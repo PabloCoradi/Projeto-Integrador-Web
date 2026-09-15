@@ -1,0 +1,43 @@
+# =========================
+# Python
+# =========================
+__pycache__/
+*.py[cod]
+*.pyo
+
+.venv/
+venv/
+env/
+
+.pytest_cache/
+.mypy_cache/
+
+# =========================
+# Variáveis de ambiente
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Node / React
+# =========================
+node_modules/
+frontend/dist/
+frontend/.vite/
+
+# =========================
+# Logs
+# =========================
+*.log
+
+# =========================
+# VS Code
+# =========================
+.vscode/
+
+# =========================
+# Sistema operacional
+# =========================
+.DS_Store
+Thumbs.db
