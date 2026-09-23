@@ -10,20 +10,56 @@ Se você nunca usou Git/GitHub antes, não se preocupe: este documento tem tudo 
 
 ```text
 Projeto-Integrador-Web/
-├── backend/    # API em Python (FastAPI) — regras de negócio e banco de dados
-├── frontend/   # Interface web em React (Vite) — o que o usuário vê e usa
-├── PRD.pdf     # Documento de requisitos do produto
+├── backend/            # API em Python (FastAPI) — regras de negócio e banco de dados
+├── frontend/           # Interface web em React (Vite) — o que o usuário vê e usa
+├── docker-compose.yml  # Sobe o banco de dados Postgres localmente via Docker
+├── PRD.pdf             # Documento de requisitos do produto
 ├── .gitignore
-└── README.md   # Este arquivo (documentação geral)
+└── README.md           # Este arquivo (documentação geral)
 ```
 
 > ⚠️ As pastas se chamam exatamente `backend` e `frontend` (não `back`/`front`). Preste atenção ao nome quando for usar `cd` no terminal.
 
 Para instruções detalhadas de instalação e execução de cada camada, acesse:
+* 🐳 [Banco de Dados (Docker)](#-banco-de-dados-docker)
 * 🔌 [Documentação do Backend](./backend/README.md)
 * 🎨 [Documentação do Frontend](./frontend/README.md)
 
-**Importante:** o Backend precisa estar rodando para o Frontend conseguir buscar dados da API. Siga sempre nessa ordem: 1) suba o Backend, 2) depois suba o Frontend.
+**Importante:** siga sempre essa ordem ao rodar o projeto: 1) suba o **banco de dados** (Docker), 2) suba o **Backend**, 3) depois suba o **Frontend**.
+
+---
+
+## 🐳 Banco de Dados (Docker)
+
+O projeto usa **PostgreSQL** e roda ele localmente via **Docker**, com um `docker-compose.yml` na raiz do repositório. Assim todo mundo do time usa a mesma versão/config do banco, sem precisar instalar Postgres manualmente.
+
+### Pré-requisito
+* **Docker Desktop** instalado e **aberto** (rodando em segundo plano) — [docker.com/products/docker-desktop](https://www.docker.com/products/docker-desktop/)
+
+### Subindo o banco
+Na **raiz do projeto** (não dentro de `backend/`):
+```bash
+docker compose up -d
+```
+
+Verifique se subiu certo:
+```bash
+docker compose ps
+```
+A linha `db` deve aparecer como `Up` (ou `healthy` depois de alguns segundos).
+
+> ⚠️ Cada pessoa roda esse comando na própria máquina. O banco **não é compartilhado** entre o time — os dados ficam só no seu Docker local (em um *volume* isolado).
+
+> ⚠️ Se der erro de porta em uso (`port is already allocated` / conexão recusada mesmo com o container `Up`), provavelmente você tem um PostgreSQL instalado localmente ocupando a porta `5432`. Pare esse serviço local ou pare o container e investigue com `docker compose logs db`.
+
+### Comandos úteis
+* `docker compose up -d` — sobe o banco em segundo plano.
+* `docker compose ps` — mostra se o container está rodando.
+* `docker compose logs db` — mostra os logs do banco (útil pra debugar problemas de conexão).
+* `docker compose down` — para o container, **mantendo** os dados salvos.
+* `docker compose down -v` — para o container e **apaga** os dados (reset completo do banco local).
+
+Com o banco no ar, siga para o [README do Backend](./backend/README.md), que explica como configurar o `.env` e rodar as migrações.
 
 ---
 
