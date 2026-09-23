@@ -9,7 +9,7 @@ Documentação técnica e guia de inicialização da interface web. O frontend �
 ### Pré-requisitos
 * **Node.js** instalado (versão LTS recomendada) — confira com `node --version`
 * Gerenciador de pacotes `npm` (já vem junto com o Node.js)
-* **Backend rodando** em `http://127.0.0.1:8000` — siga o [README do backend](../backend/README.md) antes de continuar, senão o login e as telas não vão carregar dados
+* **Backend rodando** em `http://127.0.0.1:8000` — siga primeiro o [README do backend](../backend/README.md), que inclui subir o banco de dados via Docker antes do próprio backend. Sem isso, o login e as telas não vão carregar dados.
 
 ---
 
