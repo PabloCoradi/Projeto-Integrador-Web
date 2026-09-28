@@ -26,6 +26,7 @@ config.set_main_option(
 
 from app.models.usuario import Usuario
 from app.models.cliente import Cliente
+from app.models.caso import Caso
 target_metadata = Usuario.metadata
 
 
