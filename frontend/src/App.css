@@ -335,7 +335,8 @@ td button:hover {
 }
 
 .form-group input,
-.form-group textarea {
+.form-group textarea,
+.form-group select {
   width: 100%;
 
   padding: 10px 12px;
@@ -350,7 +351,8 @@ td button:hover {
 }
 
 .form-group input:focus,
-.form-group textarea:focus {
+.form-group textarea:focus,
+.form-group select:focus {
   outline: none;
 
   border-color: #374151;
