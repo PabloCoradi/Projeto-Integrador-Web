@@ -1,21 +1,24 @@
 import { useEffect, useState } from "react";
 import { apiRequest } from "../../services/api";
 
+const FORMULARIO_VAZIO = {
+  nome: "",
+  cpf_cnpj: "",
+  email: "",
+  telefone: "",
+  endereco: "",
+  observacoes: "",
+};
+
 function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
+  const [editandoId, setEditandoId] = useState(null);
 
-  const [formulario, setFormulario] = useState({
-    nome: "",
-    cpf_cnpj: "",
-    email: "",
-    telefone: "",
-    endereco: "",
-    observacoes: "",
-  });
+  const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
 
   const [salvando, setSalvando] = useState(false);
 
@@ -48,17 +51,27 @@ function Clientes() {
   }
 
   function abrirFormulario() {
-    setFormulario({
-      nome: "",
-      cpf_cnpj: "",
-      email: "",
-      telefone: "",
-      endereco: "",
-      observacoes: "",
-    });
-
+    setFormulario(FORMULARIO_VAZIO);
+    setEditandoId(null);
     setErro("");
     setMostrarFormulario(true);
+  }
+
+  function abrirEdicao(cliente) {
+    setFormulario({
+      nome: cliente.nome || "",
+      cpf_cnpj: cliente.cpf_cnpj || "",
+      email: cliente.email || "",
+      telefone: cliente.telefone || "",
+      endereco: cliente.endereco || "",
+      observacoes: cliente.observacoes || "",
+    });
+
+    setEditandoId(cliente.id);
+    setErro("");
+    setMostrarFormulario(true);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function fecharFormulario() {
@@ -67,6 +80,7 @@ function Clientes() {
     }
 
     setMostrarFormulario(false);
+    setEditandoId(null);
   }
 
   async function salvarCliente(event) {
@@ -77,29 +91,66 @@ function Clientes() {
       return;
     }
 
+    const corpo = {
+      nome: formulario.nome.trim(),
+      cpf_cnpj: formulario.cpf_cnpj.trim() || null,
+      email: formulario.email.trim() || null,
+      telefone: formulario.telefone.trim() || null,
+      endereco: formulario.endereco.trim() || null,
+      observacoes: formulario.observacoes.trim() || null,
+    };
+
     try {
       setSalvando(true);
       setErro("");
 
-      await apiRequest("/api/clientes/", {
-        method: "POST",
-        body: JSON.stringify({
-          nome: formulario.nome.trim(),
-          cpf_cnpj: formulario.cpf_cnpj.trim() || null,
-          email: formulario.email.trim() || null,
-          telefone: formulario.telefone.trim() || null,
-          endereco: formulario.endereco.trim() || null,
-          observacoes: formulario.observacoes.trim() || null,
-        }),
-      });
+      if (editandoId) {
+        await apiRequest(`/api/clientes/${editandoId}`, {
+          method: "PUT",
+          body: JSON.stringify(corpo),
+        });
+      } else {
+        await apiRequest("/api/clientes/", {
+          method: "POST",
+          body: JSON.stringify(corpo),
+        });
+      }
 
       setMostrarFormulario(false);
+      setEditandoId(null);
 
       await carregarClientes();
     } catch (error) {
       setErro(error.message);
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function inativarCliente(cliente) {
+    const confirmou = window.confirm(
+      `Inativar o cliente "${cliente.nome}"?`
+    );
+
+    if (!confirmou) {
+      return;
+    }
+
+    try {
+      setErro("");
+
+      await apiRequest(`/api/clientes/${cliente.id}`, {
+        method: "DELETE",
+      });
+
+      if (editandoId === cliente.id) {
+        setMostrarFormulario(false);
+        setEditandoId(null);
+      }
+
+      await carregarClientes();
+    } catch (error) {
+      setErro(error.message);
     }
   }
 
@@ -127,7 +178,9 @@ function Clientes() {
 
       {mostrarFormulario && (
         <div className="content-card cliente-form-card">
-          <h2>Novo Cliente</h2>
+          <h2>
+            {editandoId ? "Editar Cliente" : "Novo Cliente"}
+          </h2>
 
           <form onSubmit={salvarCliente}>
             <div className="form-grid">
@@ -240,7 +293,9 @@ function Clientes() {
               >
                 {salvando
                   ? "Salvando..."
-                  : "Salvar Cliente"}
+                  : editandoId
+                    ? "Salvar Alterações"
+                    : "Salvar Cliente"}
               </button>
             </div>
           </form>
@@ -288,9 +343,21 @@ function Clientes() {
                   </td>
 
                   <td>
-                    <button>
-                      Editar
-                    </button>
+                    <div style={{ display: "flex", gap: 8 }}>
+                      <button
+                        type="button"
+                        onClick={() => abrirEdicao(cliente)}
+                      >
+                        Editar
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => inativarCliente(cliente)}
+                      >
+                        Inativar
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
