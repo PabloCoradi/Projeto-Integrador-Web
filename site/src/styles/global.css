@@ -1,0 +1,143 @@
+/* Tokens do Design System (Figma) */
+:root {
+  --ciano: #008188;
+  --cinza-escuro: #262b31;
+  --cinza: #707987;
+  --branco-gelo: #eaebee;
+  --branco: #ffffff;
+  --verde-whatsapp: rgba(31, 189, 0, 0.8);
+
+  --fonte: 'Open Sauce One', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  /* Escala tipográfica do Figma */
+  --display: clamp(44px, 5vw, 72px); /* Display 72 / 100% */
+  --h1: clamp(36px, 3.9vw, 56px); /* H1 56 / 55 */
+  --h2: clamp(30px, 2.8vw, 40px); /* H2 40 */
+  --h3: 32px;
+  --h4: clamp(20px, 1.7vw, 24px);
+  --h5: clamp(18px, 1.4vw, 20px);
+  --body: 16px;
+  --caption: 14px;
+
+  /* Layout: frame 1440 com 200px de margem => conteúdo de 1040 */
+  --conteudo: 1040px;
+  --margem: 24px;
+  --secao-y: 90px;
+
+  --sombra: 2px 4px 4px rgba(0, 0, 0, 0.1);
+  --sombra-drop: drop-shadow(2px 4px 2px rgba(0, 0, 0, 0.1));
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: var(--fonte);
+  font-size: var(--body);
+  line-height: normal;
+  color: var(--cinza-escuro);
+  background: var(--branco-gelo);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+
+img {
+  display: block;
+  max-width: 100%;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
+}
+
+.container {
+  width: min(var(--conteudo), 100% - var(--margem) * 2);
+  margin-inline: auto;
+}
+
+.secao {
+  padding-block: var(--secao-y);
+}
+
+.pagina--branca {
+  background: var(--branco);
+}
+
+/* Efeito "Vidro" do Figma: Glass radius 12 + drop shadow 2/4/4 */
+.vidro {
+  position: relative;
+  background: rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    var(--sombra);
+}
+
+.vidro--claro {
+  background: rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.8),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.06),
+    var(--sombra);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 1023px) {
+  :root {
+    --secao-y: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

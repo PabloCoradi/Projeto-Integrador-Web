@@ -1,0 +1,105 @@
+.sanfona {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.sanfona--meia {
+  filter: var(--sombra-drop);
+}
+
+.sanfona--larga {
+  border: 1px solid var(--branco-gelo);
+}
+
+.sanfona__cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 20px;
+  text-align: left;
+}
+
+.sanfona__titulo {
+  flex: 1;
+  font-size: var(--h4);
+  font-weight: 700;
+  line-height: normal;
+}
+
+.sanfona--meia .sanfona__titulo {
+  color: var(--cinza-escuro);
+}
+
+.sanfona--larga .sanfona__titulo {
+  color: var(--branco-gelo);
+}
+
+/* Caixa 14×8 com o vetor 8×14 girado, como no Figma */
+.sanfona__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 8px;
+}
+
+.sanfona__chevron img {
+  width: 8px;
+  height: 14px;
+  max-width: none;
+  transform: rotate(90deg);
+}
+
+.sanfona--aberta .sanfona__chevron img {
+  transform: rotate(-90deg);
+}
+
+/* Abre com transição de altura */
+.sanfona__painel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.3s ease;
+}
+
+.sanfona--aberta .sanfona__painel {
+  grid-template-rows: 1fr;
+}
+
+.sanfona__interno {
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* gap de 24px entre cabeçalho e detalhe + padding 20 */
+.sanfona__detalhe {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 20px 20px;
+}
+
+.sanfona__subtitulo {
+  font-size: var(--h4);
+  font-weight: 700;
+  color: var(--ciano);
+}
+
+.sanfona__texto {
+  font-size: var(--h5);
+  font-weight: 500;
+  line-height: 26px;
+}
+
+.sanfona--meia .sanfona__texto {
+  color: var(--cinza-escuro);
+}
+
+.sanfona--larga .sanfona__texto {
+  color: var(--branco-gelo);
+}

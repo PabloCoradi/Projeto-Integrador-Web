@@ -1,0 +1,76 @@
+.hero {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  min-height: clamp(var(--altura), var(--altura-fluida), var(--altura) * 1.5);
+  overflow: hidden;
+  padding-top: 190px;
+  padding-bottom: 48px;
+}
+
+.hero__fundo {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.hero__fundo img {
+  position: absolute;
+  max-width: none;
+}
+
+/*
+ * Imagens recortadas: a caixa tem o tamanho que a imagem tem no Figma
+ * (em % do frame, nunca menor que o tamanho em px de 1440) e usa
+ * object-fit: cover, então a foto é recortada mas nunca distorcida.
+ */
+.hero__img--inicio {
+  top: -13%;
+  left: 51.53%;
+  width: max(118.24%, 1702.7px);
+  height: max(149.94%, 934.1px);
+  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: 50% 42%;
+}
+
+.hero__img--quem {
+  top: -20.17%;
+  left: 37.13%;
+  width: max(148.26%, 2135px);
+  height: max(160.86%, 765.7px);
+  transform: translateX(-50%);
+  object-fit: cover;
+  object-position: 50% 35%;
+}
+
+.hero__img--cobrir {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: bottom;
+}
+
+.hero__sobreposicao {
+  position: absolute;
+  inset: 0;
+  mix-blend-mode: multiply;
+}
+
+.hero__conteudo {
+  position: relative;
+}
+
+.hero__titulo {
+  font-size: var(--display);
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ciano);
+}
+
+@media (max-width: 860px) {
+  .hero {
+    padding-top: 180px;
+  }
+}

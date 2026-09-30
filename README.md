@@ -1,6 +1,6 @@
 # Projeto Integrador Web — Sistema de Advocacia
 
-Bem-vindo ao repositório do **Projeto Integrador Web**. O projeto é um sistema de gestão para escritório de advocacia, organizado como **Monorepo** (Frontend e Backend no mesmo repositório).
+Bem-vindo ao repositório do **Projeto Integrador Web**. O projeto é um sistema de gestão para escritório de advocacia, organizado como **Monorepo** (Frontend, Backend e Site institucional no mesmo repositório).
 
 Se você nunca usou Git/GitHub antes, não se preocupe: este documento tem tudo explicado passo a passo.
 
@@ -12,6 +12,7 @@ Se você nunca usou Git/GitHub antes, não se preocupe: este documento tem tudo 
 Projeto-Integrador-Web/
 ├── backend/            # API em Python (FastAPI) — regras de negócio e banco de dados
 ├── frontend/           # Interface web em React (Vite) — o que o usuário vê e usa
+├── site/               # Site institucional público em React (Vite) — páginas do escritório
 ├── docker-compose.yml  # Sobe o banco de dados Postgres localmente via Docker
 ├── PRD.pdf             # Documento de requisitos do produto
 ├── .gitignore
@@ -24,8 +25,11 @@ Para instruções detalhadas de instalação e execução de cada camada, acesse
 * 🐳 [Banco de Dados (Docker)](#-banco-de-dados-docker)
 * 🔌 [Documentação do Backend](./backend/README.md)
 * 🎨 [Documentação do Frontend](./frontend/README.md)
+* 🌐 [Documentação do Site institucional](./site/README.md)
 
 **Importante:** siga sempre essa ordem ao rodar o projeto: 1) suba o **banco de dados** (Docker), 2) suba o **Backend**, 3) depois suba o **Frontend**.
+
+> O **site institucional** (`site/`) é independente: não precisa de banco nem de backend. Basta `cd site`, `npm install` e `npm run dev`.
 
 ---
 
