@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../services/api";
 
 const FORMULARIO_VAZIO = {
@@ -9,6 +9,15 @@ const FORMULARIO_VAZIO = {
   endereco: "",
   observacoes: "",
 };
+
+// Ignora maiúsculas/minúsculas e acentos ("joao" encontra "João")
+function normalizar(texto) {
+  return (texto || "")
+    .toString()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
 function Clientes() {
   const [clientes, setClientes] = useState([]);
@@ -21,6 +30,8 @@ function Clientes() {
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
 
   const [salvando, setSalvando] = useState(false);
+
+  const [busca, setBusca] = useState("");
 
   async function carregarClientes() {
     try {
@@ -40,6 +51,43 @@ function Clientes() {
   useEffect(() => {
     carregarClientes();
   }, []);
+
+  const clientesFiltrados = useMemo(() => {
+    const termo = normalizar(busca.trim());
+
+    if (!termo) {
+      return clientes;
+    }
+
+    const termoNumerico = termo.replace(/\D/g, "");
+
+    return clientes.filter((cliente) => {
+      const textos = [
+        cliente.nome,
+        cliente.email,
+        cliente.telefone,
+        cliente.cpf_cnpj,
+      ]
+        .map(normalizar)
+        .join(" ");
+
+      if (textos.includes(termo)) {
+        return true;
+      }
+
+      // Permite buscar CPF/CNPJ e telefone sem pontuação
+      if (termoNumerico) {
+        const numeros = `${cliente.cpf_cnpj || ""}${cliente.telefone || ""}`.replace(
+          /\D/g,
+          ""
+        );
+
+        return numeros.includes(termoNumerico);
+      }
+
+      return false;
+    });
+  }, [clientes, busca]);
 
   function alterarCampo(event) {
     const { name, value } = event.target;
@@ -303,6 +351,18 @@ function Clientes() {
       )}
 
       <div className="content-card">
+        {!carregando && clientes.length > 0 && (
+          <div className="form-group" style={{ marginBottom: 20 }}>
+            <input
+              type="text"
+              value={busca}
+              onChange={(event) => setBusca(event.target.value)}
+              placeholder="Buscar por nome, CPF/CNPJ, e-mail ou telefone"
+              aria-label="Buscar clientes"
+            />
+          </div>
+        )}
+
         {carregando && (
           <p>Carregando clientes...</p>
         )}
@@ -313,7 +373,15 @@ function Clientes() {
           </p>
         )}
 
-        {!carregando && clientes.length > 0 && (
+        {!carregando &&
+          clientes.length > 0 &&
+          clientesFiltrados.length === 0 && (
+            <p>
+              Nenhum cliente encontrado para a busca.
+            </p>
+          )}
+
+        {!carregando && clientesFiltrados.length > 0 && (
           <table>
             <thead>
               <tr>
@@ -326,7 +394,7 @@ function Clientes() {
             </thead>
 
             <tbody>
-              {clientes.map((cliente) => (
+              {clientesFiltrados.map((cliente) => (
                 <tr key={cliente.id}>
                   <td>{cliente.nome}</td>
 
