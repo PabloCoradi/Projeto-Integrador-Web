@@ -1,0 +1,35 @@
+.hero--noticia {
+  padding-top: 179px;
+  padding-bottom: 45px;
+}
+
+.hero--noticia .hero__conteudo {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* H1 56 / 55 */
+.hero--noticia .hero__titulo {
+  font-size: var(--h1);
+  line-height: 0.982;
+}
+
+.hero__data {
+  font-size: var(--body);
+  color: var(--branco-gelo);
+}
+
+.noticia {
+  padding: 45px 0 90px;
+}
+
+.noticia__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  font-size: var(--h5);
+  font-weight: 500;
+  line-height: 26px;
+  color: var(--cinza-escuro);
+}

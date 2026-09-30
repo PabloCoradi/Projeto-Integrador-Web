@@ -1,0 +1,41 @@
+.faq {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  padding: 224px 0 90px;
+  background: var(--cinza-escuro);
+}
+
+.faq__corpo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 40px;
+  padding-inline: var(--margem);
+}
+
+/* Painel 1040, cantos 56, padding 40, 24 entre perguntas */
+.faq__painel {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: min(var(--conteudo), 100%);
+  padding: 40px;
+  border-radius: 56px;
+  background: transparent;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.25);
+  filter: var(--sombra-drop);
+}
+
+@media (max-width: 760px) {
+  .faq {
+    padding-top: 190px;
+  }
+
+  .faq__painel {
+    padding: 20px;
+    border-radius: 32px;
+  }
+}

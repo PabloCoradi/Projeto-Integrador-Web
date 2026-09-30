@@ -1,0 +1,186 @@
+.hero--quem .hero__titulo {
+  max-width: 519px;
+}
+
+/* Sobre o escritório */
+.sobre {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  background: var(--cinza-escuro);
+}
+
+.sobre__texto {
+  max-width: 816px;
+  padding-block: 10px;
+  font-size: var(--h5);
+  font-weight: 500;
+  line-height: 26px;
+  color: var(--branco-gelo);
+}
+
+/* Quem faz acontecer */
+.equipe {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+.equipe__carrossel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 32px;
+}
+
+/*
+ * Palco com a foto das duas advogadas. No frame de 1440px ele tem 550px de
+ * altura; acima disso cresce na mesma proporção (até 820px). A foto tem
+ * 1883×600 em 1440px e nunca fica menor que isso.
+ * Os cartões ficam na mesma camada da grade, então o palco cresce se o
+ * texto precisar de mais espaço.
+ */
+.equipe__palco {
+  --foto-w: max(130.76%, 1883px);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: center;
+  width: 100%;
+  min-height: clamp(550px, 38.194vw, 820px);
+  padding-block: 40px;
+  overflow: hidden;
+}
+
+.equipe__foto {
+  position: absolute;
+  inset: 0;
+}
+
+.equipe__foto img {
+  position: absolute;
+  top: -2.67%;
+  left: 0;
+  width: var(--foto-w);
+  height: max(109.09%, 600px);
+  max-width: none;
+  object-fit: cover;
+  object-position: center top;
+  transition: left 0.6s ease;
+}
+
+/* Juliana: a borda direita da foto encosta na borda direita da tela */
+.equipe__palco--juliana .equipe__foto img {
+  left: calc(100% - var(--foto-w));
+}
+
+.advogada {
+  grid-area: 1 / 1;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 48px;
+  flex-shrink: 0;
+  padding: 32px 36px;
+  border-radius: 24px;
+  background: rgba(234, 235, 238, 0.3);
+  transition:
+    transform 0.6s ease,
+    opacity 0.6s ease;
+}
+
+/* Patrícia: à direita da foto dela (407px de 1440) */
+.advogada--patricia {
+  margin-left: max(28.26%, 407px);
+  width: min(972px, 100% - max(28.26%, 407px) - 24px);
+}
+
+/* Juliana: a 91px da esquerda, sem cobrir a foto dela (377px à direita) */
+.advogada--juliana {
+  margin-left: max(6.32%, 91px);
+  width: min(972px, 100% - max(6.32%, 91px) - max(26.18%, 377px));
+  padding: 32px 32px 36px 36px;
+}
+
+/* Cartão inativo sai pela lateral, como o carrossel do Figma */
+.equipe__palco--juliana .advogada--patricia {
+  transform: translateX(-150vw);
+  opacity: 0;
+}
+
+.equipe__palco--patricia .advogada--juliana {
+  transform: translateX(150vw);
+  opacity: 0;
+}
+
+.advogada__cabecalho {
+  position: relative;
+  width: min(485px, 100%);
+  height: 78px; /* nome (55) + linha a 78px */
+}
+
+.advogada__nome {
+  font-size: var(--h2);
+  font-weight: 600;
+  line-height: normal;
+  color: var(--cinza-escuro);
+}
+
+/* linha 83px a 78px do topo do nome */
+.advogada__linha {
+  position: absolute;
+  top: 75px;
+  left: 0;
+  width: 83px;
+  height: 6px;
+}
+
+.advogada__bio {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 900px;
+  max-width: 100%;
+  font-size: var(--h5);
+  font-weight: 500;
+  line-height: 26px;
+  color: var(--cinza-escuro);
+}
+
+/* Telas menores: cartão empilhado sobre a foto */
+@media (max-width: 1099px) {
+  .equipe__palco {
+    min-height: 550px;
+    padding: 48px var(--margem);
+  }
+
+  .equipe__foto img,
+  .equipe__palco--juliana .equipe__foto img {
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+  }
+
+  .equipe__palco--patricia .equipe__foto img {
+    object-position: left top;
+  }
+
+  .equipe__palco--juliana .equipe__foto img {
+    object-position: right top;
+  }
+
+  .advogada--patricia,
+  .advogada--juliana {
+    width: auto;
+    margin-left: 0;
+    padding: 28px 24px;
+    background: rgba(234, 235, 238, 0.75);
+  }
+
+  .advogada[aria-hidden='true'] {
+    display: none;
+  }
+}

@@ -11,6 +11,8 @@ const P = {
   inicio: 'ae1b3e2d-c6ac-44ad-aff8-ff490fae7aaf',
   areas: 'ec9d647b-bf75-4ca4-9b0c-4d27be1995df',
   quem: '25627be4-5d05-498c-af39-6755c393de29',
+  noticias: 'c8604da1-daad-4d2d-80e2-15138959df05',
+  faq: '866aba8b-732f-411d-85a0-e9907503014d',
   sanfona: '7066c8b7-19bb-42ab-bd10-29aadd3eaca1',
 };
 
@@ -20,6 +22,7 @@ const ASSETS = [
   ['logo-rodape-claro.svg', 'inicio', '932fc.svg'],
   ['logo-rodape-escuro.svg', 'quem', '8a83a.svg'],
   ['linha-titulo.svg', 'inicio', 'ec169.svg'],
+  ['linha-titulo-card.svg', 'quem', '16d72.svg'],
   ['linha-cta-clara.svg', 'inicio', 'bca9e.svg'],
   ['linha-cta-escura.svg', 'areas', 'e476c.svg'],
   ['icone-email.svg', 'inicio', 'f6465.svg'],
@@ -40,6 +43,13 @@ const ASSETS = [
   ['card-patricia.png', 'inicio', '10818.png'],
   ['card-juliana.png', 'inicio', 'a6f26.png'],
   ['hero-areas.png', 'areas', '8298b.png'],
+  ['hero-quem-somos.png', 'quem', '7523f.png'],
+  ['advogadas-carrossel.png', 'quem', '28b3a.png'],
+  ['cabecalho-quem-somos.png', 'quem', 'd0dd7.png'],
+  ['cabecalho-faq.png', 'faq', '2a853.png'],
+  ['noticia-lai-lgpd.png', 'noticias', '60222.png'],
+  ['noticia-codigo-civil.png', 'noticias', '6d493.png'],
+  ['noticia-cnj.png', 'noticias', 'a27de.png'],
 ];
 
 const destino = join(dirname(fileURLToPath(import.meta.url)), '..', 'public', 'assets');
