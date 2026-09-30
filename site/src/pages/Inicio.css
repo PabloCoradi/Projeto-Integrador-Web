@@ -1,0 +1,192 @@
+.pagina {
+  position: relative;
+  overflow-x: clip;
+}
+
+.destaque {
+  font-weight: 700;
+  color: var(--ciano);
+}
+
+/* Áreas de atuação */
+.inicio-areas {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+  background: var(--cinza-escuro);
+}
+
+.inicio-areas__conteudo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.inicio-areas__imagem {
+  display: block;
+  width: 100%;
+}
+
+.inicio-areas__imagem img {
+  width: 100%;
+  height: auto;
+  min-height: 400px;
+  aspect-ratio: 1440 / 400;
+  object-fit: cover;
+}
+
+/* Quem somos */
+.inicio-quem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.inicio-quem > .container {
+  align-self: stretch;
+  margin-inline: auto;
+}
+
+.inicio-quem__conteudo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+/* parágrafos separados por uma linha em branco (Body 16) */
+.inicio-quem__texto {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25em;
+  width: min(443px, 100%);
+  font-size: var(--body);
+  line-height: normal;
+}
+
+.inicio-quem__fotos {
+  display: flex;
+  justify-content: space-between;
+  gap: 24px;
+  width: 508px;
+  flex-shrink: 0;
+}
+
+.card-foto {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  width: 242px;
+  height: 300px;
+  padding: 24px 8px;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--sombra);
+}
+
+.card-foto__midia {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  border-radius: inherit;
+}
+
+.card-foto__img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center top;
+  transition: opacity 240ms ease;
+}
+
+.card-foto__img--hover {
+  inset: auto;
+  opacity: 0;
+  object-fit: fill;
+}
+
+.card-foto__img--padrao {
+  object-position: center;
+}
+
+.card-foto--patricia .card-foto__img--hover {
+  top: -6.63%;
+  left: 0;
+  width: 100%;
+  height: 144.53%;
+}
+
+.card-foto--juliana .card-foto__img--hover {
+  top: -34.62%;
+  left: -42.06%;
+  width: 162.31%;
+  height: 234.58%;
+}
+
+.card-foto::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 28.244%, #000 92.133%);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.card-foto__nome {
+  position: relative;
+  z-index: 1;
+  font-size: var(--h3);
+  font-weight: 500;
+  line-height: normal;
+  text-align: center;
+  color: var(--ciano);
+  transition: color 240ms ease;
+}
+
+.card-foto:hover .card-foto__img--padrao,
+.card-foto:focus-visible .card-foto__img--padrao {
+  opacity: 0;
+}
+
+.card-foto:hover .card-foto__img--hover,
+.card-foto:focus-visible .card-foto__img--hover {
+  opacity: 1;
+}
+
+.card-foto:hover .card-foto__nome,
+.card-foto:focus-visible .card-foto__nome {
+  color: var(--branco-gelo);
+}
+
+.card-foto:hover::after,
+.card-foto:focus-visible::after {
+  opacity: 1;
+}
+
+@media (max-width: 960px) {
+  .inicio-quem__conteudo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .inicio-quem__fotos {
+    width: 100%;
+    max-width: 508px;
+  }
+
+  .card-foto {
+    flex: 1;
+    width: auto;
+  }
+
+  .card-foto__nome {
+    font-size: 24px;
+  }
+}

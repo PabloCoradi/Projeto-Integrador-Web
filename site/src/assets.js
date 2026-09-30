@@ -1,0 +1,31 @@
+// Caminhos dos arquivos baixados do Figma (npm run assets)
+const a = (nome) => `/assets/${nome}`;
+
+export const img = {
+  logoCabecalho: a('logo-cabecalho.svg'),
+  logoRodapeClaro: a('logo-rodape-claro.svg'),
+  logoRodapeEscuro: a('logo-rodape-escuro.svg'),
+  linhaTitulo: a('linha-titulo.svg'),
+  linhaCtaClara: a('linha-cta-clara.svg'),
+  linhaCtaEscura: a('linha-cta-escura.svg'),
+  iconeEmail: a('icone-email.svg'),
+  iconeWhatsappEscuro: a('icone-whatsapp-escuro.svg'),
+  iconeInstagramEscuro: a('icone-instagram-escuro.svg'),
+  iconeWhatsappClaro: a('icone-whatsapp-claro.svg'),
+  iconeInstagramClaro: a('icone-instagram-claro.svg'),
+  iconeEndereco: a('icone-endereco.png'),
+  iconeWhatsappFlutuante: a('icone-whatsapp-flutuante.svg'),
+  setaDireita: a('seta-direita.svg'),
+  setaEsquerda: a('seta-esquerda.svg'),
+  chevronFechado: a('chevron-fechado.svg'),
+  chevronAberto: a('chevron-aberto.svg'),
+  mapa: a('mapa.png'),
+  heroInicio: a('hero-inicio.png'),
+  areas360: a('areas-360.png'),
+  depoimentosFundo: a('depoimentos-fundo.png'),
+  cardPatricia: a('card-patricia-pb.png'),
+  cardPatriciaCor: a('card-patricia-cor.jpg'),
+  cardJuliana: a('card-juliana-pb.png'),
+  cardJulianaCor: a('card-juliana-cor.jpg'),
+  heroAreas: a('hero-areas.png'),
+};

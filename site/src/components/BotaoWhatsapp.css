@@ -1,0 +1,33 @@
+/* Posição do Figma num frame 1440×810: 140.6px da direita, 49px da base */
+.botao-whatsapp {
+  position: fixed;
+  right: max(24px, calc((100vw - 1440px) / 2 + 140.6px));
+  bottom: 49px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52.8px;
+  height: 52.8px;
+  padding: 12px;
+  border-radius: 100px;
+  background: var(--verde-whatsapp);
+  box-shadow: 2.4px 4.8px 4.8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+}
+
+.botao-whatsapp:hover {
+  transform: scale(1.06);
+}
+
+.botao-whatsapp img {
+  width: 28.8px;
+  height: 28.8px;
+}
+
+@media (max-width: 1439px) {
+  .botao-whatsapp {
+    right: 24px;
+    bottom: 24px;
+  }
+}

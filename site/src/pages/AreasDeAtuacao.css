@@ -1,0 +1,34 @@
+.hero--areas {
+  padding-top: 196px;
+  padding-bottom: 90px;
+}
+
+.hero--areas .hero__titulo {
+  max-width: 951.5px;
+}
+
+.areas {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* Duas colunas de 508px com 24px entre elas */
+.areas__grade {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+  gap: 24px;
+}
+
+.areas__coluna {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (max-width: 860px) {
+  .areas__grade {
+    grid-template-columns: 1fr;
+  }
+}

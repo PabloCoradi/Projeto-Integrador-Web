@@ -1,0 +1,83 @@
+.rodape {
+  padding-block: 90px;
+  color: var(--branco-gelo);
+}
+
+.rodape--ciano {
+  background: var(--ciano);
+}
+
+.rodape--cinza {
+  background: var(--cinza);
+}
+
+.rodape--claro {
+  background: var(--branco-gelo);
+  color: var(--cinza-escuro);
+}
+
+.rodape__conteudo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+}
+
+.rodape__logo {
+  width: 209.3px;
+  height: 58.5px;
+}
+
+.rodape__mapa {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rodape__titulo {
+  font-weight: 700;
+  color: var(--branco);
+}
+
+.rodape--claro .rodape__titulo {
+  color: var(--cinza-escuro);
+}
+
+.rodape__lista {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rodape__lista li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Separador "|" em Caption 14 */
+.rodape__lista li + li::before {
+  content: '|';
+  font-size: var(--caption);
+}
+
+.rodape__lista a:hover,
+.rodape__lista button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.rodape__lista a.active {
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  .rodape__conteudo {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

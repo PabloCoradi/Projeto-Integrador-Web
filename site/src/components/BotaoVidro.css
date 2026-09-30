@@ -1,0 +1,36 @@
+.botao-vidro {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14.222px 28.444px;
+  border-radius: 118.519px;
+  font-size: var(--h5);
+  font-weight: 500;
+  line-height: 26px;
+  white-space: nowrap;
+  filter: drop-shadow(2.37px 4.741px 2.37px rgba(0, 0, 0, 0.1));
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
+    inset 1px 1px 0 rgba(255, 255, 255, 0.35);
+  transition: background-color 0.2s ease;
+}
+
+.botao-vidro--claro {
+  color: var(--branco-gelo);
+}
+
+.botao-vidro--claro:hover {
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.botao-vidro--escuro {
+  color: var(--cinza-escuro);
+  background-color: rgba(112, 121, 135, 0.1);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.08);
+}
+
+.botao-vidro--escuro:hover {
+  background-color: rgba(112, 121, 135, 0.2);
+}

@@ -1,0 +1,41 @@
+.titulo-secao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 24px;
+}
+
+/* Linha de 82.5px com traço de 6px (inset -3px 0 no Figma) */
+.titulo-secao__linha {
+  position: relative;
+  width: 82.5px;
+  height: 0;
+}
+
+.titulo-secao__linha img {
+  position: absolute;
+  top: -3px;
+  left: 0;
+  width: 82.5px;
+  height: 6px;
+  max-width: none;
+}
+
+.titulo-secao__texto {
+  font-size: var(--h2);
+  font-weight: 600;
+  line-height: normal;
+  text-transform: uppercase;
+}
+
+.titulo-secao--escuro .titulo-secao__texto {
+  color: var(--cinza-escuro);
+}
+
+.titulo-secao--claro .titulo-secao__texto {
+  color: var(--branco-gelo);
+}
+
+.titulo-secao--preto .titulo-secao__texto {
+  color: #000;
+}
