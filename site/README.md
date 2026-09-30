@@ -14,9 +14,7 @@ npm run dev      # http://localhost:5173
 
 Para gerar a versão de produção, rode `npm run build`. Os arquivos saem na pasta `dist/`.
 
-> As imagens já estão em `public/assets`. O script `npm run assets` só serve para baixá-las de novo do Figma,
-> e os links de exportação expiram cerca de 7 dias depois de gerados (gerados em 16/09/2026). Se precisar
-> atualizar alguma imagem, exporte-a do Figma e salve em `public/assets` com o nome listado em `scripts/baixar-assets.mjs`.
+> As imagens já estão em `public/assets`. O script `npm run assets` só serve para baixá-las atraves do mcp que fizemos no figma para baixar todos os assets em uma pasta, mas como tem validade nao esta mais funcional.
 
 ## Páginas
 
