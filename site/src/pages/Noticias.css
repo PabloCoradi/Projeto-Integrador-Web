@@ -1,0 +1,87 @@
+.hero--noticias {
+  padding-top: 180px;
+  padding-bottom: 90px;
+  background: var(--ciano);
+}
+
+.hero--noticias .hero__titulo,
+.hero--noticia .hero__titulo {
+  color: var(--branco-gelo);
+}
+
+.noticias {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+}
+
+.noticias > .container {
+  margin-inline: auto;
+}
+
+/* 3 cards de 331×464 com 24px entre eles */
+.noticias__grade {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 24px;
+  margin-block: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.card-noticia {
+  position: relative;
+  display: block;
+  height: 464px;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.card-noticia__img {
+  position: absolute;
+  max-width: none;
+  transition: transform 0.4s ease;
+}
+
+.card-noticia:hover .card-noticia__img {
+  transform: scale(1.03);
+}
+
+.card-noticia__legenda {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 20px 16px;
+  border-radius: 16px;
+  filter: var(--sombra-drop);
+}
+
+/* Fundo cinza-escuro em "hard light", como no Figma */
+.card-noticia__legenda::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: var(--cinza-escuro);
+  mix-blend-mode: hard-light;
+}
+
+.card-noticia__titulo {
+  position: relative;
+  font-size: var(--h4);
+  font-weight: 500;
+  line-height: normal;
+  color: var(--branco-gelo);
+}
+
+@media (max-width: 960px) {
+  .noticias__grade {
+    grid-template-columns: 1fr;
+    max-width: 480px;
+  }
+}
