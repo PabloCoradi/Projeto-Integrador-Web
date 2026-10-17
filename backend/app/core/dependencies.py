@@ -1,3 +1,4 @@
+
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
@@ -40,10 +41,22 @@ def get_usuario_atual(
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido ou expirado.",
-        )
+        ) from None
 
-    usuario = db.get(Usuario, int(usuario_id))
+    # Valida se o ID do token é numérico
+    try:
+        usuario_id = int(usuario_id)
 
+    except (ValueError, TypeError):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Token inválido.",
+        ) from None
+
+    # Busca o usuário no banco de dados
+    usuario = db.get(Usuario, usuario_id)
+
+    # Verifica se o usuário existe e está ativo
     if usuario is None or not usuario.ativo:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
