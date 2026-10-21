@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { apiRequest } from "../../services/api";
 import {
@@ -7,6 +7,8 @@ import {
   inativarCaso,
   listarCasos,
 } from "../../services/casos";
+
+import ArquivosCaso from "./ArquivosCaso";
 
 const FORM_VAZIO = {
   cliente_id: "",
@@ -24,6 +26,9 @@ function Casos() {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+
+  const [casoDosArquivos, setCasoDosArquivos] = useState(null);
+  const painelArquivosRef = useRef(null);
 
   async function carregarCasos(filtrosAtuais = filtros) {
     setErro("");
@@ -128,11 +133,23 @@ function Casos() {
       await inativarCaso(caso.id);
 
       if (editandoId === caso.id) cancelarEdicao();
+      if (casoDosArquivos?.id === caso.id) setCasoDosArquivos(null);
 
       await carregarCasos();
     } catch (e) {
       setErro(e.message);
     }
+  }
+
+  function abrirArquivos(caso) {
+    setCasoDosArquivos(caso);
+
+    setTimeout(() => {
+      painelArquivosRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }, 0);
   }
 
   function buscar(evento) {
@@ -146,7 +163,7 @@ function Casos() {
     carregarCasos(vazio);
   }
 
-    return (
+  return (
     <div>
       <h1>Casos</h1>
 
@@ -246,6 +263,16 @@ function Casos() {
         </form>
       </div>
 
+      {casoDosArquivos && (
+        <div ref={painelArquivosRef}>
+          <ArquivosCaso
+            key={casoDosArquivos.id}
+            caso={casoDosArquivos}
+            onFechar={() => setCasoDosArquivos(null)}
+          />
+        </div>
+      )}
+
       <div className="content-card">
         <h2 style={{ marginTop: 0, marginBottom: 24 }}>Casos cadastrados</h2>
 
@@ -314,7 +341,13 @@ function Casos() {
                     <td>{caso.tipo_atendimento}</td>
                     <td>{caso.observacoes}</td>
                     <td>
-                      <div style={{ display: "flex", gap: 8 }}>
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                        <button
+                          type="button"
+                          onClick={() => abrirArquivos(caso)}
+                        >
+                          Arquivos
+                        </button>
                         <button
                           type="button"
                           onClick={() => iniciarEdicao(caso)}
