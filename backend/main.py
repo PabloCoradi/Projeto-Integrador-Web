@@ -5,8 +5,12 @@ from fastapi.middleware.cors import CORSMiddleware
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 
+from app.core.config import settings
 from app.core.limiter import limiter
+
 from app.routers.auth import router as auth_router
+from app.routers.artigos import router as artigos_router
+from app.routers.artigos_publicos import router as artigos_publicos_router
 from app.routers.clientes import router as clientes_router
 from app.routers.casos import router as casos_router
 from app.routers.arquivos import router as arquivos_router
@@ -18,6 +22,7 @@ app = FastAPI(
     version="1.0.0",
 )
 
+
 # Configuração do limite de requisições
 app.state.limiter = limiter
 
@@ -28,20 +33,25 @@ app.add_exception_handler(
 
 
 # Configuração do CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+def configurar_cors(aplicacao: FastAPI, origens: list[str]) -> None:
+    """Aplica a política CORS explícita usada pelo painel e pelo site."""
+
+    aplicacao.add_middleware(
+        CORSMiddleware,
+        allow_origins=origens,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
+
+
+configurar_cors(app, settings.cors_origins)
 
 
 # Registro das rotas
 app.include_router(auth_router)
+app.include_router(artigos_router)
+app.include_router(artigos_publicos_router)
 app.include_router(clientes_router)
 app.include_router(casos_router)
 app.include_router(arquivos_router)

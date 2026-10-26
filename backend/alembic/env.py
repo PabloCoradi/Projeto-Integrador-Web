@@ -1,3 +1,4 @@
+
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -24,10 +25,13 @@ config.set_main_option(
 )
 
 
+# Modelos registrados no Alembic
 from app.models.usuario import Usuario
 from app.models.cliente import Cliente
 from app.models.caso import Caso
 from app.models.arquivo_caso import ArquivoCaso
+from app.models.artigo import Artigo
+
 target_metadata = Usuario.metadata
 
 

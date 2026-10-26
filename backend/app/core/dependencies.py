@@ -12,6 +12,14 @@ from app.models.usuario import Usuario
 security = HTTPBearer()
 
 
+def _erro_credenciais(detail: str) -> HTTPException:
+    return HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+
 def get_usuario_atual(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: Session = Depends(get_db),
@@ -29,38 +37,30 @@ def get_usuario_atual(
             algorithms=[ALGORITHM],
         )
 
-        usuario_id = payload.get("sub")
+        usuario_id_token = payload.get("sub")
 
-        if usuario_id is None:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token inválido.",
-            )
+        # Verifica se o ID informado no token é válido
+        if (
+            not isinstance(usuario_id_token, str)
+            or not usuario_id_token.isdecimal()
+            or int(usuario_id_token) <= 0
+        ):
+            raise _erro_credenciais("Token inválido.")
 
-    except JWTError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido ou expirado.",
-        ) from None
+        usuario_id = int(usuario_id_token)
 
-    # Valida se o ID do token é numérico
-    try:
-        usuario_id = int(usuario_id)
-
-    except (ValueError, TypeError):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Token inválido.",
-        ) from None
+    except JWTError as erro:
+        raise _erro_credenciais(
+            "Token inválido ou expirado."
+        ) from erro
 
     # Busca o usuário no banco de dados
     usuario = db.get(Usuario, usuario_id)
 
     # Verifica se o usuário existe e está ativo
     if usuario is None or not usuario.ativo:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Usuário não encontrado ou inativo.",
+        raise _erro_credenciais(
+            "Usuário não encontrado ou inativo."
         )
 
     return usuario
