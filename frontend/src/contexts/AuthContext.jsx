@@ -1,4 +1,4 @@
-import {
+﻿import {
   createContext,
   useContext,
   useEffect,
@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
 
       try {
         const dados = await apiRequest("/api/auth/me");
-
         setUsuario(dados);
       } catch {
         localStorage.removeItem("access_token");
@@ -37,58 +36,56 @@ export function AuthProvider({ children }) {
     verificarSessao();
   }, []);
 
-  
-async function login(email, senha) {
-  // Evita reutilizar um token antigo
-  localStorage.removeItem("access_token");
-  setUsuario(null);
-
-  try {
-    const dados = await apiRequest("/api/auth/login", {
-      method: "POST",
-      body: JSON.stringify({
-        email,
-        senha,
-      }),
-    });
-
-    if (!dados?.access_token) {
-      throw new Error(
-        "Não foi possível autenticar. Tente novamente."
-      );
-    }
-
-    localStorage.setItem(
-      "access_token",
-      dados.access_token
-    );
-
-    // Confirma que o token permite obter o usuário
-    const usuarioAtual = await apiRequest(
-      "/api/auth/me"
-    );
-
-    if (!usuarioAtual?.id) {
-      throw new Error(
-        "Não foi possível validar a sessão."
-      );
-    }
-
-    setUsuario(usuarioAtual);
-
-  } catch (error) {
-    // Remove qualquer sessão incompleta
+  async function login(email, senha) {
     localStorage.removeItem("access_token");
     setUsuario(null);
 
-    throw error;
-  }
-}
+    try {
+      const dados = await apiRequest("/api/auth/login", {
+        method: "POST",
+        body: JSON.stringify({ email, senha }),
+      });
 
+      if (!dados?.access_token) {
+        throw new Error("Não foi possível autenticar.");
+      }
+
+      localStorage.setItem("access_token", dados.access_token);
+
+      const usuarioAtual = await apiRequest("/api/auth/me");
+
+      if (!usuarioAtual?.id) {
+        throw new Error("Não foi possível validar a sessão.");
+      }
+
+      setUsuario(usuarioAtual);
+    } catch (error) {
+      localStorage.removeItem("access_token");
+      setUsuario(null);
+      throw error;
+    }
+  }
 
   function logout() {
     localStorage.removeItem("access_token");
     setUsuario(null);
+  }
+
+  function podeVisualizar(modulo) {
+    if (usuario?.is_admin) return true;
+
+    return usuario?.permissoes?.some(
+      (p) => p.modulo === modulo &&
+        (p.pode_visualizar || p.pode_editar)
+    ) || false;
+  }
+
+  function podeEditar(modulo) {
+    if (usuario?.is_admin) return true;
+
+    return usuario?.permissoes?.some(
+      (p) => p.modulo === modulo && p.pode_editar
+    ) || false;
   }
 
   return (
@@ -99,6 +96,8 @@ async function login(email, senha) {
         autenticado: !!usuario,
         login,
         logout,
+        podeVisualizar,
+        podeEditar,
       }}
     >
       {children}

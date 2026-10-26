@@ -1,9 +1,8 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+﻿from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_usuario_atual
-from app.models.cliente import Cliente
+from app.core.dependencies import exigir_permissao
 from app.models.usuario import Usuario
 from app.schemas.cliente import (
     ClienteCreate,
@@ -17,7 +16,6 @@ from app.services.cliente_service import (
     inativar_cliente,
     listar_clientes,
 )
-
 
 router = APIRouter(
     prefix="/api/clientes",
@@ -33,16 +31,10 @@ router = APIRouter(
 def cadastrar_cliente(
     dados: ClienteCreate,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
-    """
-    Cadastra um novo cliente.
-
-    Requer autenticação.
-    """
-
     try:
-        cliente = criar_cliente(
+        return criar_cliente(
             db=db,
             nome=dados.nome,
             cpf_cnpj=dados.cpf_cnpj,
@@ -51,14 +43,11 @@ def cadastrar_cliente(
             endereco=dados.endereco,
             observacoes=dados.observacoes,
         )
-
     except ValueError as erro:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(erro),
         )
-
-    return cliente
 
 
 @router.get(
@@ -67,14 +56,8 @@ def cadastrar_cliente(
 )
 def listar(
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "visualizar")),
 ):
-    """
-    Lista todos os clientes ativos.
-
-    Requer autenticação.
-    """
-
     return listar_clientes(db)
 
 
@@ -85,18 +68,9 @@ def listar(
 def buscar(
     cliente_id: int,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "visualizar")),
 ):
-    """
-    Busca um cliente ativo pelo ID.
-
-    Requer autenticação.
-    """
-
-    cliente = buscar_cliente(
-        db=db,
-        cliente_id=cliente_id,
-    )
+    cliente = buscar_cliente(db=db, cliente_id=cliente_id)
 
     if cliente is None:
         raise HTTPException(
@@ -111,22 +85,12 @@ def buscar(
     "/{cliente_id}",
     response_model=ClienteResponse,
 )
-@router.put(
-    "/{cliente_id}",
-    response_model=ClienteResponse,
-)
 def atualizar(
     cliente_id: int,
     dados: ClienteUpdate,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
-    """
-    Atualiza os dados de um cliente.
-
-    Requer autenticação.
-    """
-
     try:
         cliente = atualizar_cliente(
             db=db,
@@ -138,7 +102,6 @@ def atualizar(
             endereco=dados.endereco,
             observacoes=dados.observacoes,
         )
-
     except ValueError as erro:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
@@ -154,27 +117,13 @@ def atualizar(
     return cliente
 
 
-@router.delete(
-    "/{cliente_id}",
-)
+@router.delete("/{cliente_id}")
 def inativar(
     cliente_id: int,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
-    """
-    Inativa um cliente (soft delete).
-
-    O registro não é apagado do banco.
-    Apenas o campo 'ativo' passa para False.
-
-    Requer autenticação.
-    """
-
-    cliente = inativar_cliente(
-        db=db,
-        cliente_id=cliente_id,
-    )
+    cliente = inativar_cliente(db=db, cliente_id=cliente_id)
 
     if cliente is None:
         raise HTTPException(

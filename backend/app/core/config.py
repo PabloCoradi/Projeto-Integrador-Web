@@ -68,9 +68,9 @@ class Settings(BaseSettings):
         """Origens HTTP aceitas, configuradas como uma lista separada por vírgulas."""
         return self.CORS_ORIGINS.split(",") if self.CORS_ORIGINS else []
 
-    RUSTFS_ENDPOINT: str
-    RUSTFS_ACCESS_KEY: str
-    RUSTFS_SECRET_KEY: str
+    RUSTFS_ENDPOINT: str = "http://localhost:9000"
+    RUSTFS_ACCESS_KEY: str = "desenvolvimento"
+    RUSTFS_SECRET_KEY: str = "desenvolvimento"
     RUSTFS_BUCKET: str = "casos"
 
     model_config = SettingsConfigDict(

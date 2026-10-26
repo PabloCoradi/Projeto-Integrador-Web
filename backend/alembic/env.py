@@ -1,4 +1,4 @@
-
+﻿
 from logging.config import fileConfig
 
 from sqlalchemy import engine_from_config
@@ -9,11 +9,11 @@ from alembic import context
 from app.core.config import settings
 
 
-# Configuração do Alembic
+# ConfiguraÃ§Ã£o do Alembic
 config = context.config
 
 
-# Configuração de logging
+# ConfiguraÃ§Ã£o de logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
@@ -31,6 +31,7 @@ from app.models.cliente import Cliente
 from app.models.caso import Caso
 from app.models.arquivo_caso import ArquivoCaso
 from app.models.artigo import Artigo
+from app.models.permissao import Permissao
 
 target_metadata = Usuario.metadata
 
@@ -77,3 +78,6 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
+
+
+

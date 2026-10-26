@@ -1,5 +1,7 @@
+
 import { useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../../services/api";
+import { useAuth } from "../../contexts/AuthContext";
 
 const FORMULARIO_VAZIO = {
   nome: "",
@@ -10,7 +12,7 @@ const FORMULARIO_VAZIO = {
   observacoes: "",
 };
 
-// Ignora maiúsculas/minúsculas e acentos ("joao" encontra "João")
+// Ignora maiúsculas/minúsculas e acentos
 function normalizar(texto) {
   return (texto || "")
     .toString()
@@ -20,17 +22,17 @@ function normalizar(texto) {
 }
 
 function Clientes() {
+  const { podeEditar } = useAuth();
+  const podeEditarClientes = podeEditar("clientes");
+
   const [clientes, setClientes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
 
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
-
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
-
   const [salvando, setSalvando] = useState(false);
-
   const [busca, setBusca] = useState("");
 
   async function carregarClientes() {
@@ -39,7 +41,6 @@ function Clientes() {
       setErro("");
 
       const dados = await apiRequest("/api/clientes/");
-
       setClientes(dados);
     } catch (error) {
       setErro(error.message);
@@ -55,9 +56,7 @@ function Clientes() {
   const clientesFiltrados = useMemo(() => {
     const termo = normalizar(busca.trim());
 
-    if (!termo) {
-      return clientes;
-    }
+    if (!termo) return clientes;
 
     const termoNumerico = termo.replace(/\D/g, "");
 
@@ -71,16 +70,11 @@ function Clientes() {
         .map(normalizar)
         .join(" ");
 
-      if (textos.includes(termo)) {
-        return true;
-      }
+      if (textos.includes(termo)) return true;
 
-      // Permite buscar CPF/CNPJ e telefone sem pontuação
       if (termoNumerico) {
-        const numeros = `${cliente.cpf_cnpj || ""}${cliente.telefone || ""}`.replace(
-          /\D/g,
-          ""
-        );
+        const numeros = `${cliente.cpf_cnpj || ""}${cliente.telefone || ""}`
+          .replace(/\D/g, "");
 
         return numeros.includes(termoNumerico);
       }
@@ -99,6 +93,8 @@ function Clientes() {
   }
 
   function abrirFormulario() {
+    if (!podeEditarClientes) return;
+
     setFormulario(FORMULARIO_VAZIO);
     setEditandoId(null);
     setErro("");
@@ -106,6 +102,8 @@ function Clientes() {
   }
 
   function abrirEdicao(cliente) {
+    if (!podeEditarClientes) return;
+
     setFormulario({
       nome: cliente.nome || "",
       cpf_cnpj: cliente.cpf_cnpj || "",
@@ -123,9 +121,7 @@ function Clientes() {
   }
 
   function fecharFormulario() {
-    if (salvando) {
-      return;
-    }
+    if (salvando) return;
 
     setMostrarFormulario(false);
     setEditandoId(null);
@@ -133,6 +129,11 @@ function Clientes() {
 
   async function salvarCliente(event) {
     event.preventDefault();
+
+    if (!podeEditarClientes) {
+      setErro("Você não tem permissão para editar clientes.");
+      return;
+    }
 
     if (!formulario.nome.trim()) {
       setErro("O nome do cliente é obrigatório.");
@@ -176,13 +177,13 @@ function Clientes() {
   }
 
   async function inativarCliente(cliente) {
+    if (!podeEditarClientes) return;
+
     const confirmou = window.confirm(
       `Inativar o cliente "${cliente.nome}"?`
     );
 
-    if (!confirmou) {
-      return;
-    }
+    if (!confirmou) return;
 
     try {
       setErro("");
@@ -210,12 +211,14 @@ function Clientes() {
           <p>Gerencie os clientes do escritório.</p>
         </div>
 
-        <button
-          className="primary-button"
-          onClick={abrirFormulario}
-        >
-          + Novo Cliente
-        </button>
+        {podeEditarClientes && (
+          <button
+            className="primary-button"
+            onClick={abrirFormulario}
+          >
+            + Novo Cliente
+          </button>
+        )}
       </div>
 
       {erro && (
@@ -224,7 +227,7 @@ function Clientes() {
         </div>
       )}
 
-      {mostrarFormulario && (
+      {mostrarFormulario && podeEditarClientes && (
         <div className="content-card cliente-form-card">
           <h2>
             {editandoId ? "Editar Cliente" : "Novo Cliente"}
@@ -233,10 +236,7 @@ function Clientes() {
           <form onSubmit={salvarCliente}>
             <div className="form-grid">
               <div className="form-group">
-                <label htmlFor="nome">
-                  Nome *
-                </label>
-
+                <label htmlFor="nome">Nome *</label>
                 <input
                   id="nome"
                   name="nome"
@@ -249,10 +249,7 @@ function Clientes() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="cpf_cnpj">
-                  CPF/CNPJ
-                </label>
-
+                <label htmlFor="cpf_cnpj">CPF/CNPJ</label>
                 <input
                   id="cpf_cnpj"
                   name="cpf_cnpj"
@@ -264,10 +261,7 @@ function Clientes() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="email">
-                  E-mail
-                </label>
-
+                <label htmlFor="email">E-mail</label>
                 <input
                   id="email"
                   name="email"
@@ -279,10 +273,7 @@ function Clientes() {
               </div>
 
               <div className="form-group">
-                <label htmlFor="telefone">
-                  Telefone
-                </label>
-
+                <label htmlFor="telefone">Telefone</label>
                 <input
                   id="telefone"
                   name="telefone"
@@ -294,10 +285,7 @@ function Clientes() {
               </div>
 
               <div className="form-group form-group-full">
-                <label htmlFor="endereco">
-                  Endereço
-                </label>
-
+                <label htmlFor="endereco">Endereço</label>
                 <input
                   id="endereco"
                   name="endereco"
@@ -309,10 +297,7 @@ function Clientes() {
               </div>
 
               <div className="form-group form-group-full">
-                <label htmlFor="observacoes">
-                  Observações
-                </label>
-
+                <label htmlFor="observacoes">Observações</label>
                 <textarea
                   id="observacoes"
                   name="observacoes"
@@ -363,22 +348,16 @@ function Clientes() {
           </div>
         )}
 
-        {carregando && (
-          <p>Carregando clientes...</p>
-        )}
+        {carregando && <p>Carregando clientes...</p>}
 
         {!carregando && clientes.length === 0 && (
-          <p>
-            Nenhum cliente cadastrado.
-          </p>
+          <p>Nenhum cliente cadastrado.</p>
         )}
 
         {!carregando &&
           clientes.length > 0 &&
           clientesFiltrados.length === 0 && (
-            <p>
-              Nenhum cliente encontrado para a busca.
-            </p>
+            <p>Nenhum cliente encontrado para a busca.</p>
           )}
 
         {!carregando && clientesFiltrados.length > 0 && (
@@ -389,7 +368,7 @@ function Clientes() {
                 <th>CPF/CNPJ</th>
                 <th>E-mail</th>
                 <th>Telefone</th>
-                <th>Ações</th>
+                {podeEditarClientes && <th>Ações</th>}
               </tr>
             </thead>
 
@@ -397,36 +376,29 @@ function Clientes() {
               {clientesFiltrados.map((cliente) => (
                 <tr key={cliente.id}>
                   <td>{cliente.nome}</td>
+                  <td>{cliente.cpf_cnpj || "-"}</td>
+                  <td>{cliente.email || "-"}</td>
+                  <td>{cliente.telefone || "-"}</td>
 
-                  <td>
-                    {cliente.cpf_cnpj || "-"}
-                  </td>
+                  {podeEditarClientes && (
+                    <td>
+                      <div style={{ display: "flex", gap: 8 }}>
+                        <button
+                          type="button"
+                          onClick={() => abrirEdicao(cliente)}
+                        >
+                          Editar
+                        </button>
 
-                  <td>
-                    {cliente.email || "-"}
-                  </td>
-
-                  <td>
-                    {cliente.telefone || "-"}
-                  </td>
-
-                  <td>
-                    <div style={{ display: "flex", gap: 8 }}>
-                      <button
-                        type="button"
-                        onClick={() => abrirEdicao(cliente)}
-                      >
-                        Editar
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={() => inativarCliente(cliente)}
-                      >
-                        Inativar
-                      </button>
-                    </div>
-                  </td>
+                        <button
+                          type="button"
+                          onClick={() => inativarCliente(cliente)}
+                        >
+                          Inativar
+                        </button>
+                      </div>
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>

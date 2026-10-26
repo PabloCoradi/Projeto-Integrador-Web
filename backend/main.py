@@ -1,4 +1,4 @@
-
+﻿
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -14,16 +14,17 @@ from app.routers.artigos_publicos import router as artigos_publicos_router
 from app.routers.clientes import router as clientes_router
 from app.routers.casos import router as casos_router
 from app.routers.arquivos import router as arquivos_router
+from app.routers.administradores import router as administradores_router
 
 
 app = FastAPI(
     title="Sistema de Advocacia",
-    description="API do sistema de gestão do escritório de advocacia",
+    description="API do sistema de gestÃ£o do escritÃ³rio de advocacia",
     version="1.0.0",
 )
 
 
-# Configuração do limite de requisições
+# ConfiguraÃ§Ã£o do limite de requisiÃ§Ãµes
 app.state.limiter = limiter
 
 app.add_exception_handler(
@@ -32,9 +33,9 @@ app.add_exception_handler(
 )
 
 
-# Configuração do CORS
+# ConfiguraÃ§Ã£o do CORS
 def configurar_cors(aplicacao: FastAPI, origens: list[str]) -> None:
-    """Aplica a política CORS explícita usada pelo painel e pelo site."""
+    """Aplica a polÃ­tica CORS explÃ­cita usada pelo painel e pelo site."""
 
     aplicacao.add_middleware(
         CORSMiddleware,
@@ -55,6 +56,7 @@ app.include_router(artigos_publicos_router)
 app.include_router(clientes_router)
 app.include_router(casos_router)
 app.include_router(arquivos_router)
+app.include_router(administradores_router)
 
 
 @app.get("/")
@@ -69,3 +71,5 @@ def health_check():
     return {
         "status": "ok"
     }
+
+

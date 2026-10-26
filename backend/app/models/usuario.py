@@ -1,7 +1,7 @@
-from datetime import datetime
+﻿from datetime import datetime
 
 from sqlalchemy import Boolean, DateTime, String
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
@@ -37,6 +37,13 @@ class Usuario(Base):
         default=True,
     )
 
+    is_admin: Mapped[bool] = mapped_column(
+        Boolean,
+        nullable=False,
+        default=False,
+        server_default="false",
+    )
+
     criado_em: Mapped[datetime] = mapped_column(
         DateTime,
         nullable=False,
@@ -48,4 +55,10 @@ class Usuario(Base):
         nullable=False,
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
+    )
+
+    permissoes: Mapped[list["Permissao"]] = relationship(
+        "Permissao",
+        back_populates="usuario",
+        cascade="all, delete-orphan",
     )

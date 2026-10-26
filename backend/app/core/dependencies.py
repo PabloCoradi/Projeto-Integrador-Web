@@ -64,3 +64,69 @@ def get_usuario_atual(
         )
 
     return usuario
+
+def get_admin_atual(
+    usuario: Usuario = Depends(get_usuario_atual),
+) -> Usuario:
+    """
+    Permite acesso somente a usuários administradores.
+    """
+    if not usuario.is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Acesso restrito a administradores.",
+        )
+
+    return usuario
+
+def exigir_permissao(modulo: str, acao: str = "visualizar"):
+    """
+    Valida se o usuário pode visualizar ou editar determinado módulo.
+    Administradores possuem acesso total.
+    """
+
+    if acao not in {"visualizar", "editar"}:
+        raise ValueError("Ação de permissão inválida.")
+
+    def verificar_permissao(
+        usuario: Usuario = Depends(get_usuario_atual),
+        db: Session = Depends(get_db),
+    ) -> Usuario:
+
+        if usuario.is_admin:
+            return usuario
+
+        from app.models.permissao import Permissao
+
+        permissao = (
+            db.query(Permissao)
+            .filter(
+                Permissao.usuario_id == usuario.id,
+                Permissao.modulo == modulo,
+            )
+            .first()
+        )
+
+        if permissao is None:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"Você não possui acesso ao módulo {modulo}.",
+            )
+
+        if acao == "visualizar" and not (
+            permissao.pode_visualizar or permissao.pode_editar
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Você não possui permissão para visualizar este módulo.",
+            )
+
+        if acao == "editar" and not permissao.pode_editar:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Você não possui permissão para editar este módulo.",
+            )
+
+        return usuario
+
+    return verificar_permissao
