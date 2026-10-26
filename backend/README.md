@@ -41,6 +41,11 @@ Documentação técnica e guia de inicialização da API. O backend é escrito e
    pip install -r requirements.txt
    ```
 
+   Para executar os testes, instale também as dependências de teste (esse arquivo já inclui as dependências de execução):
+   ```bash
+   pip install -r requirements-test.txt
+   ```
+
 4. **Suba o banco de dados (Docker):**
    O `docker-compose.yml` fica na **raiz do repositório**, não dentro de `backend/`. Em outro terminal (ou saindo temporariamente da pasta `backend`):
    ```bash
@@ -69,6 +74,8 @@ Documentação técnica e guia de inicialização da API. O backend é escrito e
    ```
    > Não é preciso criar o banco `sistema_advocacia` manualmente — o container do Docker já cria ele sozinho na primeira vez que sobe.
 
+   Para o módulo de artigos, configure também `SECRET_KEY` e `CORS_ORIGINS` conforme o `.env.example`.
+
 6. **Execute as Migrações** (cria as tabelas no banco):
    ```bash
    alembic upgrade head
@@ -93,7 +100,9 @@ Para conferir se está tudo funcionando, acesse no navegador:
 * `uvicorn main:app --reload`: inicia a API em modo desenvolvimento (recarrega sozinha a cada alteração de código).
 * `alembic upgrade head`: aplica todas as migrações pendentes no banco de dados.
 * `alembic revision --autogenerate -m "descricao da mudanca"`: gera uma nova migração automaticamente com base nas alterações feitas nos modelos (rode isso sempre que criar/alterar uma tabela).
-* `pip install -r requirements.txt`: instala/atualiza as dependências do projeto.
+* `pip install -r requirements.txt`: instala/atualiza as dependências de execução da API.
+* `pip install -r requirements-test.txt`: instala as dependências necessárias para a suíte automatizada.
+* `python -m unittest discover -s tests -v`: executa testes unitários e de integração; os testes de banco usam o PostgreSQL indicado em `DATABASE_URL`.
 * `pip freeze > requirements.txt`: se você instalar uma nova biblioteca, rode este comando para adicioná-la à lista de dependências antes de commitar.
 
 ### Docker (banco de dados) — rodar sempre na raiz do repositório
@@ -107,11 +116,17 @@ Para conferir se está tudo funcionando, acesse no navegador:
 
 ## ⚠️ Atenção
 
-* O CORS da API está configurado para aceitar requisições apenas de `http://localhost:5173` (a porta padrão do frontend). Se o frontend rodar em outra porta, os pedidos serão bloqueados pelo navegador — nesse caso, avise o time para ajustar o `main.py`.
+* O CORS da API usa a lista `CORS_ORIGINS` do `.env`. Inclua nela as origens exatas do painel e do site, separadas por vírgula. Curingas e URLs com caminhos são rejeitados porque a API aceita credenciais.
 * Nunca faça commit do arquivo `.env` (ele já está no `.gitignore`) — apenas do `.env.example`, sem senhas reais.
 * **Docker Desktop precisa estar aberto** antes de rodar qualquer `docker compose ...`, senão o comando falha na hora de falar com o daemon do Docker.
 * O banco de dados **não é compartilhado** entre o time: cada pessoa tem seu próprio container e seus próprios dados, isolados na sua máquina.
-* Se você já tem um PostgreSQL instalado localmente (fora do Docker) e ele estiver ligado, a porta `5432` vai estar ocupada e o container do Docker pode falhar ao subir. Pare o serviço local do Postgres antes de rodar `docker compose up -d`, ou mude a porta mapeada no `docker-compose.yml`.
+* Se a porta `5432` estiver ocupada, defina `POSTGRES_PORT=5433` na raiz antes de subir o Compose e use a mesma porta na `DATABASE_URL` do backend.
+
+---
+
+## Artigos
+
+As rotas administrativas em `/api/artigos` exigem um usuário ativo autenticado. Conforme o PRD atual, ainda não existem papéis distintos: qualquer usuária interna ativa pode gerenciar artigos. As rotas `/api/public/artigos` permanecem públicas e retornam somente artigos publicados, não excluídos e com conteúdo válido. O anexo de imagens foi adiado para uma versão futura.
 
 ---
 
