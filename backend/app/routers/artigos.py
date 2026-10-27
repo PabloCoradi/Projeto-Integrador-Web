@@ -1,5 +1,4 @@
-
-from typing import Annotated
+﻿from typing import Annotated
 
 from fastapi import (
     APIRouter,
@@ -12,7 +11,7 @@ from fastapi import (
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.dependencies import get_usuario_atual
+from app.core.dependencies import exigir_permissao
 from app.models.usuario import Usuario
 from app.schemas.artigo import (
     ArtigoAdminPageResponse,
@@ -35,7 +34,6 @@ from app.services.artigo_service import (
     listar_artigos,
     publicar_artigo,
 )
-
 
 router = APIRouter(
     prefix="/api/artigos",
@@ -82,10 +80,8 @@ def _http_error(erro: Exception) -> HTTPException:
 def cadastrar_artigo(
     dados: ArtigoCreate,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "editar")),
 ):
-    """Cria um rascunho vinculado ao usuário autenticado."""
-
     try:
         return criar_artigo(
             db=db,
@@ -115,10 +111,8 @@ def listar_artigos_administrativos(
     ] = None,
     q: Annotated[str | None, Query(max_length=250)] = None,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "visualizar")),
 ):
-    """Lista artigos internos com paginação, busca e filtro por status."""
-
     artigos, total = listar_artigos(
         db=db,
         page=page,
@@ -143,10 +137,8 @@ def listar_artigos_administrativos(
 def consultar_artigo(
     artigo_id: int,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "visualizar")),
 ):
-    """Consulta um artigo não excluído pelo identificador."""
-
     artigo = buscar_artigo(db=db, artigo_id=artigo_id)
 
     if artigo is None:
@@ -166,10 +158,8 @@ def editar_artigo(
     artigo_id: int,
     dados: ArtigoUpdate,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "editar")),
 ):
-    """Altera parcialmente os campos editoriais do artigo."""
-
     try:
         return atualizar_artigo(
             db=db,
@@ -191,10 +181,8 @@ def editar_artigo(
 def publicar(
     artigo_id: int,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "editar")),
 ):
-    """Publica um artigo que possua todos os campos obrigatórios."""
-
     try:
         return publicar_artigo(db=db, artigo_id=artigo_id)
     except (ArtigoNaoEncontradoError, ArtigoPublicacaoError) as erro:
@@ -208,10 +196,8 @@ def publicar(
 def despublicar(
     artigo_id: int,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "editar")),
 ):
-    """Retorna um artigo publicado para rascunho."""
-
     try:
         return despublicar_artigo(db=db, artigo_id=artigo_id)
     except ArtigoNaoEncontradoError as erro:
@@ -225,10 +211,8 @@ def despublicar(
 def remover_artigo(
     artigo_id: int,
     db: Session = Depends(get_db),
-    usuario: Usuario = Depends(get_usuario_atual),
+    usuario: Usuario = Depends(exigir_permissao("artigos", "editar")),
 ) -> Response:
-    """Exclui logicamente um artigo."""
-
     try:
         excluir_artigo(db=db, artigo_id=artigo_id)
     except ArtigoNaoEncontradoError as erro:

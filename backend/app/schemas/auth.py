@@ -10,6 +10,18 @@ class LoginRequest(BaseModel):
     )
 
 
+class RedefinirSenhaRequest(BaseModel):
+    email: EmailStr
+    nova_senha: str = Field(
+        min_length=8,
+        max_length=128
+    )
+    confirmar_senha: str = Field(
+        min_length=8,
+        max_length=128
+    )
+
+
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"

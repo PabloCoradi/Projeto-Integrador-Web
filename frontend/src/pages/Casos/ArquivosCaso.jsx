@@ -1,4 +1,7 @@
+
 import { useCallback, useEffect, useRef, useState } from "react";
+
+import { useAuth } from "../../contexts/AuthContext";
 
 import {
   enviarArquivo,
@@ -7,7 +10,7 @@ import {
   listarArquivos,
 } from "../../services/casos";
 
-// Deve ser igual ao TAMANHO_MAXIMO_MB do backend (arquivo_service.py)
+// Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
 function formatarTamanho(bytes) {
@@ -34,10 +37,12 @@ function formatarData(valor) {
 }
 
 function ArquivosCaso({ caso, onFechar }) {
+  const { podeEditar } = useAuth();
+  const podeEditarCasos = podeEditar("casos");
+
   const [arquivos, setArquivos] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-
   const [envio, setEnvio] = useState(null);
 
   const inputRef = useRef(null);
@@ -58,13 +63,16 @@ function ArquivosCaso({ caso, onFechar }) {
   }, [carregar]);
 
   async function aoEscolherArquivos(evento) {
-    const lista = Array.from(evento.target.files);
-
-    evento.target.value = "";
-
-    if (lista.length === 0) {
+    if (!podeEditarCasos) {
+      setErro("Você não tem permissão para anexar arquivos.");
+      evento.target.value = "";
       return;
     }
+
+    const lista = Array.from(evento.target.files);
+    evento.target.value = "";
+
+    if (lista.length === 0) return;
 
     setErro("");
 
@@ -89,7 +97,9 @@ function ArquivosCaso({ caso, onFechar }) {
 
       try {
         await enviarArquivo(caso.id, arquivo, (percentual) => {
-          setEnvio((atual) => (atual ? { ...atual, percentual } : atual));
+          setEnvio((atual) =>
+            atual ? { ...atual, percentual } : atual
+          );
         });
       } catch (e) {
         falhas.push(`${arquivo.name}: ${e.message}`);
@@ -109,7 +119,11 @@ function ArquivosCaso({ caso, onFechar }) {
     setErro("");
 
     try {
-      const { url } = await gerarLinkArquivo(caso.id, arquivo.id, inline);
+      const { url } = await gerarLinkArquivo(
+        caso.id,
+        arquivo.id,
+        inline
+      );
 
       window.open(url, "_blank", "noopener");
     } catch (e) {
@@ -118,13 +132,16 @@ function ArquivosCaso({ caso, onFechar }) {
   }
 
   async function remover(arquivo) {
+    if (!podeEditarCasos) {
+      setErro("Você não tem permissão para remover arquivos.");
+      return;
+    }
+
     const confirmou = window.confirm(
       `Remover o arquivo "${arquivo.nome_original}" deste caso?`
     );
 
-    if (!confirmou) {
-      return;
-    }
+    if (!confirmou) return;
 
     setErro("");
 
@@ -149,7 +166,9 @@ function ArquivosCaso({ caso, onFechar }) {
           marginBottom: 24,
         }}
       >
-        <h2 style={{ margin: 0 }}>Arquivos do caso: {caso.titulo}</h2>
+        <h2 style={{ margin: 0 }}>
+          Arquivos do caso: {caso.titulo}
+        </h2>
 
         <button
           type="button"
@@ -171,66 +190,68 @@ function ArquivosCaso({ caso, onFechar }) {
         </div>
       )}
 
-      <div style={{ marginBottom: 24 }}>
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          onChange={aoEscolherArquivos}
-          style={{ display: "none" }}
-        />
+      {podeEditarCasos && (
+        <div style={{ marginBottom: 24 }}>
+          <input
+            ref={inputRef}
+            type="file"
+            multiple
+            onChange={aoEscolherArquivos}
+            style={{ display: "none" }}
+          />
 
-        <button
-          type="button"
-          className="primary-button"
-          onClick={() => inputRef.current?.click()}
-          disabled={enviando}
-        >
-          {enviando ? "Enviando..." : "+ Anexar arquivos"}
-        </button>
+          <button
+            type="button"
+            className="primary-button"
+            onClick={() => inputRef.current?.click()}
+            disabled={enviando}
+          >
+            {enviando ? "Enviando..." : "+ Anexar arquivos"}
+          </button>
 
-        <p style={{ marginTop: 8, fontSize: 13 }}>
-          Qualquer tipo de arquivo (fotos, vídeos, áudios, documentos), até{" "}
-          {LIMITE_MB} MB cada. Você pode selecionar vários de uma vez.
-        </p>
+          <p style={{ marginTop: 8, fontSize: 13 }}>
+            Qualquer tipo de arquivo (fotos, vídeos, áudios, documentos),
+            até {LIMITE_MB} MB cada. Você pode selecionar vários de uma vez.
+          </p>
 
-        {enviando && (
-          <div style={{ marginTop: 16 }}>
-            <p>
-              Enviando {envio.indice} de {envio.total}: {envio.nome}
-            </p>
+          {enviando && (
+            <div style={{ marginTop: 16 }}>
+              <p>
+                Enviando {envio.indice} de {envio.total}: {envio.nome}
+              </p>
 
-            <div
-              role="progressbar"
-              aria-valuenow={envio.percentual}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              style={{
-                height: 8,
-                marginTop: 8,
-                borderRadius: 4,
-                background: "#e5e7eb",
-                overflow: "hidden",
-              }}
-            >
               <div
+                role="progressbar"
+                aria-valuenow={envio.percentual}
+                aria-valuemin={0}
+                aria-valuemax={100}
                 style={{
-                  width: `${envio.percentual}%`,
-                  height: "100%",
-                  background: "#1f2937",
-                  transition: "width 0.2s",
+                  height: 8,
+                  marginTop: 8,
+                  borderRadius: 4,
+                  background: "#e5e7eb",
+                  overflow: "hidden",
                 }}
-              />
-            </div>
+              >
+                <div
+                  style={{
+                    width: `${envio.percentual}%`,
+                    height: "100%",
+                    background: "#1f2937",
+                    transition: "width 0.2s",
+                  }}
+                />
+              </div>
 
-            <p style={{ marginTop: 6, fontSize: 13 }}>
-              {envio.percentual < 100
-                ? `${envio.percentual}%`
-                : "Finalizando (salvando no armazenamento)..."}
-            </p>
-          </div>
-        )}
-      </div>
+              <p style={{ marginTop: 6, fontSize: 13 }}>
+                {envio.percentual < 100
+                  ? `${envio.percentual}%`
+                  : "Finalizando (salvando no armazenamento)..."}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
 
       {carregando ? (
         <p>Carregando arquivos...</p>
@@ -260,18 +281,35 @@ function ArquivosCaso({ caso, onFechar }) {
                   <td>{formatarData(arquivo.criado_em)}</td>
 
                   <td>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button type="button" onClick={() => abrir(arquivo, true)}>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => abrir(arquivo, true)}
+                      >
                         Abrir
                       </button>
 
-                      <button type="button" onClick={() => abrir(arquivo, false)}>
+                      <button
+                        type="button"
+                        onClick={() => abrir(arquivo, false)}
+                      >
                         Baixar
                       </button>
 
-                      <button type="button" onClick={() => remover(arquivo)}>
-                        Remover
-                      </button>
+                      {podeEditarCasos && (
+                        <button
+                          type="button"
+                          onClick={() => remover(arquivo)}
+                        >
+                          Remover
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,25 +16,16 @@ function Login() {
 
   async function handleSubmit(event) {
     event.preventDefault();
-
     setErro("");
 
     if (!email.trim() || !senha) {
-      setErro(
-        "Informe o e-mail e a senha."
-      );
-
+      setErro("Informe o e-mail e a senha.");
       return;
     }
 
     try {
       setEntrando(true);
-
-      await login(
-        email.trim(),
-        senha
-      );
-
+      await login(email.trim(), senha);
       navigate("/");
     } catch (error) {
       setErro(
@@ -50,9 +42,7 @@ function Login() {
       <div className="login-card">
         <h1>Sistema de Advocacia</h1>
 
-        <p>
-          Acesse sua conta
-        </p>
+        <p>Acesse sua conta</p>
 
         {erro && (
           <div className="error-message">
@@ -62,34 +52,26 @@ function Login() {
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
-            <label htmlFor="email">
-              E-mail
-            </label>
+            <label htmlFor="email">E-mail</label>
 
             <input
               id="email"
               type="email"
               value={email}
-              onChange={(event) =>
-                setEmail(event.target.value)
-              }
+              onChange={(event) => setEmail(event.target.value)}
               placeholder="seu@email.com"
               autoComplete="email"
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="senha">
-              Senha
-            </label>
+            <label htmlFor="senha">Senha</label>
 
             <input
               id="senha"
               type="password"
               value={senha}
-              onChange={(event) =>
-                setSenha(event.target.value)
-              }
+              onChange={(event) => setSenha(event.target.value)}
               placeholder="Digite sua senha"
               autoComplete="current-password"
             />
@@ -100,11 +82,17 @@ function Login() {
             className="primary-button login-button"
             disabled={entrando}
           >
-            {entrando
-              ? "Entrando..."
-              : "Entrar"}
+            {entrando ? "Entrando..." : "Entrar"}
           </button>
         </form>
+
+        <button
+          type="button"
+          className="secondary-button"
+          onClick={() => navigate("/redefinir-senha")}
+        >
+          Redefinir senha
+        </button>
       </div>
     </div>
   );
