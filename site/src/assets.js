@@ -22,7 +22,6 @@ export const img = {
   chevronAberto: a('chevron-aberto.svg'),
   mapa: a('mapa.png'),
   heroInicio: a('hero-inicio.png'),
-  areas360: a('areas-360.png'),
   depoimentosFundo: a('depoimentos-fundo.png'),
   cardPatricia: a('card-patricia-pb.png'),
   cardPatriciaCor: a('card-patricia-cor.jpg'),

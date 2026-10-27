@@ -1,16 +1,16 @@
 .hero--areas {
-  padding-top: 196px;
-  padding-bottom: 90px;
+  padding-top: calc(196 * var(--u));
+  padding-bottom: calc(90 * var(--u));
 }
 
 .hero--areas .hero__titulo {
-  max-width: 951.5px;
+  max-width: calc(951.5 * var(--u));
 }
 
 .areas {
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: calc(48 * var(--u));
 }
 
 /* Duas colunas de 508px com 24px entre elas */
@@ -18,17 +18,78 @@
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: start;
-  gap: 24px;
+  gap: calc(24 * var(--u));
 }
 
 .areas__coluna {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: calc(24 * var(--u));
 }
 
 @media (max-width: 860px) {
   .areas__grade {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ================================
+   SITE MOBILE
+================================ */
+@media (max-width: 767px) {
+  .hero--areas {
+    height: 227px;
+    padding: 0 0 16px;
+  }
+
+  .hero--areas .hero__titulo {
+    max-width: 240px;
+  }
+
+  .areas {
+    gap: 32px;
+    padding-block: 40px;
+  }
+
+  /* Uma coluna só: Empresarial, Família, Médico, LGPD, Tributário, Holding */
+  .areas__grade {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .areas__coluna {
+    display: contents;
+  }
+
+  .areas__item {
+    order: var(--ordem);
+  }
+}
+
+/* Como no Figma, a foto do hero ocupa o quadro inteiro, esticada, sem recorte
+   (no celular também, para não mostrar só um pedaço ampliado da foto) */
+.hero--areas .hero__img--cobrir {
+  object-fit: fill;
+}
+
+/* ================================
+   TELAS GRANDES (acima de 1440px)
+   A foto do hero cresce junto com o layout (--u), centralizada; as laterais
+   se dissolvem num cinza parecido com o da foto (escurecido pela sobreposição).
+================================ */
+@media (min-width: 1441px) {
+  .hero--areas .hero__fundo {
+    background: #8a8a8a;
+  }
+
+  .hero--areas .hero__img--cobrir {
+    inset: auto;
+    top: 0;
+    left: 50%;
+    width: calc(1440 * var(--u));
+    height: 100%;
+    transform: translateX(-50%);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+    mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
   }
 }

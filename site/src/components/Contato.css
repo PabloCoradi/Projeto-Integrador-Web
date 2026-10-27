@@ -1,5 +1,5 @@
 .contato {
-  padding-block: 90px;
+  padding-block: calc(90 * var(--u));
   scroll-margin-top: 0;
 }
 
@@ -12,20 +12,20 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 40px;
+  gap: calc(40 * var(--u));
 }
 
 .contato__coluna {
   display: flex;
   flex-direction: column;
-  gap: 54px;
-  width: min(483px, 100%);
+  gap: calc(54 * var(--u));
+  width: min(calc(483 * var(--u)), 100%);
 }
 
 .contato__lista {
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: calc(24 * var(--u));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -34,20 +34,20 @@
 .contato__item {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: calc(16 * var(--u));
 }
 
 .contato__icone {
-  width: 32.832px;
-  height: 32.832px;
+  width: calc(32.832 * var(--u));
+  height: calc(32.832 * var(--u));
   flex-shrink: 0;
 }
 
 .contato__texto {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  width: 271px;
+  gap: calc(2 * var(--u));
+  width: calc(271 * var(--u));
   max-width: 100%;
   font-size: var(--body);
   line-height: normal;
@@ -60,27 +60,27 @@
 
 .contato__item:hover .contato__texto span {
   text-decoration: underline;
-  text-underline-offset: 3px;
+  text-underline-offset: calc(3 * var(--u));
 }
 
 /* Mapa 435×435, cantos 24 */
 .contato__mapa {
   position: relative;
   flex-shrink: 0;
-  width: 435px;
-  height: 435px;
+  width: calc(435 * var(--u));
+  height: calc(435 * var(--u));
   overflow: hidden;
-  border-radius: 24px;
+  border-radius: calc(24 * var(--u));
   background: var(--cinza);
-  box-shadow: 1.133px 2.266px 2.266px rgba(0, 0, 0, 0.1);
+  box-shadow: calc(1.133 * var(--u)) calc(2.266 * var(--u)) calc(2.266 * var(--u)) rgba(0, 0, 0, 0.1);
 }
 
 .contato__mapa img {
   position: absolute;
-  top: -1.92px;
-  left: -36.89px;
-  width: 666.66px;
-  height: 438.965px;
+  top: calc(-1.92 * var(--u));
+  left: calc(-36.89 * var(--u));
+  width: calc(666.66 * var(--u));
+  height: calc(438.965 * var(--u));
   max-width: none;
   object-fit: cover;
 }
@@ -96,5 +96,45 @@
     max-width: 435px;
     aspect-ratio: 1;
     height: auto;
+  }
+}
+
+/* ================================
+   SITE MOBILE: contato claro, título em uma linha e mapa quadrado
+================================ */
+@media (max-width: 767px) {
+  .contato {
+    padding-block: 32px;
+  }
+
+  .contato--escuro {
+    background: transparent;
+    color: var(--cinza-escuro);
+  }
+
+  .contato--escuro .titulo-secao__texto {
+    color: var(--cinza-escuro);
+  }
+
+  .contato .titulo-secao__texto br {
+    display: none;
+  }
+
+  .contato__conteudo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 32px;
+  }
+
+  .contato__coluna {
+    gap: 32px;
+    width: 100%;
+  }
+
+  .contato__mapa {
+    width: 100%;
+    max-width: none;
+    height: auto;
+    aspect-ratio: 1;
   }
 }

@@ -1,5 +1,5 @@
 .rodape {
-  padding-block: 90px;
+  padding-block: calc(90 * var(--u));
   color: var(--branco-gelo);
 }
 
@@ -20,18 +20,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 40px;
+  gap: calc(40 * var(--u));
 }
 
 .rodape__logo {
-  width: 209.3px;
-  height: 58.5px;
+  width: calc(209.3 * var(--u));
+  height: calc(58.5 * var(--u));
 }
 
 .rodape__mapa {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: calc(20 * var(--u));
 }
 
 .rodape__titulo {
@@ -47,7 +47,7 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: calc(8 * var(--u));
   margin: 0;
   padding: 0;
   list-style: none;
@@ -56,7 +56,7 @@
 .rodape__lista li {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: calc(8 * var(--u));
 }
 
 /* Separador "|" em Caption 14 */
@@ -68,7 +68,7 @@
 .rodape__lista a:hover,
 .rodape__lista button:hover {
   text-decoration: underline;
-  text-underline-offset: 4px;
+  text-underline-offset: calc(4 * var(--u));
 }
 
 .rodape__lista a.active {
@@ -79,5 +79,47 @@
   .rodape__conteudo {
     flex-direction: column;
     align-items: flex-start;
+  }
+}
+
+/* ================================
+   SITE MOBILE: rodapé ciano, mapa do site em coluna e logo embaixo
+================================ */
+@media (max-width: 767px) {
+  .rodape,
+  .rodape--cinza,
+  .rodape--claro {
+    padding-block: 32px;
+    background: var(--ciano);
+    color: var(--branco-gelo);
+  }
+
+  .rodape__conteudo {
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 32px;
+  }
+
+  .rodape__mapa {
+    align-items: center;
+    gap: 12px;
+  }
+
+  .rodape--claro .rodape__titulo {
+    color: var(--branco);
+  }
+
+  .rodape__lista {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .rodape__lista li + li::before {
+    content: none;
+  }
+
+  .rodape__lista a,
+  .rodape__lista button {
+    text-transform: lowercase;
   }
 }

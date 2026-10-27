@@ -2,7 +2,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
-  border-radius: 16px;
+  border-radius: calc(16 * var(--u));
   overflow: hidden;
 }
 
@@ -11,16 +11,16 @@
 }
 
 .sanfona--larga {
-  border: 1px solid var(--branco-gelo);
+  border: calc(1 * var(--u)) solid var(--branco-gelo);
 }
 
 .sanfona__cabecalho {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: calc(16 * var(--u));
   width: 100%;
-  padding: 20px;
+  padding: calc(20 * var(--u));
   text-align: left;
 }
 
@@ -45,13 +45,13 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 14px;
-  height: 8px;
+  width: calc(14 * var(--u));
+  height: calc(8 * var(--u));
 }
 
 .sanfona__chevron img {
-  width: 8px;
-  height: 14px;
+  width: calc(8 * var(--u));
+  height: calc(14 * var(--u));
   max-width: none;
   transform: rotate(90deg);
 }
@@ -80,8 +80,8 @@
 .sanfona__detalhe {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding: 4px 20px 20px;
+  gap: calc(8 * var(--u));
+  padding: calc(4 * var(--u)) calc(20 * var(--u)) calc(20 * var(--u));
 }
 
 .sanfona__subtitulo {
@@ -93,7 +93,7 @@
 .sanfona__texto {
   font-size: var(--h5);
   font-weight: 500;
-  line-height: 26px;
+  line-height: calc(26 * var(--u));
 }
 
 .sanfona--meia .sanfona__texto {
@@ -102,4 +102,23 @@
 
 .sanfona--larga .sanfona__texto {
   color: var(--branco-gelo);
+}
+
+/* ================================
+   SITE MOBILE: títulos em Body bold 16 e detalhe em Caption 14
+================================ */
+@media (max-width: 767px) {
+  .sanfona__titulo {
+    font-size: 16px;
+  }
+
+  .sanfona__subtitulo {
+    font-size: 16px;
+  }
+
+  .sanfona__texto {
+    font-size: 14px;
+    font-weight: 400;
+    line-height: normal;
+  }
 }

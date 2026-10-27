@@ -3,6 +3,11 @@
   overflow-x: clip;
 }
 
+/* Título do hero em 3 linhas, como no Figma ("…para decisões / seguras") */
+.hero--inicio .hero__titulo {
+  max-width: calc(600 * var(--u));
+}
+
 .destaque {
   font-weight: 700;
   color: var(--ciano);
@@ -12,7 +17,7 @@
 .inicio-areas {
   display: flex;
   flex-direction: column;
-  gap: 48px;
+  gap: calc(48 * var(--u));
   background: var(--cinza-escuro);
 }
 
@@ -20,20 +25,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 48px;
-}
-
-.inicio-areas__imagem {
-  display: block;
-  width: 100%;
-}
-
-.inicio-areas__imagem img {
-  width: 100%;
-  height: auto;
-  min-height: 400px;
-  aspect-ratio: 1440 / 400;
-  object-fit: cover;
+  gap: calc(48 * var(--u));
 }
 
 /* Quem somos */
@@ -41,7 +33,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 48px;
+  gap: calc(48 * var(--u));
 }
 
 .inicio-quem > .container {
@@ -53,7 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 40px;
+  gap: calc(40 * var(--u));
 }
 
 /* parágrafos separados por uma linha em branco (Body 16) */
@@ -61,7 +53,7 @@
   display: flex;
   flex-direction: column;
   gap: 1.25em;
-  width: min(443px, 100%);
+  width: min(calc(443 * var(--u)), 100%);
   font-size: var(--body);
   line-height: normal;
 }
@@ -69,8 +61,8 @@
 .inicio-quem__fotos {
   display: flex;
   justify-content: space-between;
-  gap: 24px;
-  width: 508px;
+  gap: calc(24 * var(--u));
+  width: calc(508 * var(--u));
   flex-shrink: 0;
 }
 
@@ -80,10 +72,10 @@
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
-  width: 242px;
-  height: 300px;
-  padding: 24px 8px;
-  border-radius: 16px;
+  width: calc(242 * var(--u));
+  height: calc(300 * var(--u));
+  padding: calc(24 * var(--u)) calc(8 * var(--u));
+  border-radius: calc(16 * var(--u));
   overflow: hidden;
   box-shadow: var(--sombra);
 }
@@ -188,5 +180,69 @@
 
   .card-foto__nome {
     font-size: 24px;
+  }
+}
+
+/* ================================
+   SITE MOBILE (Figma, frame de 390px)
+================================ */
+@media (max-width: 767px) {
+  .inicio-areas,
+  .inicio-quem {
+    gap: 24px;
+  }
+
+  .inicio-areas__conteudo {
+    gap: 24px;
+  }
+
+  /* O carrossel (720px) passa da largura da tela: corta o que sobra */
+  .inicio-areas {
+    overflow-x: clip;
+  }
+
+  .inicio-quem__conteudo {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 24px;
+  }
+
+  .inicio-quem__texto {
+    width: 100%;
+    color: #000;
+  }
+
+  /* Dois cards de 171×212 com 16px entre eles */
+  .inicio-quem__fotos {
+    width: 100%;
+    max-width: none;
+    gap: 16px;
+  }
+
+  .card-foto {
+    flex: 1;
+    width: auto;
+    height: 212px;
+    padding: 16.959px 5.653px;
+    box-shadow: 1.413px 2.826px 2.826px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-foto__nome {
+    font-size: 22.61px;
+  }
+
+  /* No celular não existe "passar o mouse": as fotos ficam sempre acesas
+     (coloridas, com o escurecido e o nome em branco), como no hover do desktop */
+  .card-foto__img--padrao {
+    opacity: 0;
+  }
+
+  .card-foto__img--hover,
+  .card-foto::after {
+    opacity: 1;
+  }
+
+  .card-foto__nome {
+    color: var(--branco-gelo);
   }
 }

@@ -3,10 +3,13 @@ import { img } from '../assets';
 import { depoimentos } from '../data/depoimentos';
 import TituloSecao from './TituloSecao';
 import { inerte } from './inerte';
+import { useMobile } from './useMobile';
 import './CarrosselDepoimentos.css';
 
 export default function CarrosselDepoimentos() {
   const [indice, setIndice] = useState(0);
+  // No celular os cartões ficam lado a lado para arrastar, então todos ficam acessíveis
+  const mobile = useMobile();
   const total = depoimentos.length;
   const ir = (passo) => setIndice((i) => (i + passo + total) % total);
 
@@ -34,8 +37,8 @@ export default function CarrosselDepoimentos() {
               className="depoimento vidro"
               aria-roledescription="slide"
               aria-label={`${i + 1} de ${total}`}
-              ref={inerte(i === indice)}
-              aria-hidden={i !== indice}
+              ref={inerte(mobile || i === indice)}
+              aria-hidden={!mobile && i !== indice}
             >
               <p className="depoimento__titulo">“{d.titulo}”</p>
               <div className="depoimento__corpo">

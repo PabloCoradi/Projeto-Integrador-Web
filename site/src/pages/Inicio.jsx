@@ -4,6 +4,7 @@ import Cabecalho from '../components/Cabecalho';
 import Hero from '../components/Hero';
 import TituloSecao from '../components/TituloSecao';
 import BotaoVidro from '../components/BotaoVidro';
+import CarrosselAreas from '../components/CarrosselAreas';
 import CarrosselDepoimentos from '../components/CarrosselDepoimentos';
 import CtaFaq from '../components/CtaFaq';
 import Contato from '../components/Contato';
@@ -56,14 +57,7 @@ export default function Inicio() {
             </TituloSecao>
           </div>
           <div className="inicio-areas__conteudo">
-            <Link to="/areas-de-atuacao" className="inicio-areas__imagem">
-              <img
-                src={img.areas360}
-                alt="Direito Tributário, Direito Empresarial, Família e Sucessões, Direito Médico e Preventivo, Adequação à LGPD e Holding"
-                width="1440"
-                height="400"
-              />
-            </Link>
+            <CarrosselAreas />
             <BotaoVidro to="/areas-de-atuacao">Saiba mais</BotaoVidro>
           </div>
         </section>

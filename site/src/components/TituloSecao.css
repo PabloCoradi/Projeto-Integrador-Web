@@ -2,22 +2,22 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 24px;
+  gap: calc(24 * var(--u));
 }
 
 /* Linha de 82.5px com traço de 6px (inset -3px 0 no Figma) */
 .titulo-secao__linha {
   position: relative;
-  width: 82.5px;
+  width: calc(82.5 * var(--u));
   height: 0;
 }
 
 .titulo-secao__linha img {
   position: absolute;
-  top: -3px;
+  top: calc(-3 * var(--u));
   left: 0;
-  width: 82.5px;
-  height: 6px;
+  width: calc(82.5 * var(--u));
+  height: calc(6 * var(--u));
   max-width: none;
 }
 
@@ -38,4 +38,22 @@
 
 .titulo-secao--preto .titulo-secao__texto {
   color: #000;
+}
+
+/* Mobile: linha de 46px e título H5 (20/26, Medium) */
+@media (max-width: 767px) {
+  .titulo-secao {
+    gap: 16px;
+  }
+
+  .titulo-secao__linha,
+  .titulo-secao__linha img {
+    width: 46px;
+  }
+
+  .titulo-secao__texto {
+    font-size: 20px;
+    font-weight: 500;
+    line-height: 26px;
+  }
 }

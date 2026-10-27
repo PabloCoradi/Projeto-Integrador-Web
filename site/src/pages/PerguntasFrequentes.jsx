@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { img } from '../assets';
 import { categoriasFaq } from '../data/faq';
 import Cabecalho from '../components/Cabecalho';
@@ -11,7 +11,23 @@ import './PerguntasFrequentes.css';
 
 export default function PerguntasFrequentes() {
   const [categoria, setCategoria] = useState(categoriasFaq[0].id);
-  const atual = categoriasFaq.find((c) => c.id === categoria);
+  const indice = categoriasFaq.findIndex((c) => c.id === categoria);
+
+  // Os três painéis ficam lado a lado e deslizam na troca de assunto, como no
+  // protótipo do Figma. A janela acompanha a altura do painel visível (inclusive
+  // quando uma resposta abre ou fecha).
+  const paineis = useRef([]);
+  const [altura, setAltura] = useState(null);
+
+  useLayoutEffect(() => {
+    const painel = paineis.current[indice];
+    if (!painel) return undefined;
+    const medir = () => setAltura(painel.offsetHeight);
+    medir();
+    const obs = new ResizeObserver(medir);
+    obs.observe(painel);
+    return () => obs.disconnect();
+  }, [indice]);
 
   return (
     <div className="pagina pagina--branca">
@@ -36,16 +52,32 @@ export default function PerguntasFrequentes() {
             />
 
             <div
-              className="faq__painel vidro container"
+              className="faq__janela"
               id="painel-faq"
               role="tabpanel"
               aria-labelledby={`aba-${categoria}`}
+              style={altura ? { height: `calc(${altura}px + 2 * var(--folga))` } : undefined}
             >
-              {atual.perguntas.map((p) => (
-                <Sanfona key={`${categoria}-${p.pergunta}`} titulo={p.pergunta} variante="larga">
-                  {p.resposta}
-                </Sanfona>
-              ))}
+              <div className="faq__trilho" style={{ '--i': indice }}>
+                {categoriasFaq.map((c, i) => (
+                  <div className="faq__vaga" key={c.id}>
+                    <div
+                      className="faq__painel vidro"
+                      aria-hidden={i !== indice || undefined}
+                      ref={(el) => {
+                        paineis.current[i] = el;
+                        if (el) el.inert = i !== indice;
+                      }}
+                    >
+                      {c.perguntas.map((p) => (
+                        <Sanfona key={p.pergunta} titulo={p.pergunta} variante="larga">
+                          {p.resposta}
+                        </Sanfona>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
