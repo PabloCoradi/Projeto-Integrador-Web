@@ -1,6 +1,6 @@
 .hero--noticias {
-  padding-top: 180px;
-  padding-bottom: 90px;
+  padding-top: calc(180 * var(--u));
+  padding-bottom: calc(90 * var(--u));
   background: var(--ciano);
 }
 
@@ -13,7 +13,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 48px;
+  gap: calc(48 * var(--u));
 }
 
 .noticias > .container {
@@ -24,7 +24,7 @@
 .noticias__grade {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 24px;
+  gap: calc(24 * var(--u));
   margin-block: 0;
   padding: 0;
   list-style: none;
@@ -33,9 +33,9 @@
 .card-noticia {
   position: relative;
   display: block;
-  height: 464px;
+  height: calc(464 * var(--u));
   overflow: hidden;
-  border-radius: 16px;
+  border-radius: calc(16 * var(--u));
 }
 
 .card-noticia__img {
@@ -56,9 +56,10 @@
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 20px 16px;
-  border-radius: 16px;
-  filter: var(--sombra-drop);
+  padding: calc(20 * var(--u)) calc(16 * var(--u));
+  border-radius: calc(16 * var(--u));
+  /* box-shadow em vez de filter: o filter isolava o "hard light" e a legenda ficava opaca */
+  box-shadow: var(--sombra);
 }
 
 /* Fundo cinza-escuro em "hard light", como no Figma */
@@ -66,7 +67,7 @@
   content: '';
   position: absolute;
   inset: 0;
-  border-radius: 16px;
+  border-radius: calc(16 * var(--u));
   background: var(--cinza-escuro);
   mix-blend-mode: hard-light;
 }
@@ -83,5 +84,46 @@
   .noticias__grade {
     grid-template-columns: 1fr;
     max-width: 480px;
+  }
+}
+
+/* ================================
+   SITE MOBILE: hero ciano, 2 cards de 171×240 por linha
+================================ */
+@media (max-width: 767px) {
+  .hero--noticias {
+    padding: 184px 0 32px;
+  }
+
+  .noticias {
+    gap: 24px;
+  }
+
+  .noticias__grade {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    max-width: none;
+  }
+
+  .card-noticia {
+    height: 239.71px;
+  }
+
+  /* Sem filtro, para o "hard light" misturar com a foto como no Figma */
+  .card-noticia__legenda {
+    padding: 10.332px 8.266px;
+    filter: none;
+    box-shadow: none;
+  }
+
+  .card-noticia__titulo {
+    font-size: 12.4px;
+  }
+
+  /* "ver mais..." 18.2px */
+  .noticias .botao-vidro {
+    padding: 9.102px 18.204px;
+    font-size: 18.2px;
+    font-weight: 500;
   }
 }

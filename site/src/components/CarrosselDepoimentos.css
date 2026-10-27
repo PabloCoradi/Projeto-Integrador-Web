@@ -4,14 +4,14 @@
 
 /* Variáveis ficam no filho: unidades cqw precisam de um contêiner acima */
 .depoimentos > * {
-  --card-w: min(1040px, 100cqw - var(--margem) * 2);
+  --card-w: min(calc(1040 * var(--u)), 100cqw - var(--margem) * 2);
   /* 200px em 1440; em telas maiores o próximo card continua fora da tela */
-  --vao: max(200px, (100cqw - var(--card-w)) / 2);
+  --vao: max(calc(200 * var(--u)), (100cqw - var(--card-w)) / 2);
 }
 
 .depoimentos {
   position: relative;
-  height: 520px;
+  height: calc(520 * var(--u));
   overflow: hidden;
   background: var(--branco);
 }
@@ -19,10 +19,10 @@
 /* Imagem 1840×1242 a -376px, ancorada embaixo, com multiply 85% */
 .depoimentos__fundo {
   position: absolute;
-  top: min(-376px, -26.11cqw);
+  top: min(calc(-376 * var(--u)), -26.11cqw);
   left: 0;
-  width: max(1840px, 127.78cqw);
-  height: max(1242px, 86.25cqw);
+  width: max(calc(1840 * var(--u)), 127.78cqw);
+  height: max(calc(1242 * var(--u)), 86.25cqw);
 }
 
 .depoimentos__fundo img {
@@ -43,17 +43,17 @@
 
 .depoimentos__titulo {
   position: absolute;
-  top: 80px;
+  top: calc(80 * var(--u));
   left: 0;
   right: 0;
 }
 
 .depoimentos__janela {
   position: absolute;
-  top: 185px;
+  top: calc(185 * var(--u));
   left: 0;
   right: 0;
-  height: 273px;
+  height: calc(273 * var(--u));
 }
 
 .depoimentos__trilho {
@@ -72,10 +72,10 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 24px;
+  gap: calc(24 * var(--u));
   flex: 0 0 var(--card-w);
-  padding: 28px 36px;
-  border-radius: 20px;
+  padding: calc(28 * var(--u)) calc(36 * var(--u));
+  border-radius: calc(20 * var(--u));
   background: rgba(38, 43, 49, 0.4);
   color: var(--branco-gelo);
 }
@@ -88,13 +88,13 @@
 .depoimento__corpo {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: calc(12 * var(--u));
 }
 
 .depoimento__texto {
   font-size: var(--h5);
   font-weight: 500;
-  line-height: 26px;
+  line-height: calc(26 * var(--u));
 }
 
 .depoimento__autor {
@@ -109,27 +109,27 @@
 /* Setas 48×48 em top 288, a 122px da margem do conteúdo */
 .depoimentos__seta {
   position: absolute;
-  top: 288px;
+  top: calc(288 * var(--u));
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 48px;
-  height: 48px;
-  border-radius: 100px;
+  width: calc(48 * var(--u));
+  height: calc(48 * var(--u));
+  border-radius: calc(100 * var(--u));
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.35);
-  filter: drop-shadow(4px 8px 4px rgba(0, 0, 0, 0.1));
+    inset 0 0 0 calc(1 * var(--u)) rgba(255, 255, 255, 0.28),
+    inset calc(1 * var(--u)) calc(1 * var(--u)) 0 rgba(255, 255, 255, 0.35);
+  filter: drop-shadow(calc(4 * var(--u)) calc(8 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.1));
 }
 
 .depoimentos__seta img {
-  width: 24px;
-  height: 48px;
+  width: calc(24 * var(--u));
+  height: calc(48 * var(--u));
   max-width: none;
 }
 
 .depoimentos__seta--anterior {
-  left: calc((100cqw - var(--card-w)) / 2 - 122px);
+  left: calc((100cqw - var(--card-w)) / 2 - calc(122 * var(--u)));
 }
 
 /* No Figma a seta esquerda é o mesmo vetor girado 180° */
@@ -138,7 +138,7 @@
 }
 
 .depoimentos__seta--proxima {
-  right: calc((100cqw - var(--card-w)) / 2 - 121px);
+  right: calc((100cqw - var(--card-w)) / 2 - calc(121 * var(--u)));
 }
 
 .depoimentos__seta:hover {
@@ -177,5 +177,98 @@
 
   .depoimento {
     padding: 24px;
+  }
+}
+
+/* ================================
+   SITE MOBILE: faixa escura com cartões de 358px para arrastar
+   (sem foto de fundo, sem título visível e sem setas, como no Figma)
+================================ */
+@media (max-width: 767px) {
+  .depoimentos {
+    height: auto;
+    padding-block: 32px;
+    background: var(--cinza-escuro);
+  }
+
+  .depoimentos__fundo,
+  .depoimentos__seta {
+    display: none;
+  }
+
+  /* Título continua disponível para leitores de tela */
+  .depoimentos__titulo {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+  }
+
+  .depoimentos__janela {
+    position: static;
+    height: auto;
+    overflow-x: auto;
+    scroll-snap-type: x mandatory;
+    scroll-padding-inline: 16px;
+    scrollbar-width: none;
+  }
+
+  .depoimentos__janela::-webkit-scrollbar {
+    display: none;
+  }
+
+  .depoimentos__trilho {
+    align-items: center;
+    gap: 8px;
+    width: max-content;
+    padding: 0 16px;
+    transform: none;
+  }
+
+  .depoimento {
+    flex: 0 0 calc(100cqw - 32px);
+    padding: 28px 36px;
+    scroll-snap-align: start;
+  }
+
+  .depoimento__titulo {
+    font-size: 20px;
+    line-height: 26px;
+  }
+
+  .depoimento__texto {
+    font-size: 16px;
+    font-weight: 400;
+    line-height: normal;
+  }
+
+  .depoimento__autor {
+    font-size: 14px;
+  }
+}
+
+/* ================================
+   TELAS GRANDES (acima de 1440px)
+   A foto de fundo cresce junto com o layout (--u), não com a largura da tela.
+================================ */
+@media (min-width: 1441px) {
+  .depoimentos {
+    background: #1c1d1f;
+  }
+
+  .depoimentos__fundo {
+    top: calc(-376 * var(--u));
+    width: calc(1840 * var(--u));
+    height: calc(1242 * var(--u));
+  }
+}
+
+/* Telas muito largas (ou zoom bem baixo): a foto termina antes da borda direita;
+   em vez de um corte seco, ela se dissolve no fundo escuro da seção */
+@media (min-width: 2500px) {
+  .depoimentos__fundo {
+    -webkit-mask-image: linear-gradient(90deg, #000 75%, transparent);
+    mask-image: linear-gradient(90deg, #000 75%, transparent);
   }
 }

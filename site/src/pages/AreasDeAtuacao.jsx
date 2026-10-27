@@ -35,12 +35,15 @@ export default function AreasDeAtuacao() {
           </div>
 
           <div className="areas__grade container">
-            {colunas.map((coluna, i) => (
-              <div className="areas__coluna" key={i}>
-                {coluna.map((area) => (
-                  <Sanfona key={area.nome} titulo={area.nome} subtitulo={area.titulo}>
-                    {area.texto}
-                  </Sanfona>
+            {colunas.map((coluna, c) => (
+              <div className="areas__coluna" key={c}>
+                {coluna.map((area, linha) => (
+                  // No celular vira uma lista só, lida linha a linha (esquerda, direita…), como no Figma
+                  <div className="areas__item" key={area.nome} style={{ '--ordem': linha * 2 + c }}>
+                    <Sanfona titulo={area.nome} subtitulo={area.titulo}>
+                      {area.texto}
+                    </Sanfona>
+                  </div>
                 ))}
               </div>
             ))}

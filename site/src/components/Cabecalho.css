@@ -9,9 +9,9 @@
 .cabecalho__sombra {
   position: absolute;
   top: 0;
-  left: -60px;
-  right: -60px;
-  filter: blur(50px);
+  left: calc(-60 * var(--u));
+  right: calc(-60 * var(--u));
+  filter: blur(calc(50 * var(--u)));
   background: linear-gradient(to top, rgba(38, 43, 49, 0), #000);
 }
 
@@ -23,10 +23,43 @@
   background: none;
 }
 
+/* Desktop: o mesmo degradê do Figma, só um pouco mais forte (o celular fica como está) */
+@media (min-width: 768px) {
+  .cabecalho__sombra {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.6) 50%, #000 100%);
+  }
+
+  .cabecalho__sombra--inicio {
+    background: linear-gradient(to top, rgba(0, 0, 0, 0) 15%, rgba(0, 0, 0, 0.75) 70%, #000 100%);
+  }
+
+  .cabecalho__sombra--imagem {
+    background: none;
+  }
+}
+
 .cabecalho__sombra img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+/* Barra que acompanha a rolagem (desktop) */
+.cabecalho__fixo {
+  position: fixed;
+  inset: 0 0 auto 0;
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Páginas com faixa de imagem: o degradê escuro atrás da barra aparece ao rolar */
+.cabecalho__sombra--rolagem {
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.cabecalho__fixo--rolado .cabecalho__sombra--rolagem {
+  opacity: 1;
 }
 
 .cabecalho__barra {
@@ -34,8 +67,8 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding-top: 37px;
+  gap: calc(24 * var(--u));
+  padding-top: calc(37 * var(--u));
   pointer-events: auto;
 }
 
@@ -44,20 +77,20 @@
 }
 
 .cabecalho__logo img {
-  width: 177px;
-  height: 49.472px;
+  width: calc(177 * var(--u));
+  height: calc(49.472 * var(--u));
 }
 
 .cabecalho__nav {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 8px 16px;
-  border-radius: 203px;
+  gap: calc(24 * var(--u));
+  padding: calc(8 * var(--u)) calc(16 * var(--u));
+  border-radius: calc(203 * var(--u));
   filter: var(--sombra-drop);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.35);
+    inset 0 0 0 calc(1 * var(--u)) rgba(255, 255, 255, 0.28),
+    inset calc(1 * var(--u)) calc(1 * var(--u)) 0 rgba(255, 255, 255, 0.35);
 }
 
 .cabecalho__item {
@@ -85,7 +118,7 @@
 
 .cabecalho__item:not(.active):hover {
   text-decoration: underline;
-  text-underline-offset: 4px;
+  text-underline-offset: calc(4 * var(--u));
 }
 
 @media (max-width: 860px) {
@@ -99,5 +132,109 @@
     max-width: 100%;
     overflow-x: auto;
     scrollbar-width: none;
+  }
+}
+
+/* Menu hambúrguer: só aparece no celular */
+.cabecalho__mobile {
+  display: none;
+}
+
+/* ================================
+   SITE MOBILE (Figma, frame de 390px)
+================================ */
+@media (max-width: 767px) {
+  /* No celular a barra fica no topo da página e não acompanha a rolagem */
+  .cabecalho__fixo {
+    position: static;
+  }
+
+  .cabecalho__sombra--rolagem {
+    display: none;
+  }
+
+  /* Rectangle 25: degradê de 181px, sem blur */
+  .cabecalho__sombra {
+    left: 0;
+    right: 0;
+    height: 181px !important;
+    filter: none;
+  }
+
+  .cabecalho__sombra--imagem {
+    background: linear-gradient(to top, rgba(38, 43, 49, 0), #000);
+  }
+
+  .cabecalho__sombra img {
+    display: none;
+  }
+
+  .cabecalho__barra {
+    flex-direction: row;
+    align-items: center;
+    padding-top: 45px;
+  }
+
+  .cabecalho__logo img {
+    width: 121.644px;
+    height: 34px;
+  }
+
+  .cabecalho__nav {
+    display: none;
+  }
+
+  .cabecalho__mobile {
+    position: relative;
+    display: block;
+  }
+
+  /* "Manu hamburguer": pílula de vidro 34×34 */
+  .cabecalho__hamburguer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 54px;
+    background: rgba(255, 255, 255, 0.04);
+    filter: var(--sombra-drop);
+  }
+
+  .cabecalho__hamburguer svg {
+    fill: none;
+    stroke: var(--branco-gelo);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  /* Cabeçalho mobile: lista vertical alinhada à direita */
+  .cabecalho__menu {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 16px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    background: rgba(38, 43, 49, 0.55);
+    filter: var(--sombra-drop);
+  }
+
+  .cabecalho__menu-item {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: var(--body);
+    line-height: normal;
+    color: var(--branco-gelo);
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .cabecalho__menu-item.active {
+    font-weight: 700;
   }
 }

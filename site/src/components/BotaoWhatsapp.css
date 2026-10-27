@@ -1,18 +1,18 @@
 /* Posição do Figma num frame 1440×810: 140.6px da direita, 49px da base */
 .botao-whatsapp {
   position: fixed;
-  right: max(24px, calc((100vw - 1440px) / 2 + 140.6px));
-  bottom: 49px;
+  right: max(calc(24 * var(--u)), calc((100vw - calc(1440 * var(--u))) / 2 + calc(140.6 * var(--u))));
+  bottom: calc(49 * var(--u));
   z-index: 20;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 52.8px;
-  height: 52.8px;
-  padding: 12px;
-  border-radius: 100px;
+  width: calc(52.8 * var(--u));
+  height: calc(52.8 * var(--u));
+  padding: calc(12 * var(--u));
+  border-radius: calc(100 * var(--u));
   background: var(--verde-whatsapp);
-  box-shadow: 2.4px 4.8px 4.8px rgba(0, 0, 0, 0.1);
+  box-shadow: calc(2.4 * var(--u)) calc(4.8 * var(--u)) calc(4.8 * var(--u)) rgba(0, 0, 0, 0.1);
   transition: transform 0.2s ease;
 }
 
@@ -21,13 +21,31 @@
 }
 
 .botao-whatsapp img {
-  width: 28.8px;
-  height: 28.8px;
+  width: calc(28.8 * var(--u));
+  height: calc(28.8 * var(--u));
 }
 
 @media (max-width: 1439px) {
   .botao-whatsapp {
     right: 24px;
     bottom: 24px;
+  }
+}
+
+/* Mobile: botão de 34px a 16px da borda */
+@media (max-width: 767px) {
+  .botao-whatsapp {
+    right: 16px;
+    bottom: 27px;
+    width: 34px;
+    height: 34px;
+    padding: 7.727px;
+    background: rgba(31, 189, 0, 0.7);
+    box-shadow: 1.545px 3.091px 3.091px rgba(0, 0, 0, 0.1);
+  }
+
+  .botao-whatsapp img {
+    width: 18.545px;
+    height: 18.545px;
   }
 }

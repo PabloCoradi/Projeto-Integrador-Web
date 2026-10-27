@@ -3,14 +3,14 @@ import './Hero.css';
 /**
  * Hero das páginas.
  * altura: altura no frame de 1440px do Figma. Acima de 1440px o hero cresce
- * na mesma proporção (até 1,5×), para a foto manter o enquadramento.
+ * junto com o resto do layout (unidade --u do global.css).
  * imagem: { src, classe?, estilo? } — classe/estilo reproduzem o recorte do Figma.
  */
 export default function Hero({ titulo, imagem, sobreposicao, altura = 476, classe = '', children }) {
   return (
     <section
       className={`hero ${classe}`}
-      style={{ '--altura': `${altura}px`, '--altura-fluida': `${(altura / 14.4).toFixed(3)}vw` }}
+      style={{ '--altura': `calc(${altura} * var(--u))` }}
     >
       {imagem && (
         <div className="hero__fundo" aria-hidden="true">

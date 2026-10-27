@@ -1,5 +1,17 @@
 /* Tokens do Design System (Figma) */
 :root {
+  /*
+   * Unidade de escala do desktop. O Figma foi desenhado num quadro de 1440px:
+   * até 1440px de largura, --u vale 1px. Acima disso o layout inteiro (textos,
+   * espaços, cards e fotos) cresce junto, para nada ficar pequeno e fora do lugar.
+   * --crescimento define o quanto: 1 = na mesma proporção da tela (como o modo
+   * apresentação do Figma), 0.5 = metade disso (1920px → 1,17×), 0 = não cresce.
+   * Use calc(N * var(--u)) no lugar de Npx nas regras de desktop.
+   * As regras de tablet e celular (@media max-width) continuam em px.
+   */
+  --crescimento: 0.5;
+  --u: clamp(1px, 1px + (100vw - 1440px) * var(--crescimento) / 1440, 1.5px);
+
   --ciano: #008188;
   --cinza-escuro: #262b31;
   --cinza: #707987;
@@ -10,22 +22,22 @@
   --fonte: 'Open Sauce One', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Escala tipográfica do Figma */
-  --display: clamp(44px, 5vw, 72px); /* Display 72 / 100% */
-  --h1: clamp(36px, 3.9vw, 56px); /* H1 56 / 55 */
-  --h2: clamp(30px, 2.8vw, 40px); /* H2 40 */
-  --h3: 32px;
-  --h4: clamp(20px, 1.7vw, 24px);
-  --h5: clamp(18px, 1.4vw, 20px);
-  --body: 16px;
-  --caption: 14px;
+  --display: clamp(calc(44 * var(--u)), 5vw, calc(72 * var(--u))); /* Display 72 / 100% */
+  --h1: clamp(calc(36 * var(--u)), 3.9vw, calc(56 * var(--u))); /* H1 56 / 55 */
+  --h2: clamp(calc(30 * var(--u)), 2.8vw, calc(40 * var(--u))); /* H2 40 */
+  --h3: calc(32 * var(--u));
+  --h4: clamp(calc(20 * var(--u)), 1.7vw, calc(24 * var(--u)));
+  --h5: clamp(calc(18 * var(--u)), 1.4vw, calc(20 * var(--u)));
+  --body: calc(16 * var(--u));
+  --caption: calc(14 * var(--u));
 
   /* Layout: frame 1440 com 200px de margem => conteúdo de 1040 */
-  --conteudo: 1040px;
-  --margem: 24px;
-  --secao-y: 90px;
+  --conteudo: calc(1040 * var(--u));
+  --margem: calc(24 * var(--u));
+  --secao-y: calc(90 * var(--u));
 
-  --sombra: 2px 4px 4px rgba(0, 0, 0, 0.1);
-  --sombra-drop: drop-shadow(2px 4px 2px rgba(0, 0, 0, 0.1));
+  --sombra: calc(2 * var(--u)) calc(4 * var(--u)) calc(4 * var(--u)) rgba(0, 0, 0, 0.1);
+  --sombra-drop: drop-shadow(calc(2 * var(--u)) calc(4 * var(--u)) calc(2 * var(--u)) rgba(0, 0, 0, 0.1));
 }
 
 *,
@@ -75,8 +87,8 @@ button {
 }
 
 :focus-visible {
-  outline: 2px solid var(--ciano);
-  outline-offset: 3px;
+  outline: calc(2 * var(--u)) solid var(--ciano);
+  outline-offset: calc(3 * var(--u));
 }
 
 .container {
@@ -96,28 +108,28 @@ button {
 .vidro {
   position: relative;
   background: rgba(255, 255, 255, 0.06);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(calc(12 * var(--u)));
+  backdrop-filter: blur(calc(12 * var(--u)));
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.28),
-    inset 1px 1px 0 rgba(255, 255, 255, 0.35),
+    inset 0 0 0 calc(1 * var(--u)) rgba(255, 255, 255, 0.28),
+    inset calc(1 * var(--u)) calc(1 * var(--u)) 0 rgba(255, 255, 255, 0.35),
     var(--sombra);
 }
 
 .vidro--claro {
   background: rgba(255, 255, 255, 0.35);
   box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.8),
-    inset -1px -1px 0 rgba(0, 0, 0, 0.06),
+    inset 0 0 0 calc(1 * var(--u)) rgba(255, 255, 255, 0.8),
+    inset calc(-1 * var(--u)) calc(-1 * var(--u)) 0 rgba(0, 0, 0, 0.06),
     var(--sombra);
 }
 
 .sr-only {
   position: absolute;
-  width: 1px;
-  height: 1px;
+  width: calc(1 * var(--u));
+  height: calc(1 * var(--u));
   padding: 0;
-  margin: -1px;
+  margin: calc(-1 * var(--u));
   overflow: hidden;
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
@@ -139,5 +151,13 @@ button {
   *::after {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
+  }
+}
+
+/* Site Mobile do Figma: frame de 390px com 16px de margem e seções de 32px */
+@media (max-width: 767px) {
+  :root {
+    --margem: 16px;
+    --secao-y: 32px;
   }
 }

@@ -11,7 +11,7 @@ export const depoimentos = [
     texto:
       'O processo de estruturação da nossa holding foi conduzido com uma clareza e empatia ímpares. As doutoras conseguiram simplificar termos complexos e nos deram a segurança jurídica necessária para proteger nosso patrimônio e planejar a sucessão com total paz de espírito.',
     autor: 'Cláudia Mendes | Fundadora do Grupo Mendes Agro',
-    area: 'Famílias e Sucessões',
+    area: 'Família e Sucessões',
   },
   {
     titulo: 'Condução impecável e sem burocracia desnecessária',

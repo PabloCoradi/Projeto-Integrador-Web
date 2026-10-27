@@ -1,0 +1,86 @@
+/* Medidas do Figma (frame de 1440): card 274×305, raio 16, 14px entre cards */
+.carrossel-areas {
+  position: relative;
+  width: 100%;
+  height: calc(400 * var(--u));
+  overflow: hidden;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.carrossel-areas--arrastando {
+  cursor: grabbing;
+}
+
+.carrossel-areas__palco {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+/* A posição e a curva de cada card são calculadas no JS (matrix3d) */
+.carrossel-areas__item {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: calc(274 * var(--u));
+  height: calc(305 * var(--u));
+  transform-origin: 0 0;
+  pointer-events: auto;
+  will-change: transform, filter;
+}
+
+.carrossel-areas__card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: calc(24 * var(--u));
+  border-radius: calc(16 * var(--u));
+  background: var(--ciano);
+  box-shadow: var(--sombra);
+  color: var(--branco);
+  font-size: calc(24 * var(--u));
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: uppercase;
+  -webkit-user-drag: none;
+  transition: background-color 0.2s;
+}
+
+.carrossel-areas__card:hover {
+  background: #00737a;
+}
+
+.carrossel-areas__card:focus-visible {
+  outline-color: var(--branco);
+}
+
+/* Site Mobile do Figma ("areas-360_mobile"): a mesma faixa pela metade (720×200),
+   deslocada para mostrar o trecho a 30% da largura, como no recorte do Figma */
+@media (max-width: 767px) {
+  .carrossel-areas {
+    width: 720px;
+    height: 200px;
+    margin-left: calc((100% - 720px) * 0.3);
+    align-self: flex-start;
+  }
+
+  .carrossel-areas__item {
+    width: 137px;
+    height: 152.5px;
+  }
+
+  .carrossel-areas__card {
+    padding: 12px 6px;
+    border-radius: 8px;
+    font-size: 12px;
+  }
+}

@@ -2,6 +2,7 @@ import { NavLink, Link } from 'react-router-dom';
 import { img } from '../assets';
 import { paginas } from '../data/contato';
 import { rolarParaContato } from './rolarParaContato';
+import { CONSULTA_MOBILE } from './useMobile';
 import './Rodape.css';
 
 const itens = [
@@ -18,7 +19,11 @@ export default function Rodape({ tema = 'ciano' }) {
     <footer className={`rodape rodape--${tema}`}>
       <div className="rodape__conteudo container">
         <Link to="/" aria-label="Giongo & Raguzzoni — início">
-          <img className="rodape__logo" src={logo} alt="" width="209.3" height="58.5" />
+          {/* No celular o rodapé é sempre ciano, então o logo é sempre o claro */}
+          <picture>
+            <source media={CONSULTA_MOBILE} srcSet={img.logoRodapeClaro} />
+            <img className="rodape__logo" src={logo} alt="" width="209.3" height="58.5" />
+          </picture>
         </Link>
 
         <nav className="rodape__mapa" aria-label="Mapa do site">

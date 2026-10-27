@@ -7,12 +7,18 @@ import TituloSecao from '../components/TituloSecao';
 import BotaoVidro from '../components/BotaoVidro';
 import Contato from '../components/Contato';
 import Rodape from '../components/Rodape';
+import { useMobile } from '../components/useMobile';
 import './Noticias.css';
 
 const POR_PAGINA = 3;
+// No celular a grade tem 2 colunas, então mostramos de 2 em 2 (como no Figma)
+const POR_PAGINA_MOBILE = 2;
 
 export default function Noticias() {
-  const [visiveis, setVisiveis] = useState(POR_PAGINA);
+  const mobile = useMobile();
+  const porPagina = mobile ? POR_PAGINA_MOBILE : POR_PAGINA;
+  const [extras, setExtras] = useState(0);
+  const visiveis = porPagina + extras;
 
   return (
     <div className="pagina pagina--branca">
@@ -41,7 +47,7 @@ export default function Noticias() {
 
           {/* "Ver mais..." aparece quando houver mais notícias cadastradas */}
           {visiveis < noticias.length && (
-            <BotaoVidro tom="escuro" onClick={() => setVisiveis((v) => v + POR_PAGINA)}>
+            <BotaoVidro tom="escuro" onClick={() => setExtras((v) => v + porPagina)}>
               Ver mais...
             </BotaoVidro>
           )}

@@ -1,6 +1,7 @@
 import { img } from '../assets';
 import { contato, MAPS_URL, WHATSAPP_URL } from '../data/contato';
 import TituloSecao from './TituloSecao';
+import { CONSULTA_MOBILE } from './useMobile';
 import './Contato.css';
 
 /** tema: 'claro' (sem fundo, texto escuro) | 'escuro' (fundo cinza-escuro) */
@@ -19,12 +20,14 @@ export default function Contato({ tema = 'claro' }) {
       valor: contato.whatsapp,
       href: WHATSAPP_URL,
       icone: escuro ? img.iconeWhatsappClaro : img.iconeWhatsappEscuro,
+      iconeMobile: img.iconeWhatsappEscuro,
     },
     {
       rotulo: 'Instagram',
       valor: contato.instagram,
       href: contato.instagramUrl,
       icone: escuro ? img.iconeInstagramClaro : img.iconeInstagramEscuro,
+      iconeMobile: img.iconeInstagramEscuro,
     },
     {
       rotulo: 'Endereço',
@@ -39,7 +42,7 @@ export default function Contato({ tema = 'claro' }) {
       <div className="contato__conteudo container">
         <div className="contato__coluna">
           <TituloSecao tom={escuro ? 'claro' : 'escuro'} id="contato-titulo">
-            Onde nos
+            Onde nos{' '}
             <br />
             encontrar?
           </TituloSecao>
@@ -53,13 +56,19 @@ export default function Contato({ tema = 'claro' }) {
                   target={item.href.startsWith('mailto:') ? undefined : '_blank'}
                   rel="noreferrer"
                 >
-                  <img
-                    className="contato__icone"
-                    src={item.icone}
-                    alt=""
-                    width="32.832"
-                    height="32.832"
-                  />
+                  {/* No celular o Figma usa sempre o contato claro, com ícones escuros */}
+                  <picture>
+                    {item.iconeMobile && (
+                      <source media={CONSULTA_MOBILE} srcSet={item.iconeMobile} />
+                    )}
+                    <img
+                      className="contato__icone"
+                      src={item.icone}
+                      alt=""
+                      width="32.832"
+                      height="32.832"
+                    />
+                  </picture>
                   <span className="contato__texto">
                     <strong>{item.rotulo}</strong>
                     {Array.isArray(item.valor) ? (

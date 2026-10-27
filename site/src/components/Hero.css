@@ -2,10 +2,10 @@
   position: relative;
   display: flex;
   align-items: flex-end;
-  min-height: clamp(var(--altura), var(--altura-fluida), var(--altura) * 1.5);
+  min-height: var(--altura);
   overflow: hidden;
-  padding-top: 190px;
-  padding-bottom: 48px;
+  padding-top: calc(190 * var(--u));
+  padding-bottom: calc(48 * var(--u));
 }
 
 .hero__fundo {
@@ -24,21 +24,34 @@
  * (em % do frame, nunca menor que o tamanho em px de 1440) e usa
  * object-fit: cover, então a foto é recortada mas nunca distorcida.
  */
+/*
+ * Página inicial: a foto acompanha a escala do layout (--u), nunca a largura da tela,
+ * para manter a mesma proporção do Figma em relação ao título e ao menu.
+ * Em telas muito largas sobra espaço nas laterais: o fundo do hero tem a cor do
+ * estúdio da foto e as bordas da imagem se dissolvem nele.
+ */
+.hero--inicio {
+  background: linear-gradient(90deg, #eaecef, #f2f2f2);
+}
+
 .hero__img--inicio {
   top: -13%;
   left: 51.53%;
-  width: max(118.24%, 1702.7px);
-  height: max(149.94%, 934.1px);
+  width: calc(1702.7 * var(--u));
+  height: calc(934.1 * var(--u));
   transform: translateX(-50%);
   object-fit: cover;
   object-position: 50% 42%;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
 }
 
 .hero__img--quem {
   top: -20.17%;
   left: 37.13%;
-  width: max(148.26%, 2135px);
-  height: max(160.86%, 765.7px);
+  /* 125.74% = largura mínima para a foto (centrada em 37.13%) chegar até a borda direita */
+  width: max(calc(2135 * var(--u)), 125.74%);
+  height: max(160.86%, calc(765.7 * var(--u)));
   transform: translateX(-50%);
   object-fit: cover;
   object-position: 50% 35%;
@@ -72,5 +85,63 @@
 @media (max-width: 860px) {
   .hero {
     padding-top: 180px;
+  }
+}
+
+/* ================================
+   SITE MOBILE (Figma, frame de 390px)
+   Títulos em H4 (24, Medium); alturas e recortes por página.
+================================ */
+@media (max-width: 767px) {
+  .hero {
+    min-height: 0;
+    padding-top: 0;
+    padding-bottom: 16px;
+  }
+
+  .hero__titulo {
+    font-size: 24px;
+    font-weight: 500;
+    line-height: normal;
+  }
+
+  /* Página inicial: 539px, foto inteira e degradê escuro embaixo */
+  .hero--inicio {
+    height: 539px;
+    padding-bottom: 32px;
+  }
+
+  .hero--inicio .hero__titulo {
+    font-size: 40px;
+    font-weight: 600;
+    color: var(--branco-gelo);
+  }
+
+  .hero__img--inicio {
+    top: 0;
+    left: -125.79%;
+    width: 247.62%;
+    height: 100%;
+    transform: none;
+    object-position: center;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+
+  .hero--inicio .hero__fundo::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(181.67deg, rgba(38, 43, 49, 0) 45.144%, rgba(38, 43, 49, 0.92) 91.786%);
+    mix-blend-mode: multiply;
+  }
+
+  .hero__img--quem {
+    top: 0;
+    left: -80.92%;
+    width: 211.62%;
+    height: 100%;
+    transform: none;
+    object-position: center;
   }
 }
