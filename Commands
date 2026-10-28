@@ -1,0 +1,17 @@
+sudo docker compose -f docker-compose.prod.yml run --rm --no-deps   -e DATABASE_URL=postgresql://sem_banco:sem_banco@127.0.0.1:1/sem_banco   -e RUSTFS_ENDPOINT=http://127.0.0.1:1   -e RUSTFS_ACCESS_KEY=chave-apenas-para-testes   -e RUSTFS_SECRET_KEY=segredo-apenas-para-testes   backend sh -c "pip install --quiet --user httpx && python -m unittest discover -s tests -p '*login*.py' -v"
+
+sudo docker compose -f docker-compose.prod.yml run --rm --no-deps   -e DATABASE_URL=postgresql://sem_banco:sem_banco@127.0.0.1:1/sem_banco   -e RUSTFS_ENDPOINT=http://127.0.0.1:1   -e RUSTFS_ACCESS_KEY=chave-apenas-para-testes   -e RUSTFS_SECRET_KEY=segredo-apenas-para-testes   backend sh -c "pip install --quiet --user httpx && python -m unittest discover -s tests -p '*permissoes*.py' -v"
+
+sudo docker compose -f docker-compose.prod.yml run --rm --no-deps   -e DATABASE_URL=postgresql://sem_banco:sem_banco@127.0.0.1:1/sem_banco   -e RUSTFS_ENDPOINT=http://127.0.0.1:1   -e RUSTFS_ACCESS_KEY=chave-apenas-para-testes   -e RUSTFS_SECRET_KEY=segredo-apenas-para-testes   backend sh -c "pip install --quiet --user httpx && python -m unittest discover -s tests -p '*clientes*.py' -v"
+
+sudo docker compose -f docker-compose.prod.yml run --rm --no-deps   -e DATABASE_URL=postgresql://sem_banco:sem_banco@127.0.0.1:1/sem_banco   -e RUSTFS_ENDPOINT=http://127.0.0.1:1   -e RUSTFS_ACCESS_KEY=chave-apenas-para-testes   -e RUSTFS_SECRET_KEY=segredo-apenas-para-testes   backend sh -c "pip install --quiet --user httpx && python -m unittest discover -s tests -p '*casos*.py' -v"
+
+
+criação Usuário admin:
+
+sudo docker compose -f docker-compose.prod.yml exec backend python -m scripts.criar_usuario
+
+
+RustFS
+escritorio_admin
+db04e56d7c928ec9f7270fd11d4970e6
