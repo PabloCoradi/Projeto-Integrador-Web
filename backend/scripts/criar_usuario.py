@@ -1,14 +1,15 @@
-
 from getpass import getpass
 
 from pydantic import EmailStr, TypeAdapter, ValidationError
+from sqlalchemy.exc import IntegrityError
 
 from app.core.database import SessionLocal
-from app.services.usuario_service import criar_usuario
+from app.models.usuario import Usuario
+from app.core.security import hash_password
 
 
 def main():
-    print("=== Criar usuário ===")
+    print("=== Criar Usuário ADMIN ===")
 
     nome = input("Nome: ").strip()
     email = input("E-mail: ").strip()
@@ -55,24 +56,29 @@ def main():
     db = SessionLocal()
 
     try:
-        usuario = criar_usuario(
-            db=db,
+        # Criação direta da instância com is_admin=True
+        admin = Usuario(
             nome=nome,
             email=email,
-            senha=senha,
+            senha_hash=hash_password(senha),
+            ativo=True,
+            is_admin=True,
         )
 
-        print(f"Usuário criado com sucesso: {usuario.email}")
+        db.add(admin)
+        db.commit()
 
-    except ValueError as erro:
+        print(f"Administrador criado com sucesso: {admin.email}")
+
+    except IntegrityError:
         db.rollback()
-        print(f"Erro: {erro}")
+        print("Erro: Este e-mail já está cadastrado no banco de dados.")
 
-    except Exception:
+    except Exception as erro:
         db.rollback()
         print(
-            "Erro: não foi possível criar o usuário. "
-            "Verifique o banco de dados."
+            "Erro: não foi possível criar o administrador. "
+            f"Verifique o banco de dados. Detalhes: {erro}"
         )
 
     finally:
