@@ -1,6 +1,6 @@
 // Conversa com a API pública de artigos do backend (sem login).
 // O endereço vem de VITE_API_URL (arquivo .env); sem ele, usa o backend local.
-const API_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/+$/, '');
+const API_URL = (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/+$/, '');
 
 const ERRO_CONEXAO = 'Não foi possível carregar as notícias agora. Tente novamente mais tarde.';
 
