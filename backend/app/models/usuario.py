@@ -62,3 +62,7 @@ class Usuario(Base):
         back_populates="usuario",
         cascade="all, delete-orphan",
     )
+# Carrega o modelo de permissões junto com o de usuário. Sem isso, scripts que
+# usam só o Usuario (criar_usuario, migrar_noticias) quebram ao salvar, porque
+# o SQLAlchemy não encontra a classe "Permissao" usada no relationship acima.
+from app.models.permissao import Permissao  # noqa: E402, F401

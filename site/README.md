@@ -14,6 +14,25 @@ npm run dev      # http://localhost:5173
 
 Para gerar a versão de produção, rode `npm run build`. Os arquivos saem na pasta `dist/`.
 
+### Notícias (vêm do backend)
+
+As páginas `/noticias` e `/noticias/:slug` buscam os artigos **publicados** na API pública do backend
+(`GET /api/public/artigos` e `GET /api/public/artigos/{slug}`). O resto do site não depende do backend.
+
+O endereço da API fica na variável `VITE_API_URL`. Copie o exemplo e ajuste se precisar:
+
+```bash
+cp .env.example .env   # VITE_API_URL=http://127.0.0.1:8000
+```
+
+Sem o arquivo `.env`, o site usa `http://127.0.0.1:8000`. Em produção, coloque a URL pública da API
+antes de rodar `npm run build` (o Vite grava o endereço nos arquivos gerados). O backend precisa liberar
+o endereço do site em `CORS_ORIGINS`.
+
+Para aparecer no site, o artigo precisa estar com status **publicado** e ter **resumo** e **conteúdo**.
+No conteúdo, cada linha em branco separa um parágrafo. Como os artigos ainda não têm imagem, os cards
+alternam entre as três fotos do Figma (`src/data/imagensNoticias.js`).
+
 > As imagens já estão em `public/assets`. O script `npm run assets` só serve para baixá-las atraves do mcp que fizemos no figma para baixar todos os assets em uma pasta, mas como tem validade nao esta mais funcional.
 
 ## Desktop e celular
@@ -48,7 +67,9 @@ como o modo apresentação do Figma; `0` não cresceria nada). Nas regras de des
 ```
 src/
   assets.js          caminhos das imagens
-  data/              textos: notícias, FAQ, áreas, depoimentos, advogadas, contato
+  data/              textos: FAQ, áreas, depoimentos, advogadas, contato
+                     e as fotos dos cards de notícias (imagensNoticias.js)
+  services/          artigos.js: busca as notícias na API do backend
   components/        Cabecalho, Rodape, Contato, CtaFaq, Hero, TituloSecao,
                      BotaoVidro, Sanfona, Seletor, CarrosselAreas,
                      CarrosselDepoimentos, BotaoWhatsapp, useMobile (hook)
@@ -56,8 +77,8 @@ src/
   styles/global.css  tokens do design system (cores, tipografia, efeito vidro)
 ```
 
-Para adicionar uma notícia, inclua um item em `src/data/noticias.js`.
-O botão "Ver mais..." aparece sozinho quando houver mais de 3 notícias.
+Para adicionar uma notícia, publique um artigo pelo backend (veja "Notícias" acima).
+O botão "Ver mais..." aparece sozinho quando houver mais notícias publicadas (3 por vez no desktop, 2 no celular).
 
 ## Deploy
 

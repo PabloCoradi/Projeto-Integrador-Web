@@ -12,10 +12,11 @@ import "./App.css";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Clientes from "./pages/Clientes/Clientes";
 import Casos from "./pages/Casos/Casos";
-import Agenda from "./pages/Agenda/Agenda";
 import Login from "./pages/Login/Login";
 import Administradores from "./pages/Administradores/Administradores";
 import RedefinirSenha from "./pages/RedefinirSenha/RedefinirSenha";
+import Artigos from "./pages/Artigos/Artigos";
+import ArtigoEditor from "./pages/Artigos/ArtigoEditor";
 
 import {
   AuthProvider,
@@ -41,8 +42,30 @@ function RotaAdministrador({ children }) {
   return children;
 }
 
+// Páginas do menu na ordem em que aparecem. Quem não pode ver o Dashboard
+// vai para a primeira página que tem permissão (evita redirecionar em círculo).
+const PAGINAS_INICIAIS = [
+  { modulo: "clientes", rota: "/clientes" },
+  { modulo: "casos", rota: "/casos" },
+  { modulo: "artigos", rota: "/artigos" },
+];
+
+function SemAcesso() {
+  return (
+    <div className="content-card">
+      <h2>Sem acesso</h2>
+      <p>
+        Seu usuário ainda não tem permissão para nenhuma área do sistema.
+        Peça a um administrador para liberar o acesso.
+      </p>
+    </div>
+  );
+}
+
 function Layout() {
-  const { usuario, logout, podeVisualizar } = useAuth();
+  const { usuario, logout, podeVisualizar, podeEditar } = useAuth();
+
+  const rotaInicial = PAGINAS_INICIAIS.find((pagina) => podeVisualizar(pagina.modulo))?.rota;
 
   return (
     <div className="app">
@@ -70,8 +93,8 @@ function Layout() {
               <Link to="/casos" className="menu-item">Casos</Link>
             )}
 
-            {podeVisualizar("agenda") && (
-              <Link to="/agenda" className="menu-item">Agenda</Link>
+            {podeVisualizar("artigos") && (
+              <Link to="/artigos" className="menu-item">Artigos</Link>
             )}
 
             {usuario?.is_admin && (
@@ -87,7 +110,9 @@ function Layout() {
             <Route path="/" element={
               podeVisualizar("dashboard")
                 ? <Dashboard />
-                : <Navigate to="/clientes" replace />
+                : rotaInicial
+                  ? <Navigate to={rotaInicial} replace />
+                  : <SemAcesso />
             } />
 
             <Route path="/clientes" element={
@@ -102,10 +127,22 @@ function Layout() {
                 : <Navigate to="/" replace />
             } />
 
-            <Route path="/agenda" element={
-              podeVisualizar("agenda")
-                ? <Agenda />
+            <Route path="/artigos" element={
+              podeVisualizar("artigos")
+                ? <Artigos />
                 : <Navigate to="/" replace />
+            } />
+
+            <Route path="/artigos/novo" element={
+              podeEditar("artigos")
+                ? <ArtigoEditor />
+                : <Navigate to="/artigos" replace />
+            } />
+
+            <Route path="/artigos/:artigoId/editar" element={
+              podeEditar("artigos")
+                ? <ArtigoEditor />
+                : <Navigate to="/artigos" replace />
             } />
 
             <Route path="/administradores" element={

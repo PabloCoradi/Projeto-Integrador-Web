@@ -10,7 +10,7 @@ MODULOS_PERMITIDOS = {
     "dashboard",
     "clientes",
     "casos",
-    "agenda",
+    "artigos",
     "administradores",
 }
 
@@ -135,6 +135,11 @@ def atualizar_usuario(db: Session, usuario_id: int, dados):
 
         for permissao in list(usuario.permissoes):
             db.delete(permissao)
+
+        # Apaga as permissões antigas no banco antes de inserir as novas.
+        # Sem isso, o SQLAlchemy faz os INSERTs antes dos DELETEs e a regra
+        # "uma permissão por módulo" (uq_permissao_usuario_modulo) dá erro.
+        db.flush()
 
         for item in dados.permissoes:
             db.add(
