@@ -1,0 +1,50 @@
+# Compose de PRODUÇÃO (roda na VM).
+#
+# NÃO use o docker-compose.yml da raiz na VM: ele é só para desenvolvimento
+# e publica a porta do banco na internet.
+#
+# Os arquivos com senhas e os builds do front e do site ficam FORA do
+# repositório, na pasta ~/sistema-producao (ao lado da pasta do projeto).
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: producao_db
+    restart: unless-stopped
+    env_file:
+      - ../sistema-producao/db.env
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    # Sem "ports": o banco só é acessível pelos outros containers.
+
+  backend:
+    build: ./backend
+    container_name: producao_backend
+    restart: unless-stopped
+    env_file:
+      - ../sistema-producao/backend.env
+    depends_on:
+      db:
+        condition: service_healthy
+    # Sem "ports": quem recebe as requisições da internet é o Nginx.
+
+  nginx:
+    image: nginx:stable-alpine
+    container_name: producao_nginx
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "80:80"      # site
+      - "8080:8080"  # sistema
+    volumes:
+      - ./deploy/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      - ../sistema-producao/www:/usr/share/nginx/www:ro
+
+volumes:
+  db_data:
