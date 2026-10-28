@@ -127,3 +127,19 @@
     font-weight: 500;
   }
 }
+
+/* Avisos da lista (carregando, erro, nenhuma notícia) */
+.noticias__aviso {
+  font-size: var(--body);
+  text-align: center;
+  color: var(--cinza);
+}
+
+.noticias__aviso:empty {
+  display: none;
+}
+
+.noticia__texto a {
+  color: var(--ciano);
+  text-decoration: underline;
+}

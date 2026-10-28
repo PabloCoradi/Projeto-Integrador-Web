@@ -19,12 +19,12 @@ from app.routers.administradores import router as administradores_router
 
 app = FastAPI(
     title="Sistema de Advocacia",
-    description="API do sistema de gestÃ£o do escritÃ³rio de advocacia",
+    description="API do sistema de gestão do escritório de advocacia",
     version="1.0.0",
 )
 
 
-# ConfiguraÃ§Ã£o do limite de requisiÃ§Ãµes
+# Configuração do limite de requisições
 app.state.limiter = limiter
 
 app.add_exception_handler(
@@ -33,9 +33,9 @@ app.add_exception_handler(
 )
 
 
-# ConfiguraÃ§Ã£o do CORS
+# Configuração do CORS
 def configurar_cors(aplicacao: FastAPI, origens: list[str]) -> None:
-    """Aplica a polÃ­tica CORS explÃ­cita usada pelo painel e pelo site."""
+    """Aplica a política CORS explícita usada pelo painel e pelo site."""
 
     aplicacao.add_middleware(
         CORSMiddleware,

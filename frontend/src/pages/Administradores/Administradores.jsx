@@ -6,7 +6,7 @@ const MODULOS = [
   { id: "dashboard", nome: "Dashboard" },
   { id: "clientes", nome: "Clientes" },
   { id: "casos", nome: "Casos" },
-  { id: "agenda", nome: "Agenda" },
+  { id: "artigos", nome: "Artigos" },
 ];
 
 const permissoesIniciais = () =>
@@ -215,6 +215,7 @@ export default function Administradores() {
               <input
                 id="admin-email"
                 type="email"
+                autoComplete="off"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -228,6 +229,7 @@ export default function Administradores() {
               <input
                 id="admin-senha"
                 type="password"
+                autoComplete="new-password"
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 required={!editando}

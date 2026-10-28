@@ -19,7 +19,7 @@ function Dashboard() {
         </div>
 
         <div className="card">
-          <span className="card-title">Compromissos</span>
+          <span className="card-title">Artigos</span>
           <strong>0</strong>
         </div>
       </div>

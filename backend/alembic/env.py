@@ -9,11 +9,11 @@ from alembic import context
 from app.core.config import settings
 
 
-# ConfiguraÃ§Ã£o do Alembic
+# Configuração do Alembic
 config = context.config
 
 
-# ConfiguraÃ§Ã£o de logging
+# Configuração de logging
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 

@@ -55,7 +55,7 @@ Documentação técnica e guia de inicialização da interface web. O frontend �
 ```text
 frontend/
 ├── src/
-│   ├── pages/       # Telas da aplicação (Dashboard, Clientes, Casos, Agenda, Login)
+│   ├── pages/       # Telas da aplicação (Dashboard, Clientes, Casos, Artigos, Administradores, Login)
 │   ├── contexts/     # Contextos React (ex: AuthContext, autenticação)
 │   ├── services/     # Comunicação com a API (api.js)
 │   └── App.jsx        # Rotas da aplicação
