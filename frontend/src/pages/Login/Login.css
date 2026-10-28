@@ -1,0 +1,615 @@
+/* ================================
+   LOGIN — identidade Giongo & Raguzzoni
+================================ */
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+  src: url("../../assets/fonts/open-sauce-one-latin-400-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+  src: url("../../assets/fonts/open-sauce-one-latin-500-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+  src: url("../../assets/fonts/open-sauce-one-latin-600-normal.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "Open Sauce One";
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+  src: url("../../assets/fonts/open-sauce-one-latin-700-normal.woff2") format("woff2");
+}
+
+.login {
+  /* Tokens do Design System */
+  --ciano: #0b7f87;
+  --ciano-claro: #1aa6b0;
+  --ciano-escuro: #0d4f55;
+  --cinza-escuro: #1f2429;
+  --cinza: #6f7884;
+  --borda: #cfd5db;
+  --branco: #ffffff;
+  --erro: #b42318;
+  --erro-fundo: #fdecea;
+
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+
+  min-height: 100vh;
+  min-height: 100dvh;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
+
+  font-family: "Open Sauce One", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--cinza-escuro);
+
+  background: linear-gradient(165deg, #f4f6f8 0%, #e7eaee 50%, #dde1e6 100%);
+}
+
+/* Escritório desfocado: só degradês (janelas claras, colunas e um arco suave) */
+.login__escritorio {
+  position: absolute;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+
+  background:
+    /* arco claro grande e suave atrás do texto */
+    radial-gradient(circle at 28% 45%, rgba(255, 255, 255, 0.75) 0%, rgba(255, 255, 255, 0.55) 24%, rgba(255, 255, 255, 0) 38%),
+    /* claridade de janela no alto */
+    radial-gradient(ellipse 40% 30% at 45% 6%, rgba(255, 255, 255, 0.9), transparent 75%),
+    /* colunas / caixilhos das janelas, bem desfocados */
+    linear-gradient(90deg,
+      rgba(180, 190, 200, 0) 40%,
+      rgba(180, 190, 200, 0.35) 45%,
+      rgba(180, 190, 200, 0) 50%,
+      rgba(190, 199, 208, 0.25) 54%,
+      rgba(190, 199, 208, 0) 58%),
+    /* parte de baixo um pouco mais escura, como o chão do escritório */
+    linear-gradient(180deg, rgba(160, 170, 182, 0) 55%, rgba(160, 170, 182, 0.28) 80%, rgba(150, 160, 172, 0.2) 100%),
+    linear-gradient(90deg, #eef1f4 0%, #e4e8ec 55%, #d8dde2 100%);
+}
+
+/* Faixa escura da direita, com a linha ciano fina */
+.login__fundo {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.login__fundo-faceta {
+  fill: rgba(255, 255, 255, 0.035);
+}
+
+.login__fundo-linha {
+  fill: none;
+  stroke: var(--ciano-claro);
+  stroke-width: 1.5;
+  vector-effect: non-scaling-stroke;
+}
+
+/* ================================
+   LADO ESQUERDO — marca e foto
+================================ */
+
+.login__marca {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 640px;
+  padding: clamp(36px, 8vh, 100px) 0 0 clamp(32px, 10vw, 150px);
+}
+
+.login__marca-texto {
+  position: relative;
+  z-index: 4;
+  max-width: 560px;
+}
+
+.login__logo-grande {
+  display: block;
+  width: clamp(220px, 26vw, 380px);
+  height: auto;
+}
+
+.login__traco {
+  display: block;
+  width: 76px;
+  height: 3px;
+  margin: clamp(28px, 5vh, 48px) 0 clamp(18px, 3vh, 28px);
+  background: var(--ciano);
+}
+
+.login__traco--pequeno {
+  width: 36px;
+  height: 3px;
+  margin: 0 0 14px;
+}
+
+.login__titulo {
+  margin: 0;
+  max-width: 540px;
+  color: var(--ciano);
+  font-size: clamp(38px, 4.7vw, 68px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.login__subtitulo {
+  margin: clamp(10px, 1.8vh, 18px) 0 0;
+  color: var(--cinza);
+  font-size: clamp(16px, 1.5vw, 22px);
+  line-height: 1.4;
+}
+
+/* A foto começa logo abaixo do texto e fica grande, cortada na altura do quadril */
+.login__area-foto {
+  position: relative;
+  z-index: 3;
+  flex: 1;
+  min-height: 0;
+  margin-top: 8px;
+}
+
+.login__foto {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 145%;
+  width: auto;
+  max-width: 44vw;
+  object-fit: contain;
+  object-position: left top;
+  pointer-events: none;
+  user-select: none;
+  filter: drop-shadow(0 20px 30px rgba(20, 28, 36, 0.12));
+}
+
+/* Onda escura no canto inferior esquerdo (atrás das advogadas) */
+.login__onda {
+  position: absolute;
+  z-index: 2;
+  left: 0;
+  bottom: 0;
+  width: min(48vw, 700px);
+  height: clamp(220px, 32vh, 340px);
+}
+
+.login__onda--linha {
+  z-index: 4;
+  pointer-events: none;
+}
+
+.login__onda-escura {
+  fill: var(--cinza-escuro);
+}
+
+.login__onda-linha {
+  fill: none;
+  stroke: var(--ciano-claro);
+  stroke-width: 2;
+  vector-effect: non-scaling-stroke;
+}
+
+.login__lema {
+  position: absolute;
+  z-index: 5;
+  left: clamp(28px, 4.6vw, 68px);
+  bottom: clamp(28px, 7vh, 84px);
+
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  color: rgba(234, 235, 238, 0.75);
+  font-size: 12px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+}
+
+/* ================================
+   LADO DIREITO — cartão de acesso
+================================ */
+
+.login__area-cartao {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 48px clamp(24px, 5vw, 80px) 48px 0;
+}
+
+.login__cartao {
+  position: relative;
+  overflow: hidden;
+
+  width: 100%;
+  max-width: 590px;
+  padding: clamp(40px, 7vh, 72px) clamp(28px, 4.5vw, 66px) clamp(40px, 7vh, 72px);
+
+  background: linear-gradient(170deg, #ffffff 0%, #f6f8f9 100%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  box-shadow:
+    0 34px 70px -24px rgba(10, 16, 22, 0.5),
+    0 12px 28px -14px rgba(10, 16, 22, 0.3);
+}
+
+.login__logo-cartao {
+  position: relative;
+  display: block;
+  width: min(300px, 75%);
+  height: auto;
+  margin: 0 0 clamp(32px, 6vh, 60px);
+}
+
+.login__titulo-cartao {
+  margin: 0;
+  color: var(--cinza-escuro);
+  font-size: clamp(28px, 2.7vw, 40px);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+
+.login__subtitulo-cartao {
+  margin: 10px 0 clamp(28px, 5vh, 48px);
+  color: var(--cinza);
+  font-size: clamp(16px, 1.4vw, 20px);
+}
+
+.login__erro {
+  margin-bottom: 20px;
+  padding: 12px 16px;
+
+  color: var(--erro);
+  background: var(--erro-fundo);
+  border: 1px solid rgba(180, 35, 24, 0.18);
+  border-radius: 8px;
+
+  font-size: 15px;
+}
+
+.login__campo {
+  position: relative;
+  margin-bottom: 26px;
+}
+
+.login__campo label {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--cinza-escuro);
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.login__entrada {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  height: 64px;
+  padding: 0 18px 0 22px;
+
+  background: var(--branco);
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.login__entrada:focus-within {
+  border-color: var(--ciano);
+  box-shadow: 0 0 0 4px rgba(11, 127, 135, 0.14);
+}
+
+.login__entrada > svg,
+.login__mostrar-senha svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  fill: none;
+  stroke: var(--cinza);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.login__entrada input {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+
+  border: 0;
+  outline: 0;
+  background: transparent;
+
+  color: var(--cinza-escuro);
+  font: inherit;
+  font-size: 17px;
+}
+
+.login__entrada input::placeholder {
+  color: #8a929d;
+}
+
+.login__entrada input:disabled {
+  cursor: not-allowed;
+}
+
+.login__mostrar-senha {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-right: -6px;
+  padding: 0;
+
+  background: transparent;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.login__mostrar-senha:hover svg {
+  stroke: var(--cinza-escuro);
+}
+
+.login__mostrar-senha:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 2px;
+}
+
+.login__botao {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 100%;
+  height: 72px;
+  margin-top: 12px;
+
+  color: var(--branco);
+  font: inherit;
+  font-size: 21px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+
+  background: linear-gradient(90deg, #1c262e 0%, #1a3139 55%, #0b5f68 100%);
+  border: 0;
+  border-radius: 8px;
+  box-shadow: 0 14px 28px -14px rgba(10, 30, 36, 0.7);
+
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, filter 0.15s;
+}
+
+.login__botao svg {
+  position: absolute;
+  right: 34px;
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: transform 0.15s;
+}
+
+.login__botao:hover:not(:disabled) {
+  filter: brightness(1.15);
+  box-shadow: 0 18px 32px -14px rgba(10, 30, 36, 0.8);
+}
+
+.login__botao:hover:not(:disabled) svg {
+  transform: translateX(4px);
+}
+
+.login__botao:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.login__botao:focus-visible {
+  outline: 3px solid rgba(11, 127, 135, 0.45);
+  outline-offset: 3px;
+}
+
+.login__botao:disabled {
+  cursor: wait;
+  opacity: 0.8;
+}
+
+/* Link "Redefinir senha" abaixo do botão Entrar */
+.login__redefinir {
+  position: relative;
+  display: block;
+  width: fit-content;
+  margin: 22px auto 0;
+  padding: 4px 2px;
+
+  color: var(--ciano-escuro);
+  font: inherit;
+  font-size: 15px;
+  font-weight: 500;
+
+  background: transparent;
+  border: 0;
+  border-radius: 6px;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.login__redefinir:hover {
+  color: var(--ciano);
+  text-decoration: none;
+}
+
+.login__redefinir:focus-visible {
+  outline: 2px solid var(--ciano);
+  outline-offset: 3px;
+}
+
+/* ================================
+   RESPONSIVO
+================================ */
+
+@media (max-width: 1100px) {
+  .login__lema {
+    display: none;
+  }
+}
+
+/* Notebooks (telas baixas): tudo mais compacto para caber sem rolagem */
+@media (min-width: 901px) and (max-height: 860px) {
+  .login__marca {
+    padding-top: 32px;
+  }
+
+  .login__logo-grande {
+    width: clamp(200px, 19vw, 280px);
+  }
+
+  .login__traco {
+    margin: 22px 0 14px;
+  }
+
+  .login__titulo {
+    font-size: clamp(34px, 3.6vw, 52px);
+  }
+
+  .login__subtitulo {
+    margin-top: 10px;
+    font-size: 16px;
+  }
+
+  .login__onda {
+    height: 24vh;
+  }
+
+  .login__lema {
+    bottom: 28px;
+  }
+
+  .login__cartao {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .login__logo-cartao {
+    width: min(240px, 65%);
+    margin-bottom: 24px;
+  }
+
+  .login__titulo-cartao {
+    font-size: 30px;
+  }
+
+  .login__subtitulo-cartao {
+    margin-bottom: 24px;
+    font-size: 16px;
+  }
+
+  .login__campo {
+    margin-bottom: 18px;
+  }
+
+  .login__campo label {
+    margin-bottom: 8px;
+  }
+
+  .login__entrada {
+    height: 54px;
+  }
+
+  .login__botao {
+    height: 60px;
+    margin-top: 6px;
+  }
+
+  .login__redefinir {
+    margin-top: 14px;
+  }
+}
+
+/* Tablet e celular: só o cartão, sobre o fundo escuro da marca */
+@media (max-width: 900px) {
+  .login {
+    grid-template-columns: minmax(0, 1fr);
+    background:
+      radial-gradient(circle at 85% 0%, rgba(11, 127, 135, 0.35), transparent 45%),
+      var(--cinza-escuro);
+  }
+
+  .login__escritorio,
+  .login__fundo,
+  .login__marca {
+    display: none;
+  }
+
+  .login__area-cartao {
+    justify-content: center;
+    padding: 32px 16px;
+  }
+
+  .login__cartao {
+    max-width: 480px;
+  }
+}
+
+@media (max-width: 480px) {
+  .login__cartao {
+    padding: 36px 22px 36px;
+    border-radius: 14px;
+  }
+
+  .login__logo-cartao {
+    margin-bottom: 28px;
+  }
+
+  .login__entrada {
+    height: 56px;
+  }
+
+  .login__botao {
+    height: 60px;
+    font-size: 19px;
+  }
+
+  .login__botao svg {
+    right: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login__entrada,
+  .login__botao,
+  .login__botao svg {
+    transition: none;
+  }
+}
