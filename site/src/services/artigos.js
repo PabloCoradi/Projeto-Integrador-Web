@@ -2,6 +2,9 @@
 // O endereço vem de VITE_API_URL (arquivo .env); sem ele, usa o backend local.
 const API_URL = (import.meta.env.VITE_API_URL ?? 'http://127.0.0.1:8000').replace(/\/+$/, '');
 
+/** A API devolve a capa como caminho relativo (/api/public/...); aqui vira endereço completo. */
+export const urlDaImagem = (caminho) => (caminho ? `${API_URL}${caminho}` : '');
+
 const ERRO_CONEXAO = 'Não foi possível carregar as notícias agora. Tente novamente mais tarde.';
 
 async function pedir(caminho) {
@@ -19,7 +22,7 @@ async function pedir(caminho) {
 
 /**
  * GET /api/public/artigos?page=&por_pagina=
- * Retorna { items: [{ titulo, slug, resumo, publicado_em }], page, por_pagina, total, total_paginas }
+ * Retorna { items: [{ titulo, slug, resumo, imagem_url, imagem_alt, publicado_em }], page, por_pagina, total, total_paginas }
  */
 export function listarArtigos(pagina, porPagina) {
   const params = new URLSearchParams({ page: pagina, por_pagina: porPagina });

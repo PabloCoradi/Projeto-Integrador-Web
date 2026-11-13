@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { listarArtigos } from '../services/artigos';
-import { imagemDoCard } from '../data/imagensNoticias';
+import { listarArtigos, urlDaImagem } from '../services/artigos';
 import Cabecalho from '../components/Cabecalho';
 import Hero from '../components/Hero';
 import TituloSecao from '../components/TituloSecao';
@@ -85,19 +84,22 @@ function ListaNoticias({ porPagina }) {
     <>
       {artigos.length > 0 && (
         <ul className="noticias__grade container">
-          {artigos.map((artigo, i) => {
-            const foto = imagemDoCard(i);
-            return (
-              <li key={artigo.slug}>
-                <Link to={`/noticias/${artigo.slug}`} className="card-noticia">
-                  <img className="card-noticia__img" src={foto.src} alt="" style={foto.recorte} />
-                  <span className="card-noticia__legenda">
-                    <span className="card-noticia__titulo">{artigo.titulo}</span>
-                  </span>
-                </Link>
-              </li>
-            );
-          })}
+          {/* A capa vem de cada artigo (escolhida no sistema); o título já descreve o link */}
+          {artigos.map((artigo) => (
+            <li key={artigo.slug}>
+              <Link to={`/noticias/${artigo.slug}`} className="card-noticia">
+                <img
+                  className="card-noticia__img"
+                  src={urlDaImagem(artigo.imagem_url)}
+                  alt=""
+                  loading="lazy"
+                />
+                <span className="card-noticia__legenda">
+                  <span className="card-noticia__titulo">{artigo.titulo}</span>
+                </span>
+              </Link>
+            </li>
+          ))}
         </ul>
       )}
 

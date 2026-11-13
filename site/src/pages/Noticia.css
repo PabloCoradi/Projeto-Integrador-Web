@@ -34,6 +34,16 @@
   color: var(--cinza-escuro);
 }
 
+.noticia__capa {
+  display: block;
+  width: 100%;
+  max-height: calc(480 * var(--u));
+  aspect-ratio: 3 / 2;
+  border-radius: calc(16 * var(--u));
+  object-fit: cover;
+  background: var(--branco-gelo);
+}
+
 /* ================================
    SITE MOBILE: título H4 e texto Body 16
 ================================ */
