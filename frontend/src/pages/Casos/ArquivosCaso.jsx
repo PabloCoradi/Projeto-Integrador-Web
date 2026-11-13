@@ -1,56 +1,62 @@
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { useAuth } from "../../contexts/AuthContext";
 
 import {
+  TAGS_PADRAO_CASO,
+  alterarTagArquivo,
   enviarArquivo,
   gerarLinkArquivo,
   inativarArquivo,
   listarArquivos,
 } from "../../services/casos";
+import {
+  gerarLinkDocumentoDoCaso,
+  listarDocumentosDoCaso,
+} from "../../services/documentosClientes";
+import { formatarData, formatarTamanho } from "../../utils/formatacao";
+import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
-
-function formatarTamanho(bytes) {
-  if (bytes < 1024) {
-    return `${bytes} B`;
-  }
-
-  const unidades = ["KB", "MB", "GB", "TB"];
-  let valor = bytes / 1024;
-  let indice = 0;
-
-  while (valor >= 1024 && indice < unidades.length - 1) {
-    valor /= 1024;
-    indice += 1;
-  }
-
-  return `${valor.toFixed(valor >= 10 ? 0 : 1)} ${unidades[indice]}`;
-}
-
-function formatarData(valor) {
-  const temFuso = /Z$|[+-]\d{2}:\d{2}$/.test(valor);
-
-  return new Date(temFuso ? valor : `${valor}Z`).toLocaleString("pt-BR");
-}
 
 function ArquivosCaso({ caso, onFechar }) {
   const { podeEditar } = useAuth();
   const podeEditarCasos = podeEditar("casos");
 
   const [arquivos, setArquivos] = useState([]);
+  const [documentosCliente, setDocumentosCliente] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
   const [envio, setEnvio] = useState(null);
+  const [tag, setTag] = useState("");
+  const [filtroTag, setFiltroTag] = useState("");
 
   const inputRef = useRef(null);
 
+  const tagsDoCaso = useMemo(
+    () => Array.from(new Set(arquivos.map((a) => a.tag))).sort(),
+    [arquivos]
+  );
+
+  const sugestoes = useMemo(
+    () => Array.from(new Set([...TAGS_PADRAO_CASO, ...tagsDoCaso])),
+    [tagsDoCaso]
+  );
+
+  const arquivosFiltrados = filtroTag
+    ? arquivos.filter((a) => a.tag === filtroTag)
+    : arquivos;
+
   const carregar = useCallback(async () => {
     try {
-      const dados = await listarArquivos(caso.id);
+      const [dados, documentos] = await Promise.all([
+        listarArquivos(caso.id),
+        listarDocumentosDoCaso(caso.id),
+      ]);
       setArquivos(dados);
+      setDocumentosCliente(documentos);
     } catch (e) {
       setErro(e.message);
     } finally {
@@ -76,6 +82,7 @@ function ArquivosCaso({ caso, onFechar }) {
 
     setErro("");
 
+    const tagEscolhida = tag.trim();
     const falhas = [];
 
     for (let i = 0; i < lista.length; i += 1) {
@@ -96,7 +103,7 @@ function ArquivosCaso({ caso, onFechar }) {
       });
 
       try {
-        await enviarArquivo(caso.id, arquivo, (percentual) => {
+        await enviarArquivo(caso.id, arquivo, tagEscolhida, (percentual) => {
           setEnvio((atual) =>
             atual ? { ...atual, percentual } : atual
           );
@@ -110,9 +117,29 @@ function ArquivosCaso({ caso, onFechar }) {
 
     if (falhas.length > 0) {
       setErro(falhas.join("\n"));
+    } else {
+      setTag("");
     }
 
     await carregar();
+  }
+
+  async function trocarTag(arquivo) {
+    const nova = window.prompt(
+      `Nova tag para "${arquivo.nome_original}":`,
+      arquivo.tag
+    );
+
+    if (nova === null || !nova.trim() || nova.trim() === arquivo.tag) return;
+
+    setErro("");
+
+    try {
+      await alterarTagArquivo(caso.id, arquivo.id, nova.trim());
+      await carregar();
+    } catch (e) {
+      setErro(e.message);
+    }
   }
 
   async function abrir(arquivo, inline) {
@@ -122,6 +149,22 @@ function ArquivosCaso({ caso, onFechar }) {
       const { url } = await gerarLinkArquivo(
         caso.id,
         arquivo.id,
+        inline
+      );
+
+      window.open(url, "_blank", "noopener");
+    } catch (e) {
+      setErro(e.message);
+    }
+  }
+
+  async function abrirDocumentoCliente(documento, inline) {
+    setErro("");
+
+    try {
+      const { url } = await gerarLinkDocumentoDoCaso(
+        caso.id,
+        documento.id,
         inline
       );
 
@@ -192,26 +235,46 @@ function ArquivosCaso({ caso, onFechar }) {
 
       {podeEditarCasos && (
         <div style={{ marginBottom: 24 }}>
-          <input
-            ref={inputRef}
-            type="file"
-            multiple
-            onChange={aoEscolherArquivos}
-            style={{ display: "none" }}
-          />
-
-          <button
-            type="button"
-            className="primary-button"
-            onClick={() => inputRef.current?.click()}
-            disabled={enviando}
+          <div
+            style={{
+              display: "flex",
+              gap: 12,
+              alignItems: "flex-end",
+              flexWrap: "wrap",
+            }}
           >
-            {enviando ? "Enviando..." : "+ Anexar arquivos"}
-          </button>
+            <CampoTag
+              id="tag-arquivo-caso"
+              value={tag}
+              onChange={setTag}
+              sugestoes={sugestoes}
+              disabled={enviando}
+              placeholder="Ex.: PETIÇÃO, CONTRATO, SENTENÇA..."
+            />
+
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              onChange={aoEscolherArquivos}
+              style={{ display: "none" }}
+            />
+
+            <button
+              type="button"
+              className="primary-button"
+              onClick={() => inputRef.current?.click()}
+              disabled={enviando}
+            >
+              {enviando ? "Enviando..." : "+ Anexar arquivos"}
+            </button>
+          </div>
 
           <p style={{ marginTop: 8, fontSize: 13 }}>
             Qualquer tipo de arquivo (fotos, vídeos, áudios, documentos),
-            até {LIMITE_MB} MB cada. Você pode selecionar vários de uma vez.
+            até {LIMITE_MB} MB cada. Você pode selecionar vários de uma vez;
+            todos recebem a tag escolhida. Se a tag ficar em branco, eles são
+            salvos como <strong>OUTROS</strong>.
           </p>
 
           {enviando && (
@@ -253,15 +316,23 @@ function ArquivosCaso({ caso, onFechar }) {
         </div>
       )}
 
+      <FiltroTag
+        id="filtro-tag-arquivo-caso"
+        tags={tagsDoCaso}
+        value={filtroTag}
+        onChange={setFiltroTag}
+      />
+
       {carregando ? (
         <p>Carregando arquivos...</p>
-      ) : arquivos.length === 0 ? (
+      ) : arquivosFiltrados.length === 0 ? (
         <p>Nenhum arquivo anexado a este caso.</p>
       ) : (
         <div style={{ overflowX: "auto" }}>
           <table>
             <thead>
               <tr>
+                <th>Tag</th>
                 <th>Nome</th>
                 <th>Tamanho</th>
                 <th>Enviado em</th>
@@ -270,8 +341,12 @@ function ArquivosCaso({ caso, onFechar }) {
             </thead>
 
             <tbody>
-              {arquivos.map((arquivo) => (
+              {arquivosFiltrados.map((arquivo) => (
                 <tr key={arquivo.id}>
+                  <td>
+                    <EtiquetaTag tag={arquivo.tag} />
+                  </td>
+
                   <td style={{ wordBreak: "break-word" }}>
                     {arquivo.nome_original}
                   </td>
@@ -303,13 +378,91 @@ function ArquivosCaso({ caso, onFechar }) {
                       </button>
 
                       {podeEditarCasos && (
-                        <button
-                          type="button"
-                          onClick={() => remover(arquivo)}
-                        >
-                          Remover
-                        </button>
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => trocarTag(arquivo)}
+                          >
+                            Alterar tag
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => remover(arquivo)}
+                          >
+                            Remover
+                          </button>
+                        </>
                       )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <h3 style={{ marginTop: 32, marginBottom: 8 }}>Documentos do cliente</h3>
+
+      <p style={{ marginTop: 0, marginBottom: 16, fontSize: 13 }}>
+        Puxados automaticamente do cadastro do cliente. Para incluir ou
+        remover, use a aba Clientes.
+      </p>
+
+      {carregando ? (
+        <p>Carregando documentos...</p>
+      ) : documentosCliente.length === 0 ? (
+        <p>O cliente deste caso não possui documentos anexados.</p>
+      ) : (
+        <div style={{ overflowX: "auto" }}>
+          <table>
+            <thead>
+              <tr>
+                <th>Tag</th>
+                <th>Nome</th>
+                <th>Tamanho</th>
+                <th>Enviado em</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {documentosCliente.map((documento) => (
+                <tr key={documento.id}>
+                  <td>
+                    <EtiquetaTag tag={documento.tag} />
+                  </td>
+
+                  <td style={{ wordBreak: "break-word" }}>
+                    {documento.nome_original}
+                  </td>
+
+                  <td>{formatarTamanho(documento.tamanho_bytes)}</td>
+
+                  <td>{formatarData(documento.criado_em)}</td>
+
+                  <td>
+                    <div
+                      style={{
+                        display: "flex",
+                        gap: 8,
+                        flexWrap: "wrap",
+                      }}
+                    >
+                      <button
+                        type="button"
+                        onClick={() => abrirDocumentoCliente(documento, true)}
+                      >
+                        Abrir
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => abrirDocumentoCliente(documento, false)}
+                      >
+                        Baixar
+                      </button>
                     </div>
                   </td>
                 </tr>
