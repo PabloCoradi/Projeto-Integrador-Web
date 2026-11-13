@@ -25,6 +25,15 @@ class ArquivoCaso(Base):
         nullable=False,
     )
 
+    # Ex.: PETIÇÃO, CONTRATO, SENTENÇA, PROVA, OUTROS
+    tag: Mapped[str] = mapped_column(
+        String(50),
+        nullable=False,
+        default="OUTROS",
+        server_default="OUTROS",
+        index=True,
+    )
+
     nome_original: Mapped[str] = mapped_column(
         String(255),
         nullable=False,
