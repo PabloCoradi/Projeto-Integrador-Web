@@ -7,8 +7,12 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session, load_only
 from sqlalchemy.sql.elements import ColumnElement
 
+from app.core.imagens_padrao import IMAGENS_PADRAO
 from app.models.artigo import Artigo, agora_utc
+from app.models.imagem_artigo import ImagemArtigo
 from app.models.usuario import Usuario
+
+CAMPOS_DE_CAPA = {"imagem_id", "imagem_padrao", "imagem_alt"}
 
 
 class ArtigoError(Exception):
@@ -64,6 +68,28 @@ def _normalizar_titulo(titulo: str) -> str:
         )
 
     return titulo
+
+
+def _validar_capa(
+    db: Session,
+    imagem_id: int | None,
+    imagem_padrao: str | None,
+) -> None:
+    if imagem_id is not None and imagem_padrao is not None:
+        raise ArtigoInvalidoError(
+            "Escolha apenas uma imagem de capa: enviada ou padrão."
+        )
+
+    if imagem_padrao is not None and imagem_padrao not in IMAGENS_PADRAO:
+        raise ArtigoInvalidoError("Imagem padrão desconhecida.")
+
+    if imagem_id is not None and db.scalar(
+        select(ImagemArtigo.id).where(
+            ImagemArtigo.id == imagem_id,
+            ImagemArtigo.ativo.is_(True),
+        )
+    ) is None:
+        raise ArtigoInvalidoError("Imagem de capa não encontrada.")
 
 
 def _campos_ausentes_para_publicacao(
@@ -210,6 +236,9 @@ def listar_artigos_publicos(
                     Artigo.titulo,
                     Artigo.slug,
                     Artigo.resumo,
+                    Artigo.imagem_id,
+                    Artigo.imagem_padrao,
+                    Artigo.imagem_alt,
                     Artigo.publicado_em,
                 )
             )
@@ -251,6 +280,9 @@ def criar_artigo(
     titulo: str,
     resumo: str | None = None,
     conteudo: str | None = None,
+    imagem_id: int | None = None,
+    imagem_padrao: str | None = None,
+    imagem_alt: str | None = None,
 ) -> Artigo:
     """Cria um artigo como rascunho e atribui um slug estável."""
 
@@ -265,6 +297,8 @@ def criar_artigo(
         raise AutorInvalidoError("Autor não encontrado ou inativo.")
 
     titulo = _normalizar_titulo(titulo)
+    _validar_capa(db=db, imagem_id=imagem_id, imagem_padrao=imagem_padrao)
+
     for tentativa in range(3):
         artigo = Artigo(
             autor_id=autor_id,
@@ -272,6 +306,9 @@ def criar_artigo(
             slug=gerar_slug_unico(db=db, titulo=titulo),
             resumo=resumo,
             conteudo=conteudo,
+            imagem_id=imagem_id,
+            imagem_padrao=imagem_padrao,
+            imagem_alt=imagem_alt,
             status="rascunho",
         )
         db.add(artigo)
@@ -293,11 +330,11 @@ def criar_artigo(
 def atualizar_artigo(
     db: Session,
     artigo_id: int,
-    campos: Mapping[str, str | None],
+    campos: Mapping[str, str | int | None],
 ) -> Artigo:
     """Atualiza campos editoriais sem modificar slug, autoria ou status."""
 
-    campos_permitidos = {"titulo", "resumo", "conteudo"}
+    campos_permitidos = {"titulo", "resumo", "conteudo"} | CAMPOS_DE_CAPA
     campos_recebidos = set(campos)
 
     if not campos_recebidos:
@@ -334,6 +371,29 @@ def atualizar_artigo(
     if "conteudo" in campos:
         novo_conteudo = campos["conteudo"]
 
+    # Escolher uma capa enviada descarta a padrão e vice-versa
+    nova_imagem_id = artigo.imagem_id
+    nova_imagem_padrao = artigo.imagem_padrao
+
+    if "imagem_id" in campos:
+        nova_imagem_id = campos["imagem_id"]
+
+        if nova_imagem_id is not None and "imagem_padrao" not in campos:
+            nova_imagem_padrao = None
+
+    if "imagem_padrao" in campos:
+        nova_imagem_padrao = campos["imagem_padrao"]
+
+        if nova_imagem_padrao is not None and "imagem_id" not in campos:
+            nova_imagem_id = None
+
+    if (campos_recebidos - {"imagem_alt"}) & CAMPOS_DE_CAPA:
+        _validar_capa(
+            db=db,
+            imagem_id=nova_imagem_id,
+            imagem_padrao=nova_imagem_padrao,
+        )
+
     if artigo.status == "publicado":
         campos_ausentes = _campos_ausentes_para_publicacao(
             titulo=novo_titulo,
@@ -351,6 +411,11 @@ def atualizar_artigo(
     artigo.titulo = novo_titulo
     artigo.resumo = novo_resumo
     artigo.conteudo = novo_conteudo
+    artigo.imagem_id = nova_imagem_id
+    artigo.imagem_padrao = nova_imagem_padrao
+
+    if "imagem_alt" in campos:
+        artigo.imagem_alt = campos["imagem_alt"]
 
     return _commit_refresh(db=db, artigo=artigo)
 

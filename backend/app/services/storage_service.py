@@ -32,6 +32,18 @@ def gerar_chave(caso_id: int) -> str:
     return f"casos/{caso_id}/{uuid.uuid4().hex}"
 
 
+def gerar_chave_cliente(cliente_id: int) -> str:
+    """Documentos pessoais ficam separados, na pasta clientes/ do bucket."""
+
+    return f"clientes/{cliente_id}/{uuid.uuid4().hex}"
+
+
+def gerar_chave_imagem_artigo() -> str:
+    """Imagens de capa dos artigos ficam na pasta artigos/ do bucket."""
+
+    return f"artigos/{uuid.uuid4().hex}.webp"
+
+
 def enviar_arquivo(arquivo, chave: str, content_type: str) -> None:
 
     try:
@@ -70,3 +82,23 @@ def gerar_url_download(
         raise FalhaStorageError(
             "Não foi possível gerar o link do arquivo."
         ) from erro
+
+
+def baixar_arquivo(chave: str):
+    """Lê um objeto do RustFS em partes; retorna (partes, content_type, tamanho)."""
+
+    try:
+        resposta = _cliente.get_object(
+            Bucket=settings.RUSTFS_BUCKET,
+            Key=chave,
+        )
+    except (BotoCoreError, ClientError) as erro:
+        raise FalhaStorageError(
+            "Não foi possível ler o arquivo do armazenamento."
+        ) from erro
+
+    return (
+        resposta["Body"].iter_chunks(64 * 1024),
+        resposta.get("ContentType"),
+        resposta.get("ContentLength"),
+    )
