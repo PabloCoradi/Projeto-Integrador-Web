@@ -12,10 +12,16 @@ import {
   publicarArtigo,
 } from "../../services/artigos";
 
+import CapaArtigo, { urlDaCapa } from "./CapaArtigo";
+
 const CAMPOS_VAZIOS = {
   titulo: "",
   resumo: "",
   conteudo: "",
+  // Capa: imagem enviada OU imagem padrão; as duas vazias = imagem automática
+  imagem_id: null,
+  imagem_padrao: null,
+  imagem_alt: "",
 };
 
 // O que vai para a API: campos vazios viram null (o artigo continua rascunho)
@@ -24,6 +30,9 @@ function dadosEditoriais(campos) {
     titulo: campos.titulo.trim(),
     resumo: campos.resumo.trim() || null,
     conteudo: campos.conteudo.trim() || null,
+    imagem_id: campos.imagem_id,
+    imagem_padrao: campos.imagem_padrao,
+    imagem_alt: campos.imagem_alt.trim() || null,
   };
 }
 
@@ -32,6 +41,9 @@ function camposDoArtigo(artigo) {
     titulo: artigo.titulo,
     resumo: artigo.resumo || "",
     conteudo: artigo.conteudo || "",
+    imagem_id: artigo.imagem_id ?? null,
+    imagem_padrao: artigo.imagem_padrao ?? null,
+    imagem_alt: artigo.imagem_alt || "",
   };
 }
 
@@ -95,6 +107,12 @@ function ArtigoEditor() {
   function alterarCampo(event) {
     const { name, value } = event.target;
     setCampos((atuais) => ({ ...atuais, [name]: value }));
+    setMensagem("");
+    setErro("");
+  }
+
+  function alterarCapa(alteracoes) {
+    setCampos((atuais) => ({ ...atuais, ...alteracoes }));
     setMensagem("");
     setErro("");
   }
@@ -289,6 +307,8 @@ function ArtigoEditor() {
             <small>{campos.titulo.length}/250</small>
           </label>
 
+          <CapaArtigo campos={campos} onChange={alterarCapa} disabled={processando} />
+
           <label className="artigos-campo">
             <span>Resumo</span>
             <textarea
@@ -325,6 +345,11 @@ function ArtigoEditor() {
         >
           <span className="artigo-editor__previa-rotulo">Como vai aparecer no site</span>
           <article>
+            <img
+              className="artigo-editor__previa-capa"
+              src={urlDaCapa(campos)}
+              alt={campos.imagem_alt.trim()}
+            />
             <h2>{campos.titulo.trim() || "Título do artigo"}</h2>
             {paragrafos.length > 0 ? (
               paragrafos.map((paragrafo, indice) => <p key={indice}>{paragrafo}</p>)

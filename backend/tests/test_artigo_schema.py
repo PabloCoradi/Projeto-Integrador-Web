@@ -24,6 +24,11 @@ class ArtigoSchemaTest(unittest.TestCase):
             slug="direitos-trabalhistas",
             resumo="Resumo público",
             conteudo="# Conteúdo em Markdown",
+            imagem_id=None,
+            imagem_padrao="familia",
+            imagem_alt=None,
+            imagem_url="/api/public/imagens-artigos/padrao/familia",
+            imagem_alt_publico="Ilustração de uma casa com um coração",
             status="publicado",
             publicado_em=self.agora,
             excluido_em=None,
@@ -68,6 +73,14 @@ class ArtigoSchemaTest(unittest.TestCase):
             with self.subTest(dados=dados), self.assertRaises(ValidationError):
                 ArtigoUpdate(**dados)
 
+    def test_capa_aceita_so_uma_imagem_e_limpa_textos_vazios(self) -> None:
+        dados = ArtigoUpdate(imagem_padrao=" ", imagem_alt="  ")
+        self.assertIsNone(dados.imagem_padrao)
+        self.assertIsNone(dados.imagem_alt)
+
+        with self.assertRaises(ValidationError):
+            ArtigoCreate(titulo="Novo artigo", imagem_id=1, imagem_padrao="geral")
+
     def test_atualizacao_rejeita_campos_controlados_pelo_backend(self) -> None:
         with self.assertRaises(ValidationError):
             ArtigoUpdate(status="publicado")
@@ -90,9 +103,13 @@ class ArtigoSchemaTest(unittest.TestCase):
                 "slug",
                 "resumo",
                 "conteudo",
+                "imagem_url",
+                "imagem_alt",
                 "publicado_em",
             },
         )
+        self.assertEqual(dados["imagem_alt"], "Ilustração de uma casa com um coração")
+        self.assertNotIn("imagem_id", dados)
         self.assertNotIn("autor_id", dados)
         self.assertNotIn("status", dados)
         self.assertNotIn("excluido_em", dados)

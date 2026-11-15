@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800">
+  <defs>
+    <linearGradient id="fundo" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#22272d"/>
+      <stop offset="1" stop-color="#0a4f55"/>
+    </linearGradient>
+    <radialGradient id="luz" cx="50%" cy="48%" r="42%">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.12"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#fundo)"/>
+  <g fill="none" stroke="#ffffff" stroke-opacity="0.07" stroke-width="2">
+    <circle cx="600" cy="400" r="240"/>
+    <circle cx="600" cy="400" r="320"/>
+    <circle cx="600" cy="400" r="400"/>
+    <circle cx="600" cy="400" r="480"/>
+  </g>
+  <rect width="1200" height="800" fill="url(#luz)"/>
+  <g transform="translate(600 400)" fill="none" stroke="#e6f4f4" stroke-width="12"
+     stroke-linecap="round" stroke-linejoin="round">
+    <rect x="-170" y="-165" width="240" height="310" rx="22"/>
+    <circle cx="-95" cy="-80" r="22"/>
+    <circle cx="-5" cy="10" r="22"/>
+    <path d="M10 -105 L-110 35"/>
+    <path d="M-120 95 H20"/>
+    <ellipse cx="160" cy="135" rx="62" ry="22"/>
+    <path d="M98 135 V95 M222 135 V95"/>
+    <ellipse cx="160" cy="95" rx="62" ry="22"/>
+    <path d="M98 95 V55 M222 95 V55"/>
+    <ellipse cx="160" cy="55" rx="62" ry="22"/>
+  </g>
+</svg>

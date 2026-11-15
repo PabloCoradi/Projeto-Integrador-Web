@@ -32,6 +32,7 @@ from app.models.caso import Caso
 from app.models.arquivo_caso import ArquivoCaso
 from app.models.documento_cliente import DocumentoCliente
 from app.models.artigo import Artigo
+from app.models.imagem_artigo import ImagemArtigo
 from app.models.permissao import Permissao
 
 target_metadata = Usuario.metadata
