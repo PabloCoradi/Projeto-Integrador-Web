@@ -1,14 +1,27 @@
-﻿from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+﻿from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.dependencies import exigir_permissao
 from app.models.usuario import Usuario
-from app.schemas.arquivo_caso import ArquivoCasoResponse, ArquivoLinkResponse
+from app.schemas.arquivo_caso import (
+    ArquivoCasoResponse,
+    ArquivoCasoUpdate,
+    ArquivoLinkResponse,
+)
 from app.services.arquivo_service import (
     ArquivoInvalidoError,
     CasoNaoEncontradoError,
     anexar_arquivo,
+    atualizar_tag_arquivo,
     buscar_arquivo,
     gerar_link,
     inativar_arquivo,
@@ -32,6 +45,7 @@ router = APIRouter(
 def anexar(
     caso_id: int,
     arquivo: UploadFile = File(...),
+    tag: str = Form(""),
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
 ):
@@ -41,6 +55,7 @@ def anexar(
             caso_id=caso_id,
             usuario_id=usuario.id,
             arquivo=arquivo,
+            tag=tag,
         )
     except CasoNaoEncontradoError as erro:
         raise HTTPException(
@@ -65,6 +80,7 @@ def anexar(
 )
 def listar(
     caso_id: int,
+    tag: str | None = None,
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "visualizar")),
 ):
@@ -74,7 +90,13 @@ def listar(
             detail="Caso não encontrado.",
         )
 
-    return listar_arquivos(db=db, caso_id=caso_id)
+    try:
+        return listar_arquivos(db=db, caso_id=caso_id, tag=tag)
+    except ArquivoInvalidoError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(erro),
+        )
 
 
 @router.get(
@@ -107,6 +129,33 @@ def link_download(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=str(erro),
         )
+
+
+@router.patch(
+    "/{arquivo_id}",
+    response_model=ArquivoCasoResponse,
+)
+def alterar_tag(
+    caso_id: int,
+    arquivo_id: int,
+    dados: ArquivoCasoUpdate,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
+):
+    arquivo = atualizar_tag_arquivo(
+        db=db,
+        caso_id=caso_id,
+        arquivo_id=arquivo_id,
+        tag=dados.tag,
+    )
+
+    if arquivo is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Arquivo não encontrado.",
+        )
+
+    return arquivo
 
 
 @router.delete("/{arquivo_id}")

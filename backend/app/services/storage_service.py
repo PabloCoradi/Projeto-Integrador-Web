@@ -32,6 +32,12 @@ def gerar_chave(caso_id: int) -> str:
     return f"casos/{caso_id}/{uuid.uuid4().hex}"
 
 
+def gerar_chave_cliente(cliente_id: int) -> str:
+    """Documentos pessoais ficam separados, na pasta clientes/ do bucket."""
+
+    return f"clientes/{cliente_id}/{uuid.uuid4().hex}"
+
+
 def enviar_arquivo(arquivo, chave: str, content_type: str) -> None:
 
     try:

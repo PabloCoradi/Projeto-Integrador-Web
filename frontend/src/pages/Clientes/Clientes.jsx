@@ -1,7 +1,9 @@
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+
+import DocumentosCliente from "./DocumentosCliente";
 
 const FORMULARIO_VAZIO = {
   nome: "",
@@ -34,6 +36,20 @@ function Clientes() {
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState("");
+
+  const [clienteDosDocumentos, setClienteDosDocumentos] = useState(null);
+  const painelDocumentosRef = useRef(null);
+
+  function abrirDocumentos(cliente) {
+    setClienteDosDocumentos(cliente);
+
+    requestAnimationFrame(() => {
+      painelDocumentosRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
 
   async function carregarClientes() {
     try {
@@ -197,6 +213,10 @@ function Clientes() {
         setEditandoId(null);
       }
 
+      if (clienteDosDocumentos?.id === cliente.id) {
+        setClienteDosDocumentos(null);
+      }
+
       await carregarClientes();
     } catch (error) {
       setErro(error.message);
@@ -335,6 +355,16 @@ function Clientes() {
         </div>
       )}
 
+      {clienteDosDocumentos && (
+        <div ref={painelDocumentosRef}>
+          <DocumentosCliente
+            key={clienteDosDocumentos.id}
+            cliente={clienteDosDocumentos}
+            onFechar={() => setClienteDosDocumentos(null)}
+          />
+        </div>
+      )}
+
       <div className="content-card">
         {!carregando && clientes.length > 0 && (
           <div className="form-group" style={{ marginBottom: 20 }}>
@@ -368,7 +398,7 @@ function Clientes() {
                 <th>CPF/CNPJ</th>
                 <th>E-mail</th>
                 <th>Telefone</th>
-                {podeEditarClientes && <th>Ações</th>}
+                <th>Ações</th>
               </tr>
             </thead>
 
@@ -380,25 +410,34 @@ function Clientes() {
                   <td>{cliente.email || "-"}</td>
                   <td>{cliente.telefone || "-"}</td>
 
-                  {podeEditarClientes && (
-                    <td>
-                      <div style={{ display: "flex", gap: 8 }}>
-                        <button
-                          type="button"
-                          onClick={() => abrirEdicao(cliente)}
-                        >
-                          Editar
-                        </button>
+                  <td>
+                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                      <button
+                        type="button"
+                        onClick={() => abrirDocumentos(cliente)}
+                      >
+                        Documentos
+                      </button>
 
-                        <button
-                          type="button"
-                          onClick={() => inativarCliente(cliente)}
-                        >
-                          Inativar
-                        </button>
-                      </div>
-                    </td>
-                  )}
+                      {podeEditarClientes && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => abrirEdicao(cliente)}
+                          >
+                            Editar
+                          </button>
+
+                          <button
+                            type="button"
+                            onClick={() => inativarCliente(cliente)}
+                          >
+                            Inativar
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

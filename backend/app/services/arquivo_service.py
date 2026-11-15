@@ -16,6 +16,11 @@ from app.services.storage_service import (
 TAMANHO_MAXIMO_MB = 500
 TAMANHO_MAXIMO_BYTES = TAMANHO_MAXIMO_MB * 1024 * 1024
 
+TAMANHO_MAXIMO_TAG = 50
+
+# Usada quando o arquivo é enviado sem tag
+TAG_PADRAO = "OUTROS"
+
 
 class CasoNaoEncontradoError(Exception):
     pass
@@ -25,16 +30,27 @@ class ArquivoInvalidoError(ValueError):
     pass
 
 
-def anexar_arquivo(
-    db: Session,
-    caso_id: int,
-    usuario_id: int,
-    arquivo: UploadFile,
-) -> ArquivoCaso:
-    caso = buscar_caso(db=db, caso_id=caso_id)
+def normalizar_tag(tag: str | None) -> str:
+    """Padroniza a tag: sem espaços sobrando e em maiúsculas ("cnh " -> "CNH").
 
-    if caso is None:
-        raise CasoNaoEncontradoError("Caso não encontrado.")
+    Sem tag informada, o arquivo recebe a TAG_PADRAO.
+    """
+
+    tag = " ".join((tag or "").split()).upper()
+
+    if not tag:
+        return TAG_PADRAO
+
+    if len(tag) > TAMANHO_MAXIMO_TAG:
+        raise ArquivoInvalidoError(
+            f"A tag pode ter no máximo {TAMANHO_MAXIMO_TAG} caracteres."
+        )
+
+    return tag
+
+
+def validar_upload(arquivo: UploadFile) -> tuple[str, int, str]:
+    """Valida o arquivo enviado e retorna (nome, tamanho, content_type)."""
 
     nome = Path(arquivo.filename or "").name.strip()
 
@@ -56,6 +72,24 @@ def anexar_arquivo(
         )
 
     content_type = arquivo.content_type or "application/octet-stream"
+
+    return nome, tamanho, content_type
+
+
+def anexar_arquivo(
+    db: Session,
+    caso_id: int,
+    usuario_id: int,
+    arquivo: UploadFile,
+    tag: str | None = None,
+) -> ArquivoCaso:
+    caso = buscar_caso(db=db, caso_id=caso_id)
+
+    if caso is None:
+        raise CasoNaoEncontradoError("Caso não encontrado.")
+
+    tag = normalizar_tag(tag)
+    nome, tamanho, content_type = validar_upload(arquivo)
     chave = gerar_chave(caso_id)
 
     enviar_arquivo(arquivo.file, chave, content_type)
@@ -63,6 +97,7 @@ def anexar_arquivo(
     registro = ArquivoCaso(
         caso_id=caso_id,
         enviado_por_id=usuario_id,
+        tag=tag,
         nome_original=nome,
         chave_storage=chave,
         content_type=content_type,
@@ -76,15 +111,20 @@ def anexar_arquivo(
     return registro
 
 
-def listar_arquivos(db: Session, caso_id: int) -> list[ArquivoCaso]:
-    consulta = (
-        select(ArquivoCaso)
-        .where(
-            ArquivoCaso.caso_id == caso_id,
-            ArquivoCaso.ativo.is_(True),
-        )
-        .order_by(ArquivoCaso.criado_em.desc())
+def listar_arquivos(
+    db: Session,
+    caso_id: int,
+    tag: str | None = None,
+) -> list[ArquivoCaso]:
+    consulta = select(ArquivoCaso).where(
+        ArquivoCaso.caso_id == caso_id,
+        ArquivoCaso.ativo.is_(True),
     )
+
+    if tag and tag.strip():
+        consulta = consulta.where(ArquivoCaso.tag == normalizar_tag(tag))
+
+    consulta = consulta.order_by(ArquivoCaso.criado_em.desc())
 
     return list(db.scalars(consulta).all())
 
@@ -114,6 +154,24 @@ def gerar_link(arquivo: ArquivoCaso, inline: bool = False) -> dict:
         "url": url,
         "expira_em_segundos": EXPIRA_EM_SEGUNDOS,
     }
+
+
+def atualizar_tag_arquivo(
+    db: Session,
+    caso_id: int,
+    arquivo_id: int,
+    tag: str,
+) -> ArquivoCaso | None:
+    arquivo = buscar_arquivo(db=db, caso_id=caso_id, arquivo_id=arquivo_id)
+
+    if arquivo is None:
+        return None
+
+    arquivo.tag = normalizar_tag(tag)
+    db.commit()
+    db.refresh(arquivo)
+
+    return arquivo
 
 
 def inativar_arquivo(

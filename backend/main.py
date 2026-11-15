@@ -14,6 +14,8 @@ from app.routers.artigos_publicos import router as artigos_publicos_router
 from app.routers.clientes import router as clientes_router
 from app.routers.casos import router as casos_router
 from app.routers.arquivos import router as arquivos_router
+from app.routers.documentos_clientes import router as documentos_clientes_router
+from app.routers.documentos_clientes import router_casos as documentos_cliente_casos_router
 from app.routers.administradores import router as administradores_router
 
 
@@ -56,6 +58,8 @@ app.include_router(artigos_publicos_router)
 app.include_router(clientes_router)
 app.include_router(casos_router)
 app.include_router(arquivos_router)
+app.include_router(documentos_clientes_router)
+app.include_router(documentos_cliente_casos_router)
 app.include_router(administradores_router)
 
 
