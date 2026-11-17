@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import "./Artigos.css";
 
 import { useAuth } from "../../contexts/AuthContext";
+
 import {
   despublicarArtigo,
   excluirArtigo,
@@ -24,12 +25,17 @@ const DADOS_VAZIOS = {
 
 function Artigos() {
   const navigate = useNavigate();
+
   const { podeEditar } = useAuth();
   const editavel = podeEditar("artigos");
 
-  // O que está sendo pedido à API. Mudar a consulta (página, filtro, busca ou
-  // "versao" para recarregar) dispara uma nova busca.
-  const [consulta, setConsulta] = useState({ page: 1, status: "", q: "", versao: 0 });
+  const [consulta, setConsulta] = useState({
+    page: 1,
+    status: "",
+    q: "",
+    versao: 0,
+  });
+
   const [dados, setDados] = useState(DADOS_VAZIOS);
   const [busca, setBusca] = useState("");
   const [carregando, setCarregando] = useState(true);
@@ -48,14 +54,19 @@ function Artigos() {
     })
       .then((resposta) => {
         if (!ativo) return;
+
         setDados(resposta);
         setErro("");
       })
       .catch((error) => {
-        if (ativo) setErro(error.message);
+        if (ativo) {
+          setErro(error.message);
+        }
       })
       .finally(() => {
-        if (ativo) setCarregando(false);
+        if (ativo) {
+          setCarregando(false);
+        }
       });
 
     return () => {
@@ -65,27 +76,48 @@ function Artigos() {
 
   function consultar(mudancas) {
     setCarregando(true);
-    setConsulta((atual) => ({ ...atual, ...mudancas, versao: atual.versao + 1 }));
+
+    setConsulta((atual) => ({
+      ...atual,
+      ...mudancas,
+      versao: atual.versao + 1,
+    }));
   }
 
   function aplicarBusca(event) {
     event.preventDefault();
+
     setMensagem("");
-    consultar({ page: 1, q: busca.trim() });
+
+    consultar({
+      page: 1,
+      q: busca.trim(),
+    });
   }
 
   function alterarStatus(event) {
     setMensagem("");
-    consultar({ page: 1, status: event.target.value });
+
+    consultar({
+      page: 1,
+      status: event.target.value,
+    });
   }
 
   function limparFiltros() {
     setBusca("");
     setMensagem("");
-    consultar({ page: 1, status: "", q: "" });
+
+    consultar({
+      page: 1,
+      status: "",
+      q: "",
+    });
   }
 
   async function alternarPublicacao(artigo) {
+    if (!editavel) return;
+
     const publicar = artigo.status !== "publicado";
 
     try {
@@ -93,14 +125,18 @@ function Artigos() {
       setErro("");
       setMensagem("");
 
-      if (publicar) await publicarArtigo(artigo.id);
-      else await despublicarArtigo(artigo.id);
+      if (publicar) {
+        await publicarArtigo(artigo.id);
+      } else {
+        await despublicarArtigo(artigo.id);
+      }
 
       setMensagem(
         publicar
           ? `“${artigo.titulo}” foi publicado e já aparece no site.`
           : `“${artigo.titulo}” saiu do site e voltou para rascunho.`
       );
+
       consultar({});
     } catch (error) {
       setErro(error.message);
@@ -110,6 +146,8 @@ function Artigos() {
   }
 
   async function remover(artigo) {
+    if (!editavel) return;
+
     const confirmou = window.confirm(
       `Excluir o artigo “${artigo.titulo}”? Ele sai do site e das listagens.`
     );
@@ -122,11 +160,17 @@ function Artigos() {
       setMensagem("");
 
       await excluirArtigo(artigo.id);
+
       setMensagem(`“${artigo.titulo}” foi excluído.`);
 
-      // Se era o último item da página, volta uma página
-      const ultimaDaPagina = dados.items.length === 1 && dados.page > 1;
-      consultar({ page: ultimaDaPagina ? dados.page - 1 : dados.page });
+      const ultimaDaPagina =
+        dados.items.length === 1 && dados.page > 1;
+
+      consultar({
+        page: ultimaDaPagina
+          ? dados.page - 1
+          : dados.page,
+      });
     } catch (error) {
       setErro(error.message);
     } finally {
@@ -134,29 +178,44 @@ function Artigos() {
     }
   }
 
-  const possuiFiltros = Boolean(consulta.q || consulta.status);
+  const possuiFiltros = Boolean(
+    consulta.q || consulta.status
+  );
+
+  const inicio = dados.total
+    ? (dados.page - 1) * ITENS_POR_PAGINA + 1
+    : 0;
+
+  const fim = Math.min(
+    dados.page * ITENS_POR_PAGINA,
+    dados.total
+  );
 
   return (
-    <div className="artigos">
-      <div className="page-header">
+    <div className="page page--articles">
+      <header className="page-heading page-heading--action">
         <div>
           <h1>Artigos</h1>
-          <p>Notícias e artigos exibidos na página de Notícias do site.</p>
+
+          <p>
+            Gerencie os conteúdos editoriais publicados
+            no site institucional.
+          </p>
         </div>
 
         {editavel && (
           <button
-            className="primary-button"
+            className="button button--primary"
             type="button"
             onClick={() => navigate("/artigos/novo")}
           >
-            Novo artigo
+            + Novo artigo
           </button>
         )}
-      </div>
+      </header>
 
       {erro && (
-        <div className="error-message" role="alert">
+        <div className="alert alert--error" role="alert">
           {erro}
         </div>
       )}
@@ -167,62 +226,121 @@ function Artigos() {
         </div>
       )}
 
-      <div className="content-card">
-        <form className="artigos-filtros" onSubmit={aplicarBusca}>
-          <label className="artigos-campo artigos-campo--busca">
-            <span>Buscar</span>
+      <section className="surface data-panel articles-library">
+        <div className="section-heading">
+          <h2>Biblioteca de artigos</h2>
+
+          <p>
+            Consulte artigos, rascunhos e publicações
+            do escritório.
+          </p>
+        </div>
+
+        <form
+          className="filters-row article-filters"
+          onSubmit={aplicarBusca}
+        >
+          <div className="form-field filters-row__search">
+            <label htmlFor="artigo-busca">
+              Buscar
+            </label>
+
             <input
+              id="artigo-busca"
               type="search"
               value={busca}
-              onChange={(event) => setBusca(event.target.value)}
-              placeholder="Título, resumo ou conteúdo"
+              onChange={(event) =>
+                setBusca(event.target.value)
+              }
+              placeholder="Pesquise por título, resumo ou conteúdo..."
             />
-          </label>
+          </div>
 
-          <label className="artigos-campo">
-            <span>Status</span>
-            <select value={consulta.status} onChange={alterarStatus}>
-              <option value="">Todos</option>
-              <option value="publicado">Publicados</option>
-              <option value="rascunho">Rascunhos</option>
+          <div className="form-field">
+            <label htmlFor="artigo-status">
+              Status
+            </label>
+
+            <select
+              id="artigo-status"
+              value={consulta.status}
+              onChange={alterarStatus}
+            >
+              <option value="">
+                Todos
+              </option>
+
+              <option value="rascunho">
+                Rascunhos
+              </option>
+
+              <option value="publicado">
+                Publicados
+              </option>
             </select>
-          </label>
+          </div>
 
-          <button className="primary-button" type="submit">
-            Buscar
-          </button>
-
-          {possuiFiltros && (
-            <button className="secondary-button" type="button" onClick={limparFiltros}>
-              Limpar filtros
+          <div className="filters-row__actions">
+            <button
+              className="button button--primary"
+              type="submit"
+            >
+              Buscar
             </button>
-          )}
+
+            {possuiFiltros && (
+              <button
+                className="button button--quiet"
+                type="button"
+                onClick={limparFiltros}
+              >
+                Limpar
+              </button>
+            )}
+          </div>
+
+          <small>
+            A busca é aplicada ao clicar em Buscar.
+            O filtro de status é atualizado ao selecionar uma opção.
+          </small>
         </form>
 
-        <p className="artigos-total" aria-live="polite">
-          {dados.total} {dados.total === 1 ? "artigo encontrado" : "artigos encontrados"}
+        <p className="results-summary" aria-live="polite">
+          {dados.total}{" "}
+          {dados.total === 1
+            ? "artigo encontrado"
+            : "artigos encontrados"}
         </p>
 
         {carregando && dados.items.length === 0 ? (
-          <p className="artigos-estado">Carregando artigos…</p>
+          <div className="empty-state">
+            Carregando artigos...
+          </div>
         ) : dados.items.length === 0 ? (
-          <p className="artigos-estado">
+          <div className="empty-state">
             {possuiFiltros
               ? "Nenhum artigo encontrado com esses filtros."
               : "Nenhum artigo cadastrado ainda."}
-          </p>
+          </div>
         ) : (
-          <div className="artigos-tabela">
-            <table aria-busy={carregando}>
+          <div className="table-scroll artigos-tabela">
+            <table
+              className="data-table articles-table"
+              aria-busy={carregando}
+            >
               <thead>
                 <tr>
-                  <th>Artigo</th>
+                  <th>Conteúdo</th>
                   <th>Status</th>
-                  <th>Publicação</th>
-                  <th>Atualização</th>
-                  {editavel && <th>Ações</th>}
+                  <th>Publicado em</th>
+                  <th>Atualizado em</th>
+
+                  {editavel && (
+                    <th>Ações</th>
+                  )}
                 </tr>
               </thead>
+
               <tbody>
                 {dados.items.map((artigo) => {
                   const ocupado = acaoId === artigo.id;
@@ -230,42 +348,75 @@ function Artigos() {
                   return (
                     <tr key={artigo.id}>
                       <td>
-                        <strong className="artigos-titulo">{artigo.titulo}</strong>
-                        <span className="artigos-slug">/noticias/{artigo.slug}</span>
+                        <strong>
+                          {artigo.titulo}
+                        </strong>
+
+                        <small>
+                          /noticias/{artigo.slug}
+                        </small>
                       </td>
+
                       <td>
-                        <span className={`artigos-status artigos-status--${artigo.status}`}>
-                          {artigo.status === "publicado" ? "Publicado" : "Rascunho"}
+                        <span
+                          className={
+                            `article-status article-status--${artigo.status}`
+                          }
+                        >
+                          {artigo.status === "publicado"
+                            ? "Publicado"
+                            : "Rascunho"}
                         </span>
                       </td>
-                      <td>{formatarData(artigo.publicado_em)}</td>
-                      <td>{formatarData(artigo.atualizado_em)}</td>
+
+                      <td>
+                        {formatarData(artigo.publicado_em)}
+                      </td>
+
+                      <td>
+                        {formatarData(artigo.atualizado_em)}
+                      </td>
+
                       {editavel && (
                         <td>
-                          <div className="artigos-acoes">
+                          <span className="table-actions">
                             <button
                               type="button"
+                              className="text-action"
                               disabled={ocupado}
-                              onClick={() => navigate(`/artigos/${artigo.id}/editar`)}
+                              onClick={() =>
+                                navigate(
+                                  `/artigos/${artigo.id}/editar`
+                                )
+                              }
                             >
                               Editar
                             </button>
+
                             <button
                               type="button"
+                              className="text-action"
                               disabled={ocupado}
-                              onClick={() => alternarPublicacao(artigo)}
+                              onClick={() =>
+                                alternarPublicacao(artigo)
+                              }
                             >
-                              {artigo.status === "publicado" ? "Despublicar" : "Publicar"}
+                              {artigo.status === "publicado"
+                                ? "Despublicar"
+                                : "Publicar"}
                             </button>
+
                             <button
                               type="button"
-                              className="artigos-excluir"
+                              className="text-action text-action--danger"
                               disabled={ocupado}
-                              onClick={() => remover(artigo)}
+                              onClick={() =>
+                                remover(artigo)
+                              }
                             >
                               Excluir
                             </button>
-                          </div>
+                          </span>
                         </td>
                       )}
                     </tr>
@@ -277,29 +428,57 @@ function Artigos() {
         )}
 
         {dados.total_paginas > 1 && (
-          <nav className="artigos-paginacao" aria-label="Paginação dos artigos">
-            <button
-              type="button"
-              className="secondary-button"
-              disabled={carregando || dados.page <= 1}
-              onClick={() => consultar({ page: dados.page - 1 })}
-            >
-              Anterior
-            </button>
+          <nav
+            className="pagination"
+            aria-label="Paginação dos artigos"
+          >
             <span>
-              Página {dados.page} de {dados.total_paginas}
+              Exibindo {inicio}–{fim} de {dados.total} artigos
             </span>
-            <button
-              type="button"
-              className="secondary-button"
-              disabled={carregando || dados.page >= dados.total_paginas}
-              onClick={() => consultar({ page: dados.page + 1 })}
-            >
-              Próxima
-            </button>
+
+            <div>
+              <button
+                type="button"
+                className="button button--quiet"
+                disabled={
+                  carregando || dados.page <= 1
+                }
+                onClick={() =>
+                  consultar({
+                    page: dados.page - 1,
+                  })
+                }
+              >
+                Anterior
+              </button>
+
+              <span>
+                Página {dados.page} de {dados.total_paginas}
+              </span>
+
+              <button
+                type="button"
+                className="button button--quiet"
+                disabled={
+                  carregando ||
+                  dados.page >= dados.total_paginas
+                }
+                onClick={() =>
+                  consultar({
+                    page: dados.page + 1,
+                  })
+                }
+              >
+                Próxima
+              </button>
+            </div>
           </nav>
         )}
-      </div>
+      </section>
+
+      <p className="stage-footer">
+        ETAPA 05 / ARTIGOS • LISTAGEM E PUBLICAÇÃO
+      </p>
     </div>
   );
 }

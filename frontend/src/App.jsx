@@ -1,10 +1,11 @@
-﻿
+import { useState } from "react";
 import {
   BrowserRouter,
-  Routes,
-  Route,
-  Link,
   Navigate,
+  NavLink,
+  Route,
+  Routes,
+  useLocation,
 } from "react-router-dom";
 
 import "./App.css";
@@ -12,21 +13,75 @@ import "./App.css";
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Clientes from "./pages/Clientes/Clientes";
 import Casos from "./pages/Casos/Casos";
+import Artigos from "./pages/Artigos/Artigos";
+import ArtigoEditor from "./pages/Artigos/ArtigoEditor";
 import Login from "./pages/Login/Login";
 import Administradores from "./pages/Administradores/Administradores";
 import RedefinirSenha from "./pages/RedefinirSenha/RedefinirSenha";
-import Artigos from "./pages/Artigos/Artigos";
-import ArtigoEditor from "./pages/Artigos/ArtigoEditor";
 
-import {
-  AuthProvider,
-  useAuth,
-} from "./contexts/AuthContext";
+import { AuthProvider, useAuth } from "./contexts/AuthContext";
+
+import dashboardActive from "./assets/panel/dashboard-active.svg";
+import dashboardInactive from "./assets/panel/dashboard-inactive.svg";
+import clientsActive from "./assets/panel/clients-active.svg";
+import clientsInactive from "./assets/panel/clients-inactive.svg";
+import casesActive from "./assets/panel/cases-active.svg";
+import casesInactive from "./assets/panel/cases-inactive.svg";
+import articlesActive from "./assets/panel/articles-active.svg";
+import articlesInactive from "./assets/panel/articles-inactive.svg";
+import restrictedIcon from "./assets/panel/restricted.svg";
+
+const NAVEGACAO = [
+  {
+    to: "/",
+    modulo: "dashboard",
+    label: "Dashboard",
+    activeIcon: dashboardActive,
+    inactiveIcon: dashboardInactive,
+    end: true,
+  },
+  {
+    to: "/clientes",
+    modulo: "clientes",
+    label: "Clientes",
+    activeIcon: clientsActive,
+    inactiveIcon: clientsInactive,
+  },
+  {
+    to: "/casos",
+    modulo: "casos",
+    label: "Casos",
+    activeIcon: casesActive,
+    inactiveIcon: casesInactive,
+  },
+  {
+    to: "/artigos",
+    modulo: "artigos",
+    label: "Artigos",
+    activeIcon: articlesActive,
+    inactiveIcon: articlesInactive,
+  },
+];
+
+// Ordem das páginas usadas como início quando o usuário não vê o Dashboard.
+const PAGINAS_INICIAIS = [
+  { modulo: "clientes", rota: "/clientes" },
+  { modulo: "casos", rota: "/casos" },
+  { modulo: "artigos", rota: "/artigos" },
+];
 
 function RotaProtegida({ children }) {
   const { autenticado, carregando } = useAuth();
 
-  if (carregando) return <p>Carregando...</p>;
+  if (carregando) {
+    return (
+      <div className="app-loading">
+        <span className="loading-spinner" aria-hidden="true" />
+        <p>Carregando o painel...</p>
+      </div>
+    );
+  }
+
   if (!autenticado) return <Navigate to="/login" replace />;
 
   return children;
@@ -42,14 +97,6 @@ function RotaAdministrador({ children }) {
   return children;
 }
 
-// Páginas do menu na ordem em que aparecem. Quem não pode ver o Dashboard
-// vai para a primeira página que tem permissão (evita redirecionar em círculo).
-const PAGINAS_INICIAIS = [
-  { modulo: "clientes", rota: "/clientes" },
-  { modulo: "casos", rota: "/casos" },
-  { modulo: "artigos", rota: "/artigos" },
-];
-
 function SemAcesso() {
   return (
     <div className="content-card">
@@ -62,94 +109,238 @@ function SemAcesso() {
   );
 }
 
-function Layout() {
-  const { usuario, logout, podeVisualizar, podeEditar } = useAuth();
+function Marca() {
+  return (
+    <div className="brand-lockup" aria-label="Giongo & Raguzzoni">
+      <span className="brand-lockup__accent" aria-hidden="true" />
+      <span>
+        GIONGO &amp;
+        <br />
+        RAGUZZONI
+      </span>
+    </div>
+  );
+}
 
-  const rotaInicial = PAGINAS_INICIAIS.find((pagina) => podeVisualizar(pagina.modulo))?.rota;
+function Sidebar({ aberta, aoFechar }) {
+  const { usuario, podeVisualizar } = useAuth();
+
+  return (
+    <>
+      <button
+        className={`sidebar-scrim ${aberta ? "is-open" : ""}`}
+        type="button"
+        aria-label="Fechar menu"
+        onClick={aoFechar}
+      />
+
+      <aside className={`sidebar ${aberta ? "is-open" : ""}`}>
+        <Marca />
+        <p className="sidebar__product">PAINEL ADMINISTRATIVO</p>
+        <div className="sidebar__divider" />
+        <p className="sidebar__section">NAVEGAÇÃO</p>
+
+        <nav className="sidebar__nav" aria-label="Navegação principal">
+          {NAVEGACAO.filter((item) => podeVisualizar(item.modulo)).map((item) => (
+            <NavLink
+              key={item.to}
+              to={item.to}
+              end={item.end}
+              onClick={aoFechar}
+              className={({ isActive }) =>
+                `sidebar__link ${isActive ? "is-active" : ""}`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <img
+                    src={isActive ? item.activeIcon : item.inactiveIcon}
+                    alt=""
+                    width="24"
+                    height="24"
+                  />
+                  <span>{item.label}</span>
+                  {isActive && <i aria-hidden="true" />}
+                </>
+              )}
+            </NavLink>
+          ))}
+
+          {usuario?.is_admin && (
+            <NavLink
+              to="/administradores"
+              onClick={aoFechar}
+              className={({ isActive }) =>
+                `sidebar__link ${isActive ? "is-active" : ""}`
+              }
+            >
+              {({ isActive }) => (
+                <>
+                  <img src={restrictedIcon} alt="" width="24" height="24" />
+                  <span>Administradores</span>
+                  {isActive && <i aria-hidden="true" />}
+                </>
+              )}
+            </NavLink>
+          )}
+        </nav>
+
+        <div className="sidebar__footer">
+          <div className="sidebar__divider" />
+          <p className="sidebar__restricted">
+            <img src={restrictedIcon} alt="" width="24" height="24" />
+            Acesso restrito
+          </p>
+          <p className="sidebar__office">Giongo &amp; Raguzzoni</p>
+        </div>
+      </aside>
+    </>
+  );
+}
+
+function Topbar({ pagina, aoAbrirMenu }) {
+  const { usuario, logout } = useAuth();
+  const inicial = usuario?.nome?.trim()?.[0]?.toUpperCase() || "U";
+
+  return (
+    <header className="topbar">
+      <button
+        className="topbar__menu"
+        type="button"
+        onClick={aoAbrirMenu}
+        aria-label="Abrir menu"
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      <div className="topbar__breadcrumb">
+        <span>PAINEL ADMINISTRATIVO</span>
+        <strong>{pagina}</strong>
+      </div>
+
+      <div className="topbar__session">
+        <span className="topbar__session-divider" />
+        <span className="topbar__avatar">{inicial}</span>
+        <span className="topbar__user">
+          <strong>{usuario?.nome || "Usuário autenticado"}</strong>
+          <small>Sessão ativa</small>
+        </span>
+        <button
+          type="button"
+          className="button button--quiet topbar__logout"
+          onClick={logout}
+        >
+          Sair
+        </button>
+      </div>
+    </header>
+  );
+}
+
+function Layout() {
+  const location = useLocation();
+  const [menuAberto, setMenuAberto] = useState(false);
+  const { podeVisualizar, podeEditar } = useAuth();
+
+  const rotaInicial = PAGINAS_INICIAIS.find((pagina) =>
+    podeVisualizar(pagina.modulo)
+  )?.rota;
+
+  const pagina = location.pathname.startsWith("/administradores")
+    ? "Administradores"
+    : NAVEGACAO.find((item) =>
+        item.end
+          ? location.pathname === item.to
+          : location.pathname.startsWith(item.to)
+      )?.label || "Painel";
 
   return (
     <div className="app">
-      <header className="header">
-        <div className="logo">Sistema de Advocacia</div>
+      <Sidebar aberta={menuAberto} aoFechar={() => setMenuAberto(false)} />
 
-        <div className="usuario">
-          <span>{usuario?.nome || "Usuário"}</span>
-          <button onClick={logout}>Sair</button>
-        </div>
-      </header>
-
-      <div className="layout">
-        <aside className="sidebar">
-          <nav>
-            {podeVisualizar("dashboard") && (
-              <Link to="/" className="menu-item">Dashboard</Link>
-            )}
-
-            {podeVisualizar("clientes") && (
-              <Link to="/clientes" className="menu-item">Clientes</Link>
-            )}
-
-            {podeVisualizar("casos") && (
-              <Link to="/casos" className="menu-item">Casos</Link>
-            )}
-
-            {podeVisualizar("artigos") && (
-              <Link to="/artigos" className="menu-item">Artigos</Link>
-            )}
-
-            {usuario?.is_admin && (
-              <Link to="/administradores" className="menu-item">
-                Administradores
-              </Link>
-            )}
-          </nav>
-        </aside>
+      <div className="workspace">
+        <Topbar pagina={pagina} aoAbrirMenu={() => setMenuAberto(true)} />
 
         <main className="content">
           <Routes>
-            <Route path="/" element={
-              podeVisualizar("dashboard")
-                ? <Dashboard />
-                : rotaInicial
-                  ? <Navigate to={rotaInicial} replace />
-                  : <SemAcesso />
-            } />
+            <Route
+              path="/"
+              element={
+                podeVisualizar("dashboard") ? (
+                  <Dashboard />
+                ) : rotaInicial ? (
+                  <Navigate to={rotaInicial} replace />
+                ) : (
+                  <SemAcesso />
+                )
+              }
+            />
 
-            <Route path="/clientes" element={
-              podeVisualizar("clientes")
-                ? <Clientes />
-                : <Navigate to="/" replace />
-            } />
+            <Route
+              path="/clientes"
+              element={
+                podeVisualizar("clientes") ? (
+                  <Clientes />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
 
-            <Route path="/casos" element={
-              podeVisualizar("casos")
-                ? <Casos />
-                : <Navigate to="/" replace />
-            } />
+            <Route
+              path="/casos"
+              element={
+                podeVisualizar("casos") ? (
+                  <Casos />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
 
-            <Route path="/artigos" element={
-              podeVisualizar("artigos")
-                ? <Artigos />
-                : <Navigate to="/" replace />
-            } />
+            <Route
+              path="/artigos"
+              element={
+                podeVisualizar("artigos") ? (
+                  <Artigos />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
 
-            <Route path="/artigos/novo" element={
-              podeEditar("artigos")
-                ? <ArtigoEditor />
-                : <Navigate to="/artigos" replace />
-            } />
+            <Route
+              path="/artigos/novo"
+              element={
+                podeEditar("artigos") ? (
+                  <ArtigoEditor />
+                ) : (
+                  <Navigate to="/artigos" replace />
+                )
+              }
+            />
 
-            <Route path="/artigos/:artigoId/editar" element={
-              podeEditar("artigos")
-                ? <ArtigoEditor />
-                : <Navigate to="/artigos" replace />
-            } />
+            <Route
+              path="/artigos/:artigoId/editar"
+              element={
+                podeEditar("artigos") ? (
+                  <ArtigoEditor />
+                ) : (
+                  <Navigate to="/artigos" replace />
+                )
+              }
+            />
 
-            <Route path="/administradores" element={
-              <RotaAdministrador>
-                <Administradores />
-              </RotaAdministrador>
-            } />
+            <Route
+              path="/administradores"
+              element={
+                <RotaAdministrador>
+                  <Administradores />
+                </RotaAdministrador>
+              }
+            />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
