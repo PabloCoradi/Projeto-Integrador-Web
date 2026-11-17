@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+
+import DocumentosCliente from "./DocumentosCliente";
 
 const FORMULARIO_VAZIO = {
   nome: "",
@@ -41,6 +43,20 @@ function Clientes() {
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState("");
+
+  const [clienteDosDocumentos, setClienteDosDocumentos] = useState(null);
+  const painelDocumentosRef = useRef(null);
+
+  function abrirDocumentos(cliente) {
+    setClienteDosDocumentos(cliente);
+
+    requestAnimationFrame(() => {
+      painelDocumentosRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    });
+  }
 
   async function carregarClientes() {
     try {
@@ -202,6 +218,10 @@ function Clientes() {
 
       if (editandoId === cliente.id) {
         fecharFormulario();
+      }
+
+      if (clienteDosDocumentos?.id === cliente.id) {
+        setClienteDosDocumentos(null);
       }
 
       await carregarClientes();
@@ -372,6 +392,16 @@ function Clientes() {
         </section>
       )}
 
+      {clienteDosDocumentos && (
+        <div ref={painelDocumentosRef}>
+          <DocumentosCliente
+            key={clienteDosDocumentos.id}
+            cliente={clienteDosDocumentos}
+            onFechar={() => setClienteDosDocumentos(null)}
+          />
+        </div>
+      )}
+
       <section className="surface data-panel">
         <div className="section-heading">
           <h2>Clientes cadastrados</h2>
@@ -380,7 +410,6 @@ function Clientes() {
             Consulte os registros ativos e acesse as ações disponíveis.
           </p>
         </div>
-
         {!carregando && clientes.length > 0 && (
           <div className="search-block">
             <div className="search-input">
@@ -423,10 +452,7 @@ function Clientes() {
                   <th>CPF/CNPJ</th>
                   <th>E-mail</th>
                   <th>Telefone</th>
-
-                  {podeEditarClientes && (
-                    <th>Ações</th>
-                  )}
+                  <th>Ações</th>
                 </tr>
               </thead>
 
@@ -457,27 +483,37 @@ function Clientes() {
                       {cliente.telefone || "—"}
                     </td>
 
-                    {podeEditarClientes && (
-                      <td>
-                        <span className="table-actions">
-                          <button
-                            type="button"
-                            className="text-action"
-                            onClick={() => abrirEdicao(cliente)}
-                          >
-                            Editar
-                          </button>
+                    <td>
+                      <span className="table-actions">
+                        <button
+                          type="button"
+                          className="text-action"
+                          onClick={() => abrirDocumentos(cliente)}
+                        >
+                          Documentos
+                        </button>
 
-                          <button
-                            type="button"
-                            className="text-action text-action--danger"
-                            onClick={() => inativarCliente(cliente)}
-                          >
-                            Inativar
-                          </button>
-                        </span>
-                      </td>
-                    )}
+                        {podeEditarClientes && (
+                          <>
+                            <button
+                              type="button"
+                              className="text-action"
+                              onClick={() => abrirEdicao(cliente)}
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              className="text-action text-action--danger"
+                              onClick={() => inativarCliente(cliente)}
+                            >
+                              Inativar
+                            </button>
+                          </>
+                        )}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

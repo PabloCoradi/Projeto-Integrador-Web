@@ -243,9 +243,187 @@
   color: #374151;
 }
 
-
 .artigo-editor__previa .artigo-editor__vazio {
   color: #9ca3af;
+}
+
+.artigo-editor__previa-capa {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  margin-bottom: 16px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+/* Imagem de capa */
+.artigo-capa {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.artigo-capa__titulo {
+  font-size: 14px;
+  font-weight: 600;
+  color: #374151;
+}
+
+.artigo-capa__atual {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.artigo-capa__atual img {
+  flex: 0 0 auto;
+  width: 120px;
+  aspect-ratio: 3 / 2;
+  border-radius: 6px;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+.artigo-capa__info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  font-size: 14px;
+  color: #374151;
+}
+
+.artigo-capa__info strong {
+  overflow-wrap: anywhere;
+}
+
+.artigo-capa__botoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.artigo-capa__link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: #4b5563;
+  font-size: 14px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.artigo-capa__seletor {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #f9fafb;
+}
+
+.artigo-capa__abas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.artigo-capa__abas button {
+  padding: 6px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  background: white;
+  color: #374151;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.artigo-capa__abas button.ativa {
+  border-color: #1f2937;
+  background: #1f2937;
+  color: white;
+}
+
+.artigo-capa__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 10px;
+  max-height: 340px;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+
+.artigo-capa__grade li {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.artigo-capa__opcao {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.artigo-capa__opcao img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 3 / 2;
+  border-radius: 4px;
+  object-fit: cover;
+  background: #e5e7eb;
+}
+
+.artigo-capa__opcao span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.artigo-capa__opcao:hover,
+.artigo-capa__opcao:focus-visible {
+  border-color: #9ca3af;
+}
+
+.artigo-capa__opcao[aria-pressed="true"] {
+  border-color: #1f2937;
+}
+
+.artigo-capa__remover {
+  align-self: flex-start;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: #b91c1c;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.artigo-capa__envio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.artigo-capa__envio small,
+.artigo-capa__vazio {
+  margin: 0;
+  color: #6b7280;
+  font-size: 12px;
 }
 
 /* Celular e telas estreitas: um painel por vez, com abas */

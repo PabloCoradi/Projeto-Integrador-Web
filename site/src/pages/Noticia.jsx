@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useParams } from 'react-router-dom';
-import { buscarArtigo, dividirParagrafos, formatarData } from '../services/artigos';
+import { buscarArtigo, dividirParagrafos, formatarData, urlDaImagem } from '../services/artigos';
 import Cabecalho from '../components/Cabecalho';
 import Hero from '../components/Hero';
 import Contato from '../components/Contato';
@@ -55,6 +55,14 @@ export default function Noticia() {
 
         <article className="noticia" aria-busy={carregando}>
           <div className="noticia__texto container">
+            {artigo && (
+              <img
+                className="noticia__capa"
+                src={urlDaImagem(artigo.imagem_url)}
+                alt={artigo.imagem_alt}
+              />
+            )}
+
             {artigo && dividirParagrafos(artigo.conteudo).map((p, i) => <p key={i}>{p}</p>)}
 
             {erro && (

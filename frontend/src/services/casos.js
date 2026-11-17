@@ -40,12 +40,33 @@ export function listarArquivos(casoId) {
   return apiRequest(`/api/casos/${casoId}/arquivos/`);
 }
 
-export function enviarArquivo(casoId, arquivo, onProgress) {
+// Sugestões exibidas no campo de tag (o usuário pode digitar outra)
+export const TAGS_PADRAO_CASO = [
+  "PETIÇÃO",
+  "CONTRATO",
+  "PROCURAÇÃO",
+  "SENTENÇA",
+  "DECISÃO",
+  "PROVA",
+  "COMPROVANTE",
+  "LAUDO",
+  "OUTROS",
+];
+
+export function enviarArquivo(casoId, arquivo, tag, onProgress) {
   const formData = new FormData();
 
   formData.append("arquivo", arquivo);
+  formData.append("tag", tag || "");
 
   return apiUpload(`/api/casos/${casoId}/arquivos/`, formData, onProgress);
+}
+
+export function alterarTagArquivo(casoId, arquivoId, tag) {
+  return apiRequest(`/api/casos/${casoId}/arquivos/${arquivoId}`, {
+    method: "PATCH",
+    body: JSON.stringify({ tag }),
+  });
 }
 
 export function gerarLinkArquivo(casoId, arquivoId, inline = false) {

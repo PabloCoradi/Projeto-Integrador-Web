@@ -89,6 +89,9 @@ def cadastrar_artigo(
             titulo=dados.titulo,
             resumo=dados.resumo,
             conteudo=dados.conteudo,
+            imagem_id=dados.imagem_id,
+            imagem_padrao=dados.imagem_padrao,
+            imagem_alt=dados.imagem_alt,
         )
     except (
         ArtigoConflitoError,
