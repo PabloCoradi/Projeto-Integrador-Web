@@ -1,7 +1,7 @@
-
 import { useEffect, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+
 import {
   atualizarCaso,
   criarCaso,
@@ -24,12 +24,15 @@ function Casos() {
 
   const [casos, setCasos] = useState([]);
   const [clientes, setClientes] = useState([]);
+
   const [filtros, setFiltros] = useState({
     tipoAtendimento: "",
     q: "",
   });
+
   const [form, setForm] = useState(FORM_VAZIO);
   const [editandoId, setEditandoId] = useState(null);
+
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
@@ -42,13 +45,14 @@ function Casos() {
     setCarregando(true);
 
     try {
-      const dados = await listarCasos({
+      const lista = await listarCasos({
         tipoAtendimento: filtrosAtuais.tipoAtendimento.trim(),
         q: filtrosAtuais.q.trim(),
       });
-      setCasos(dados);
-    } catch (e) {
-      setErro(e.message);
+
+      setCasos(lista);
+    } catch (error) {
+      setErro(error.message);
     } finally {
       setCarregando(false);
     }
@@ -61,10 +65,11 @@ function Casos() {
           apiRequest("/api/clientes/"),
           listarCasos(),
         ]);
+
         setClientes(listaClientes);
         setCasos(listaCasos);
-      } catch (e) {
-        setErro(e.message);
+      } catch (error) {
+        setErro(error.message);
       } finally {
         setCarregando(false);
       }
@@ -74,25 +79,37 @@ function Casos() {
   }, []);
 
   function nomeDoCliente(clienteId) {
-    const cliente = clientes.find((c) => c.id === clienteId);
-    return cliente ? cliente.nome : `Cliente #${clienteId}`;
+    return (
+      clientes.find((cliente) => cliente.id === clienteId)?.nome ||
+      `Cliente #${clienteId}`
+    );
   }
 
   function alterarForm(campo, valor) {
-    setForm((atual) => ({ ...atual, [campo]: valor }));
+    setForm((atual) => ({
+      ...atual,
+      [campo]: valor,
+    }));
   }
 
   function iniciarEdicao(caso) {
     if (!podeEditarCasos) return;
 
     setEditandoId(caso.id);
+
     setForm({
       cliente_id: String(caso.cliente_id),
       titulo: caso.titulo,
       tipo_atendimento: caso.tipo_atendimento,
       observacoes: caso.observacoes || "",
     });
+
     setErro("");
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function cancelarEdicao() {
@@ -132,8 +149,8 @@ function Casos() {
 
       cancelarEdicao();
       await carregarCasos();
-    } catch (e) {
-      setErro(e.message);
+    } catch (error) {
+      setErro(error.message);
     } finally {
       setSalvando(false);
     }
@@ -142,19 +159,28 @@ function Casos() {
   async function inativar(caso) {
     if (!podeEditarCasos) return;
 
-    if (!window.confirm(`Inativar o caso "${caso.titulo}"?`)) return;
+    const confirmou = window.confirm(
+      `Inativar o caso "${caso.titulo}"?`
+    );
+
+    if (!confirmou) return;
 
     setErro("");
 
     try {
       await inativarCaso(caso.id);
 
-      if (editandoId === caso.id) cancelarEdicao();
-      if (casoDosArquivos?.id === caso.id) setCasoDosArquivos(null);
+      if (editandoId === caso.id) {
+        cancelarEdicao();
+      }
+
+      if (casoDosArquivos?.id === caso.id) {
+        setCasoDosArquivos(null);
+      }
 
       await carregarCasos();
-    } catch (e) {
-      setErro(e.message);
+    } catch (error) {
+      setErro(error.message);
     }
   }
 
@@ -169,101 +195,149 @@ function Casos() {
     }, 0);
   }
 
-  function buscar(evento) {
-    evento.preventDefault();
-    carregarCasos();
-  }
-
   function limparFiltros() {
-    const vazio = { tipoAtendimento: "", q: "" };
+    const vazio = {
+      tipoAtendimento: "",
+      q: "",
+    };
+
     setFiltros(vazio);
     carregarCasos(vazio);
   }
 
   return (
-    <div>
-      <h1>Casos</h1>
-      <p>Gerencie os casos e processos dos clientes.</p>
+    <div className="page page--cases">
+      <header className="page-heading page-heading--action">
+        <div>
+          <h1>Casos</h1>
+
+          <p>
+            Cadastre, consulte e gerencie os casos vinculados aos clientes.
+          </p>
+        </div>
+
+        <span className="status-label">
+          CLIENTES ATIVOS
+        </span>
+      </header>
 
       {erro && (
-        <div role="alert" className="error-message">
+        <div role="alert" className="alert alert--error">
           {erro}
         </div>
       )}
 
       {podeEditarCasos && (
-        <div className="content-card cliente-form-card">
-          <h2>{editandoId ? "Editar caso" : "Novo caso"}</h2>
+        <section className="surface surface--accent form-panel">
+          <div className="section-heading">
+            <h2>
+              {editandoId ? "Editar caso" : "Novo caso"}
+            </h2>
+
+            <p>
+              {editandoId
+                ? "Atualize as informações do caso. O cliente vinculado não pode ser alterado."
+                : "Vincule o caso a um cliente ativo e registre as informações principais."}
+            </p>
+          </div>
 
           <form onSubmit={salvar}>
             <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="caso-cliente">Cliente</label>
+              <div className="form-field">
+                <label htmlFor="caso-cliente">
+                  Cliente *
+                </label>
+
                 <select
                   id="caso-cliente"
                   value={form.cliente_id}
-                  onChange={(e) =>
-                    alterarForm("cliente_id", e.target.value)
+                  onChange={(event) =>
+                    alterarForm("cliente_id", event.target.value)
                   }
                   disabled={editandoId !== null}
                   required
                 >
-                  <option value="">Selecione...</option>
-                  {clientes.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nome}
+                  <option value="">
+                    Selecione um cliente ativo
+                  </option>
+
+                  {clientes.map((cliente) => (
+                    <option key={cliente.id} value={cliente.id}>
+                      {cliente.nome}
                     </option>
                   ))}
                 </select>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="caso-tipo">Tipo de atendimento</label>
+              <div className="form-field">
+                <label htmlFor="caso-tipo">
+                  Tipo de atendimento *
+                </label>
+
                 <input
                   id="caso-tipo"
                   type="text"
                   value={form.tipo_atendimento}
-                  onChange={(e) =>
-                    alterarForm("tipo_atendimento", e.target.value)
+                  onChange={(event) =>
+                    alterarForm(
+                      "tipo_atendimento",
+                      event.target.value
+                    )
                   }
+                  placeholder="Ex.: Direito empresarial"
                   minLength={2}
                   maxLength={100}
                   required
                 />
               </div>
 
-              <div className="form-group form-group-full">
-                <label htmlFor="caso-titulo">Título</label>
+              <div className="form-field form-field--full">
+                <label htmlFor="caso-titulo">
+                  Título *
+                </label>
+
                 <input
                   id="caso-titulo"
                   type="text"
                   value={form.titulo}
-                  onChange={(e) => alterarForm("titulo", e.target.value)}
+                  onChange={(event) =>
+                    alterarForm("titulo", event.target.value)
+                  }
+                  placeholder="Informe o título do caso"
                   minLength={2}
                   maxLength={200}
                   required
                 />
               </div>
 
-              <div className="form-group form-group-full">
-                <label htmlFor="caso-obs">Observações</label>
+              <div className="form-field form-field--wide">
+                <label htmlFor="caso-obs">
+                  Observações
+                </label>
+
                 <textarea
                   id="caso-obs"
-                  rows={4}
+                  rows={3}
                   value={form.observacoes}
-                  onChange={(e) =>
-                    alterarForm("observacoes", e.target.value)
+                  onChange={(event) =>
+                    alterarForm("observacoes", event.target.value)
                   }
+                  placeholder="Adicione observações, se necessário."
                 />
+
+                <small>
+                  Tipo: 2–100 caracteres • Título: 2–200 caracteres
+                </small>
               </div>
             </div>
 
-            <div className="form-actions">
+            <div className="form-actions form-actions--inline">
               {editandoId && (
                 <button
                   type="button"
-                  className="secondary-button"
+                  className="button button--quiet"
                   onClick={cancelarEdicao}
+                  disabled={salvando}
                 >
                   Cancelar
                 </button>
@@ -271,7 +345,7 @@ function Casos() {
 
               <button
                 type="submit"
-                className="primary-button"
+                className="button button--primary"
                 disabled={salvando}
               >
                 {salvando
@@ -282,7 +356,7 @@ function Casos() {
               </button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {casoDosArquivos && (
@@ -295,64 +369,93 @@ function Casos() {
         </div>
       )}
 
-      <div className="content-card">
-        <h2 style={{ marginTop: 0, marginBottom: 24 }}>
-          Casos cadastrados
-        </h2>
+      <section className="surface data-panel">
+        <div className="section-heading">
+          <h2>Casos cadastrados</h2>
 
-        <form onSubmit={buscar} style={{ marginBottom: 24 }}>
-          <div className="form-grid">
-            <div className="form-group">
-              <label htmlFor="filtro-q">Buscar</label>
-              <input
-                id="filtro-q"
-                type="text"
-                placeholder="Título ou observações"
-                value={filtros.q}
-                onChange={(e) =>
-                  setFiltros({ ...filtros, q: e.target.value })
-                }
-              />
-            </div>
+          <p>
+            Use os filtros e clique em Buscar para atualizar os resultados.
+          </p>
+        </div>
 
-            <div className="form-group">
-              <label htmlFor="filtro-tipo">Tipo de atendimento</label>
-              <input
-                id="filtro-tipo"
-                type="text"
-                placeholder="Igual ao cadastrado"
-                value={filtros.tipoAtendimento}
-                onChange={(e) =>
-                  setFiltros({
-                    ...filtros,
-                    tipoAtendimento: e.target.value,
-                  })
-                }
-              />
-            </div>
+        <form
+          className="filters-row"
+          onSubmit={(evento) => {
+            evento.preventDefault();
+            carregarCasos();
+          }}
+        >
+          <div className="form-field filters-row__search">
+            <label htmlFor="filtro-q">
+              Buscar título ou observações
+            </label>
+
+            <input
+              id="filtro-q"
+              type="text"
+              placeholder="Digite um termo para pesquisar"
+              value={filtros.q}
+              onChange={(event) =>
+                setFiltros({
+                  ...filtros,
+                  q: event.target.value,
+                })
+              }
+            />
           </div>
 
-          <div className="form-actions">
+          <div className="form-field">
+            <label htmlFor="filtro-tipo">
+              Tipo de atendimento
+            </label>
+
+            <input
+              id="filtro-tipo"
+              type="text"
+              placeholder="Todos os tipos"
+              value={filtros.tipoAtendimento}
+              onChange={(event) =>
+                setFiltros({
+                  ...filtros,
+                  tipoAtendimento: event.target.value,
+                })
+              }
+            />
+          </div>
+
+          <div className="filters-row__actions">
+            <button
+              type="submit"
+              className="button button--primary"
+            >
+              Buscar
+            </button>
+
             <button
               type="button"
-              className="secondary-button"
+              className="button button--quiet"
               onClick={limparFiltros}
             >
               Limpar
             </button>
-            <button type="submit" className="primary-button">
-              Buscar
-            </button>
           </div>
+
+          <small>
+            Os filtros não são aplicados automaticamente.
+          </small>
         </form>
 
         {carregando ? (
-          <p>Carregando...</p>
+          <div className="empty-state empty-state--compact">
+            Carregando casos...
+          </div>
         ) : casos.length === 0 ? (
-          <p>Nenhum caso encontrado.</p>
+          <div className="empty-state empty-state--compact">
+            Nenhum caso encontrado.
+          </div>
         ) : (
-          <div style={{ overflowX: "auto" }}>
-            <table>
+          <div className="table-scroll">
+            <table className="data-table cases-table">
               <thead>
                 <tr>
                   <th>Cliente</th>
@@ -366,20 +469,29 @@ function Casos() {
               <tbody>
                 {casos.map((caso) => (
                   <tr key={caso.id}>
-                    <td>{nomeDoCliente(caso.cliente_id)}</td>
-                    <td>{caso.titulo}</td>
-                    <td>{caso.tipo_atendimento}</td>
-                    <td>{caso.observacoes}</td>
                     <td>
-                      <div
-                        style={{
-                          display: "flex",
-                          gap: 8,
-                          flexWrap: "wrap",
-                        }}
-                      >
+                      <strong>
+                        {nomeDoCliente(caso.cliente_id)}
+                      </strong>
+                    </td>
+
+                    <td>{caso.titulo}</td>
+
+                    <td>
+                      <span className="type-chip">
+                        {caso.tipo_atendimento}
+                      </span>
+                    </td>
+
+                    <td>
+                      {caso.observacoes || "—"}
+                    </td>
+
+                    <td>
+                      <span className="table-actions">
                         <button
                           type="button"
+                          className="text-action"
                           onClick={() => abrirArquivos(caso)}
                         >
                           Arquivos
@@ -389,6 +501,7 @@ function Casos() {
                           <>
                             <button
                               type="button"
+                              className="text-action"
                               onClick={() => iniciarEdicao(caso)}
                             >
                               Editar
@@ -396,13 +509,14 @@ function Casos() {
 
                             <button
                               type="button"
+                              className="text-action text-action--danger"
                               onClick={() => inativar(caso)}
                             >
                               Inativar
                             </button>
                           </>
                         )}
-                      </div>
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -410,7 +524,11 @@ function Casos() {
             </table>
           </div>
         )}
-      </div>
+      </section>
+
+      <p className="stage-footer">
+        ETAPA 03 / CASOS • CADASTRO E LISTAGEM
+      </p>
     </div>
   );
 }

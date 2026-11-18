@@ -1,4 +1,3 @@
-
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
@@ -14,13 +13,22 @@ const FORMULARIO_VAZIO = {
   observacoes: "",
 };
 
-// Ignora maiúsculas/minúsculas e acentos
+// Ignora maiúsculas, minúsculas e acentos nas buscas.
 function normalizar(texto) {
   return (texto || "")
     .toString()
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
+}
+
+function obterIniciais(nome) {
+  const partes = (nome || "").trim().split(/\s+/).filter(Boolean);
+
+  return (
+    (partes[0]?.[0] || "") +
+    (partes[1]?.[0] || partes[0]?.[1] || "")
+  ).toUpperCase();
 }
 
 function Clientes() {
@@ -30,7 +38,6 @@ function Clientes() {
   const [clientes, setClientes] = useState([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState("");
-
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
@@ -88,14 +95,14 @@ function Clientes() {
 
       if (textos.includes(termo)) return true;
 
-      if (termoNumerico) {
-        const numeros = `${cliente.cpf_cnpj || ""}${cliente.telefone || ""}`
-          .replace(/\D/g, "");
+      if (!termoNumerico) return false;
 
-        return numeros.includes(termoNumerico);
-      }
+      const numeros = (
+        String(cliente.cpf_cnpj || "") +
+        String(cliente.telefone || "")
+      ).replace(/\D/g, "");
 
-      return false;
+      return numeros.includes(termoNumerico);
     });
   }, [clientes, busca]);
 
@@ -133,7 +140,10 @@ function Clientes() {
     setErro("");
     setMostrarFormulario(true);
 
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
   }
 
   function fecharFormulario() {
@@ -169,17 +179,15 @@ function Clientes() {
       setSalvando(true);
       setErro("");
 
-      if (editandoId) {
-        await apiRequest(`/api/clientes/${editandoId}`, {
-          method: "PUT",
+      await apiRequest(
+        editandoId
+          ? "/api/clientes/" + editandoId
+          : "/api/clientes/",
+        {
+          method: editandoId ? "PUT" : "POST",
           body: JSON.stringify(corpo),
-        });
-      } else {
-        await apiRequest("/api/clientes/", {
-          method: "POST",
-          body: JSON.stringify(corpo),
-        });
-      }
+        }
+      );
 
       setMostrarFormulario(false);
       setEditandoId(null);
@@ -196,7 +204,7 @@ function Clientes() {
     if (!podeEditarClientes) return;
 
     const confirmou = window.confirm(
-      `Inativar o cliente "${cliente.nome}"?`
+      'Inativar o cliente "' + cliente.nome + '"?'
     );
 
     if (!confirmou) return;
@@ -204,13 +212,12 @@ function Clientes() {
     try {
       setErro("");
 
-      await apiRequest(`/api/clientes/${cliente.id}`, {
+      await apiRequest("/api/clientes/" + cliente.id, {
         method: "DELETE",
       });
 
       if (editandoId === cliente.id) {
-        setMostrarFormulario(false);
-        setEditandoId(null);
+        fecharFormulario();
       }
 
       if (clienteDosDocumentos?.id === cliente.id) {
@@ -224,107 +231,137 @@ function Clientes() {
   }
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="page page--clients">
+      <header className="page-heading page-heading--action">
         <div>
           <h1>Clientes</h1>
-          <p>Gerencie os clientes do escritório.</p>
+
+          <p>
+            Cadastre, consulte e mantenha atualizados os dados dos clientes.
+          </p>
         </div>
 
-        {podeEditarClientes && (
+        {podeEditarClientes && !mostrarFormulario && (
           <button
-            className="primary-button"
+            className="button button--primary"
+            type="button"
             onClick={abrirFormulario}
           >
             + Novo Cliente
           </button>
         )}
-      </div>
+      </header>
 
       {erro && (
-        <div className="error-message">
+        <div className="alert alert--error" role="alert">
           {erro}
         </div>
       )}
 
       {mostrarFormulario && podeEditarClientes && (
-        <div className="content-card cliente-form-card">
-          <h2>
-            {editandoId ? "Editar Cliente" : "Novo Cliente"}
-          </h2>
+        <section className="surface surface--accent form-panel">
+          <div className="section-heading">
+            <h2>
+              {editandoId ? "Editar Cliente" : "Novo Cliente"}
+            </h2>
+
+            <p>
+              {editandoId
+                ? "Atualize os dados cadastrais do cliente selecionado."
+                : "Preencha os dados abaixo para cadastrar um cliente."}
+            </p>
+          </div>
 
           <form onSubmit={salvarCliente}>
             <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="nome">Nome *</label>
+              <div className="form-field">
+                <label htmlFor="nome">
+                  Nome completo *
+                </label>
+
                 <input
                   id="nome"
                   name="nome"
-                  type="text"
                   value={formulario.nome}
                   onChange={alterarCampo}
-                  placeholder="Nome completo"
+                  placeholder="Digite o nome completo"
+                  maxLength={150}
                   required
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="cpf_cnpj">CPF/CNPJ</label>
+              <div className="form-field">
+                <label htmlFor="cpf_cnpj">
+                  CPF/CNPJ
+                </label>
+
                 <input
                   id="cpf_cnpj"
                   name="cpf_cnpj"
-                  type="text"
                   value={formulario.cpf_cnpj}
                   onChange={alterarCampo}
-                  placeholder="CPF ou CNPJ"
+                  placeholder="Digite o CPF ou CNPJ"
+                  maxLength={20}
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="email">E-mail</label>
+              <div className="form-field">
+                <label htmlFor="email">
+                  E-mail
+                </label>
+
                 <input
                   id="email"
                   name="email"
                   type="email"
                   value={formulario.email}
                   onChange={alterarCampo}
-                  placeholder="cliente@email.com"
+                  placeholder="exemplo@dominio.com"
                 />
               </div>
 
-              <div className="form-group">
-                <label htmlFor="telefone">Telefone</label>
+              <div className="form-field">
+                <label htmlFor="telefone">
+                  Telefone
+                </label>
+
                 <input
                   id="telefone"
                   name="telefone"
-                  type="text"
                   value={formulario.telefone}
                   onChange={alterarCampo}
-                  placeholder="(51) 99999-9999"
+                  placeholder="(00) 00000-0000"
+                  maxLength={30}
                 />
               </div>
 
-              <div className="form-group form-group-full">
-                <label htmlFor="endereco">Endereço</label>
+              <div className="form-field">
+                <label htmlFor="endereco">
+                  Endereço
+                </label>
+
                 <input
                   id="endereco"
                   name="endereco"
-                  type="text"
                   value={formulario.endereco}
                   onChange={alterarCampo}
-                  placeholder="Endereço completo"
+                  placeholder="Rua, número, bairro e cidade"
+                  maxLength={255}
                 />
               </div>
 
-              <div className="form-group form-group-full">
-                <label htmlFor="observacoes">Observações</label>
+              <div className="form-field">
+                <label htmlFor="observacoes">
+                  Observações
+                </label>
+
                 <textarea
                   id="observacoes"
                   name="observacoes"
                   value={formulario.observacoes}
                   onChange={alterarCampo}
-                  placeholder="Observações sobre o cliente"
-                  rows="4"
+                  placeholder="Informações complementares"
+                  rows={3}
                 />
               </div>
             </div>
@@ -332,7 +369,7 @@ function Clientes() {
             <div className="form-actions">
               <button
                 type="button"
-                className="secondary-button"
+                className="button button--quiet"
                 onClick={fecharFormulario}
                 disabled={salvando}
               >
@@ -341,18 +378,18 @@ function Clientes() {
 
               <button
                 type="submit"
-                className="primary-button"
+                className="button button--primary"
                 disabled={salvando}
               >
                 {salvando
                   ? "Salvando..."
                   : editandoId
-                    ? "Salvar Alterações"
+                    ? "Salvar alterações"
                     : "Salvar Cliente"}
               </button>
             </div>
           </form>
-        </div>
+        </section>
       )}
 
       {clienteDosDocumentos && (
@@ -365,85 +402,129 @@ function Clientes() {
         </div>
       )}
 
-      <div className="content-card">
+      <section className="surface data-panel">
+        <div className="section-heading">
+          <h2>Clientes cadastrados</h2>
+
+          <p>
+            Consulte os registros ativos e acesse as ações disponíveis.
+          </p>
+        </div>
         {!carregando && clientes.length > 0 && (
-          <div className="form-group" style={{ marginBottom: 20 }}>
-            <input
-              type="text"
-              value={busca}
-              onChange={(event) => setBusca(event.target.value)}
-              placeholder="Buscar por nome, CPF/CNPJ, e-mail ou telefone"
-              aria-label="Buscar clientes"
-            />
+          <div className="search-block">
+            <div className="search-input">
+              <span aria-hidden="true">
+                ⌕
+              </span>
+
+              <input
+                value={busca}
+                onChange={(event) => setBusca(event.target.value)}
+                placeholder="Buscar por nome, CPF/CNPJ, e-mail ou telefone..."
+                aria-label="Buscar clientes"
+              />
+            </div>
+
+            <small>
+              A lista é filtrada automaticamente enquanto você digita.
+            </small>
           </div>
         )}
 
-        {carregando && <p>Carregando clientes...</p>}
-
-        {!carregando && clientes.length === 0 && (
-          <p>Nenhum cliente cadastrado.</p>
-        )}
-
-        {!carregando &&
-          clientes.length > 0 &&
-          clientesFiltrados.length === 0 && (
-            <p>Nenhum cliente encontrado para a busca.</p>
-          )}
-
-        {!carregando && clientesFiltrados.length > 0 && (
-          <table>
-            <thead>
-              <tr>
-                <th>Nome</th>
-                <th>CPF/CNPJ</th>
-                <th>E-mail</th>
-                <th>Telefone</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {clientesFiltrados.map((cliente) => (
-                <tr key={cliente.id}>
-                  <td>{cliente.nome}</td>
-                  <td>{cliente.cpf_cnpj || "-"}</td>
-                  <td>{cliente.email || "-"}</td>
-                  <td>{cliente.telefone || "-"}</td>
-
-                  <td>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-                      <button
-                        type="button"
-                        onClick={() => abrirDocumentos(cliente)}
-                      >
-                        Documentos
-                      </button>
-
-                      {podeEditarClientes && (
-                        <>
-                          <button
-                            type="button"
-                            onClick={() => abrirEdicao(cliente)}
-                          >
-                            Editar
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={() => inativarCliente(cliente)}
-                          >
-                            Inativar
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </td>
+        {carregando ? (
+          <div className="empty-state empty-state--compact">
+            Carregando clientes...
+          </div>
+        ) : clientes.length === 0 ? (
+          <div className="empty-state empty-state--compact">
+            Nenhum cliente cadastrado.
+          </div>
+        ) : clientesFiltrados.length === 0 ? (
+          <div className="empty-state empty-state--compact">
+            Nenhum cliente encontrado para a busca.
+          </div>
+        ) : (
+          <div className="table-scroll">
+            <table className="data-table clients-table">
+              <thead>
+                <tr>
+                  <th>Nome</th>
+                  <th>CPF/CNPJ</th>
+                  <th>E-mail</th>
+                  <th>Telefone</th>
+                  <th>Ações</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+
+              <tbody>
+                {clientesFiltrados.map((cliente) => (
+                  <tr key={cliente.id}>
+                    <td>
+                      <span className="person-cell">
+                        <span className="person-avatar">
+                          {obterIniciais(cliente.nome)}
+                        </span>
+
+                        <strong>
+                          {cliente.nome}
+                        </strong>
+                      </span>
+                    </td>
+
+                    <td>
+                      {cliente.cpf_cnpj || "—"}
+                    </td>
+
+                    <td>
+                      {cliente.email || "—"}
+                    </td>
+
+                    <td>
+                      {cliente.telefone || "—"}
+                    </td>
+
+                    <td>
+                      <span className="table-actions">
+                        <button
+                          type="button"
+                          className="text-action"
+                          onClick={() => abrirDocumentos(cliente)}
+                        >
+                          Documentos
+                        </button>
+
+                        {podeEditarClientes && (
+                          <>
+                            <button
+                              type="button"
+                              className="text-action"
+                              onClick={() => abrirEdicao(cliente)}
+                            >
+                              Editar
+                            </button>
+
+                            <button
+                              type="button"
+                              className="text-action text-action--danger"
+                              onClick={() => inativarCliente(cliente)}
+                            >
+                              Inativar
+                            </button>
+                          </>
+                        )}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
-      </div>
+      </section>
+
+      <p className="stage-footer">
+        ETAPA 02 / CLIENTES • LISTAGEM E CADASTRO
+      </p>
     </div>
   );
 }
