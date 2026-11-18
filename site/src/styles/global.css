@@ -142,18 +142,6 @@ button {
   }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-  *,
-  *::before,
-  *::after {
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-  }
-}
-
 /* Site Mobile do Figma: frame de 390px com 16px de margem e seções de 32px */
 @media (max-width: 767px) {
   :root {
