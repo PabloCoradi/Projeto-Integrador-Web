@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { img } from '../assets';
 import './CarrosselAreas.css';
 
 /**
  * Carrossel "360" das áreas de atuação (Início). Os cards correm sozinhos para a esquerda
  * numa faixa "360": no centro eles ficam retos e, perto das bordas, a faixa
  * fica mais alta e os cards desfocam, como no protótipo do Figma.
- * Para ao passar o mouse e dá para arrastar. No celular é o mesmo carrossel
+ * Para ao passar o mouse e dá para arrastar. As setas abaixo do "Saiba mais"
+ * (children) passam um card para cada lado. No celular é o mesmo carrossel
  * pela metade, com o recorte "areas-360_mobile" do Figma (ver o CSS).
  */
 const cards = [
@@ -23,19 +25,23 @@ const VOLTAS = 2;
 const VELOCIDADE = 120; // px por segundo (em 1440px): um card a cada 2,4s, como no protótipo do Figma
 const CURVA = 0.2; // quanto a faixa cresce nas pontas
 const ARRASTO_MINIMO = 5;
+const DURACAO_SETA = 450; // ms para andar um card ao clicar numa seta
 
-export default function CarrosselAreas() {
+export default function CarrosselAreas({ children }) {
   const faixa = useRef(null);
   const itens = useRef([]);
+  const setas = useRef(null);
+  // Função criada dentro do efeito: anda um card para a esquerda (-1) ou direita (+1)
+  const andar = useRef(null);
 
   useEffect(() => {
     const el = faixa.current;
     if (!el) return undefined;
 
-    const reduzido = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let deslocamento = 0;
     let pausado = false;
     let arrasto = null;
+    let animacao = null; // { de, para, inicio } enquanto uma seta está levando a faixa
     let anterior = performance.now();
     let quadro;
 
@@ -92,7 +98,13 @@ export default function CarrosselAreas() {
     const rodar = (agora) => {
       const dt = Math.min(agora - anterior, 100) / 1000;
       anterior = agora;
-      if (!pausado && !arrasto && !reduzido) {
+      if (animacao) {
+        // Seta: desliza até o próximo card com uma desaceleração suave
+        const t = Math.min((agora - animacao.inicio) / DURACAO_SETA, 1);
+        const suave = 1 - (1 - t) ** 3;
+        deslocamento = animacao.de + (animacao.para - animacao.de) * suave;
+        if (t >= 1) animacao = null;
+      } else if (!pausado && !arrasto) {
         const escala = (itens.current[0]?.offsetWidth || 274) / 274;
         deslocamento += VELOCIDADE * escala * dt;
       }
@@ -101,9 +113,19 @@ export default function CarrosselAreas() {
     };
     quadro = requestAnimationFrame(rodar);
 
+    // Leva a faixa até deixar o card vizinho centralizado. Cliques seguidos somam.
+    andar.current = (direcao) => {
+      const cartao = itens.current[0]?.offsetWidth || 274;
+      const passo = cartao * (288 / 274);
+      const base = animacao ? animacao.para : deslocamento;
+      const para = (Math.round(base / passo) + direcao) * passo;
+      animacao = { de: deslocamento, para, inicio: performance.now() };
+    };
+
     const entrar = () => { pausado = true; };
     const sair = () => { pausado = false; };
     const apertar = (e) => {
+      animacao = null;
       arrasto = { x: e.clientX, inicio: deslocamento, moveu: false };
     };
     const mover = (e) => {
@@ -138,8 +160,15 @@ export default function CarrosselAreas() {
     el.addEventListener('pointermove', mover);
     el.addEventListener('pointerup', soltar);
     el.addEventListener('pointercancel', soltar);
+    // Com o mouse (ou o foco) nas setas a faixa também para, para o clique cair certinho
+    const botoes = setas.current;
+    botoes?.addEventListener('pointerenter', entrar);
+    botoes?.addEventListener('pointerleave', sair);
+    botoes?.addEventListener('focusin', entrar);
+    botoes?.addEventListener('focusout', sair);
 
     return () => {
+      andar.current = null;
       cancelAnimationFrame(quadro);
       el.removeEventListener('pointerenter', entrar);
       el.removeEventListener('pointerleave', sair);
@@ -149,37 +178,64 @@ export default function CarrosselAreas() {
       el.removeEventListener('pointermove', mover);
       el.removeEventListener('pointerup', soltar);
       el.removeEventListener('pointercancel', soltar);
+      botoes?.removeEventListener('pointerenter', entrar);
+      botoes?.removeEventListener('pointerleave', sair);
+      botoes?.removeEventListener('focusin', entrar);
+      botoes?.removeEventListener('focusout', sair);
     };
   }, []);
 
   const lista = Array.from({ length: VOLTAS }, () => cards).flat();
 
   return (
-    <div className="carrossel-areas" ref={faixa}>
-      <ul className="carrossel-areas__palco">
-        {lista.map((linhas, i) => {
-          const copia = i >= cards.length;
-          return (
-            <li
-              key={i}
-              className="carrossel-areas__item"
-              ref={(n) => { itens.current[i] = n; }}
-              aria-hidden={copia || undefined}
-            >
-              <Link
-                to="/areas-de-atuacao"
-                className="carrossel-areas__card"
-                tabIndex={copia ? -1 : undefined}
-                draggable="false"
+    <>
+      <div className="carrossel-areas" ref={faixa}>
+        <ul className="carrossel-areas__palco">
+          {lista.map((linhas, i) => {
+            const copia = i >= cards.length;
+            return (
+              <li
+                key={i}
+                className="carrossel-areas__item"
+                ref={(n) => { itens.current[i] = n; }}
+                aria-hidden={copia || undefined}
               >
-                {linhas.map((l, j) => (
-                  <span key={j}>{l}</span>
-                ))}
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+                <Link
+                  to="/areas-de-atuacao"
+                  className="carrossel-areas__card"
+                  tabIndex={copia ? -1 : undefined}
+                  draggable="false"
+                >
+                  {linhas.map((l, j) => (
+                    <span key={j}>{l}</span>
+                  ))}
+                </Link>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+
+      {children}
+
+      <div className="carrossel-areas__setas" ref={setas}>
+        <button
+          type="button"
+          className="carrossel-areas__seta carrossel-areas__seta--anterior vidro"
+          onClick={() => andar.current?.(-1)}
+          aria-label="Área anterior"
+        >
+          <img src={img.setaDireita} alt="" width="24" height="48" />
+        </button>
+        <button
+          type="button"
+          className="carrossel-areas__seta vidro"
+          onClick={() => andar.current?.(1)}
+          aria-label="Próxima área"
+        >
+          <img src={img.setaDireita} alt="" width="24" height="48" />
+        </button>
+      </div>
+    </>
   );
 }

@@ -57,8 +57,10 @@ export default function Inicio() {
             </TituloSecao>
           </div>
           <div className="inicio-areas__conteudo">
-            <CarrosselAreas />
-            <BotaoVidro to="/areas-de-atuacao">Saiba mais</BotaoVidro>
+            {/* O "Saiba mais" fica entre a faixa e as setas do carrossel */}
+            <CarrosselAreas>
+              <BotaoVidro to="/areas-de-atuacao">Saiba mais</BotaoVidro>
+            </CarrosselAreas>
           </div>
         </section>
 
