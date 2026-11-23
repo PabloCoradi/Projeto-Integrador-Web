@@ -46,6 +46,9 @@ class TesteComBancoEmMemoria(unittest.TestCase):
         def override_get_db():
             yield self.session
 
+        # Um teste que falha no setUp não chega ao tearDown e pode deixar
+        # substituições de dependência para trás; começa sempre do zero.
+        app.dependency_overrides.clear()
         app.dependency_overrides[get_db] = override_get_db
 
         # O login tem limite de 5 tentativas por minuto; nos testes isso

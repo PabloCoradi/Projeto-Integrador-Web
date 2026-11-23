@@ -708,6 +708,60 @@ textarea:focus-visible {
 
 .text-action--danger { color: var(--danger); }
 
+/* Seletor Ativos | Inativos das listagens */
+.list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--canvas);
+}
+
+.status-toggle button {
+  min-height: 30px;
+  padding: 0 14px;
+  color: var(--muted);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.74rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.status-toggle button:hover { color: var(--ink); }
+
+.status-toggle button.is-active {
+  color: #fff;
+  background: var(--accent);
+}
+
+.inactive-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  color: #6e7378;
+  border-radius: 999px;
+  background: #edf0f2;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.content-card td .text-action--restore,
+.text-action--restore { color: var(--accent-deep); }
+
 /* Botão "Arquivos"/"Documentos" com a quantidade anexada */
 .content-card td .file-count,
 .file-count {
