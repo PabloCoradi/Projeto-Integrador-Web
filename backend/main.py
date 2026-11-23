@@ -19,6 +19,7 @@ from app.routers.documentos_clientes import router_casos as documentos_cliente_c
 from app.routers.imagens_artigos import router as imagens_artigos_router
 from app.routers.imagens_artigos import router_publico as imagens_artigos_publicas_router
 from app.routers.administradores import router as administradores_router
+from app.routers.dashboard import router as dashboard_router
 
 
 app = FastAPI(
@@ -65,6 +66,7 @@ app.include_router(documentos_cliente_casos_router)
 app.include_router(imagens_artigos_router)
 app.include_router(imagens_artigos_publicas_router)
 app.include_router(administradores_router)
+app.include_router(dashboard_router)
 
 
 @app.get("/")
