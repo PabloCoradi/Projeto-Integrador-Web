@@ -78,14 +78,16 @@ def listar_clientes(
 def buscar_cliente(
     db: Session,
     cliente_id: int,
+    incluir_inativos: bool = False,
 ) -> Cliente | None:
+    """Busca um cliente ativo; incluir_inativos=True serve só para consultas."""
 
-    return db.scalar(
-        select(Cliente).where(
-            Cliente.id == cliente_id,
-            Cliente.ativo.is_(True),
-        )
-    )
+    consulta = select(Cliente).where(Cliente.id == cliente_id)
+
+    if not incluir_inativos:
+        consulta = consulta.where(Cliente.ativo.is_(True))
+
+    return db.scalar(consulta)
 
 
 def atualizar_cliente(

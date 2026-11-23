@@ -130,6 +130,11 @@ function Casos() {
 
     try {
       await reativarCaso(caso.id);
+
+      if (casoDosArquivos?.id === caso.id) {
+        setCasoDosArquivos(null);
+      }
+
       await carregarCasos();
     } catch (error) {
       setErro(error.message);
@@ -417,6 +422,7 @@ function Casos() {
             caso={casoDosArquivos}
             onFechar={() => setCasoDosArquivos(null)}
             onQuantidadeAlterada={atualizarQuantidadeArquivos}
+            somenteLeitura={!casoDosArquivos.ativo}
           />
         </div>
       )}
@@ -560,7 +566,13 @@ function Casos() {
                     <td>
                       {exibindoInativos ? (
                         <span className="table-actions">
-                          {podeEditarCasos ? (
+                          <BotaoArquivos
+                            rotulo="Arquivos"
+                            quantidade={caso.quantidade_arquivos}
+                            onClick={() => abrirArquivos(caso)}
+                          />
+
+                          {podeEditarCasos && (
                             <button
                               type="button"
                               className="text-action text-action--restore"
@@ -568,8 +580,6 @@ function Casos() {
                             >
                               Reativar
                             </button>
-                          ) : (
-                            "—"
                           )}
                         </span>
                       ) : (

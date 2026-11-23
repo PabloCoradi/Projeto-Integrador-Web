@@ -125,6 +125,10 @@ function Clientes() {
         method: "PATCH",
       });
 
+      if (clienteDosDocumentos?.id === cliente.id) {
+        setClienteDosDocumentos(null);
+      }
+
       await carregarClientes();
     } catch (error) {
       setErro(error.message);
@@ -454,6 +458,7 @@ function Clientes() {
             cliente={clienteDosDocumentos}
             onFechar={() => setClienteDosDocumentos(null)}
             onQuantidadeAlterada={atualizarQuantidadeDocumentos}
+            somenteLeitura={!clienteDosDocumentos.ativo}
           />
         </div>
       )}
@@ -560,7 +565,13 @@ function Clientes() {
                     <td>
                       {exibindoInativos ? (
                         <span className="table-actions">
-                          {podeEditarClientes ? (
+                          <BotaoArquivos
+                            rotulo="Documentos"
+                            quantidade={cliente.quantidade_documentos}
+                            onClick={() => abrirDocumentos(cliente)}
+                          />
+
+                          {podeEditarClientes && (
                             <button
                               type="button"
                               className="text-action text-action--restore"
@@ -568,8 +579,6 @@ function Clientes() {
                             >
                               Reativar
                             </button>
-                          ) : (
-                            "—"
                           )}
                         </span>
                       ) : (

@@ -81,13 +81,19 @@ def listar_casos(
     return list(db.scalars(consulta).all())
 
 
-def buscar_caso(db: Session, caso_id: int) -> Caso | None:
-    return db.scalar(
-        select(Caso).where(
-            Caso.id == caso_id,
-            Caso.ativo.is_(True),
-        )
-    )
+def buscar_caso(
+    db: Session,
+    caso_id: int,
+    incluir_inativos: bool = False,
+) -> Caso | None:
+    """Busca um caso ativo; incluir_inativos=True serve só para consultas."""
+
+    consulta = select(Caso).where(Caso.id == caso_id)
+
+    if not incluir_inativos:
+        consulta = consulta.where(Caso.ativo.is_(True))
+
+    return db.scalar(consulta)
 
 
 def atualizar_caso(db: Session, caso_id: int, campos: dict) -> Caso | None:

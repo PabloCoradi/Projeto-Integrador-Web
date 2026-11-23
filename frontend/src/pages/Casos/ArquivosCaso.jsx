@@ -21,9 +21,10 @@ import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada }) {
+function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = false }) {
   const { podeEditar } = useAuth();
-  const podeEditarCasos = podeEditar("casos");
+  // Caso inativo: os arquivos podem ser consultados, mas não alterados.
+  const podeEditarCasos = podeEditar("casos") && !somenteLeitura;
 
   const [arquivos, setArquivos] = useState([]);
   const [documentosCliente, setDocumentosCliente] = useState([]);
@@ -238,6 +239,13 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada }) {
           style={{ whiteSpace: "pre-line" }}
         >
           {erro}
+        </div>
+      )}
+
+      {somenteLeitura && (
+        <div className="alert alert--warning" role="status">
+          Este caso está inativo. Os arquivos estão disponíveis só para consulta.
+          Para enviar, alterar ou excluir arquivos, reative o caso.
         </div>
       )}
 

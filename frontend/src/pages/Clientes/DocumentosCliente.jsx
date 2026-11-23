@@ -16,9 +16,10 @@ import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada }) {
+function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada, somenteLeitura = false }) {
   const { podeEditar } = useAuth();
-  const podeEditarClientes = podeEditar("clientes");
+  // Cliente inativo: os documentos podem ser consultados, mas não alterados.
+  const podeEditarClientes = podeEditar("clientes") && !somenteLeitura;
 
   const [documentos, setDocumentos] = useState([]);
   const [tagsUsadas, setTagsUsadas] = useState([]);
@@ -200,6 +201,13 @@ function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada }) {
           style={{ whiteSpace: "pre-line" }}
         >
           {erro}
+        </div>
+      )}
+
+      {somenteLeitura && (
+        <div className="alert alert--warning" role="status">
+          Este cliente está inativo. Os documentos estão disponíveis só para consulta.
+          Para enviar, alterar ou excluir documentos, reative o cliente.
         </div>
       )}
 

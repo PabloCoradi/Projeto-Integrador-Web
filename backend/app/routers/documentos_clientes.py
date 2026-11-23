@@ -52,6 +52,21 @@ def _nao_encontrado(mensagem: str = "Documento não encontrado.") -> HTTPExcepti
     )
 
 
+def _exigir_cliente_ativo(db: Session, cliente_id: int) -> None:
+    """Documentos de cliente inativo podem ser consultados, mas não alterados."""
+
+    cliente = buscar_cliente(db=db, cliente_id=cliente_id, incluir_inativos=True)
+
+    if cliente is None:
+        raise _nao_encontrado("Cliente não encontrado.")
+
+    if not cliente.ativo:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Este cliente está inativo. Reative-o para alterar os documentos.",
+        )
+
+
 def _gerar_link(documento, inline: bool) -> dict:
     try:
         return gerar_link(documento, inline=inline)
@@ -85,6 +100,8 @@ def anexar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
+    _exigir_cliente_ativo(db, cliente_id)
+
     try:
         return anexar_documento(
             db=db,
@@ -117,7 +134,7 @@ def listar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "visualizar")),
 ):
-    if buscar_cliente(db=db, cliente_id=cliente_id) is None:
+    if buscar_cliente(db=db, cliente_id=cliente_id, incluir_inativos=True) is None:
         raise _nao_encontrado("Cliente não encontrado.")
 
     try:
@@ -163,6 +180,8 @@ def alterar_tag(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
+    _exigir_cliente_ativo(db, cliente_id)
+
     documento = atualizar_tag(
         db=db,
         cliente_id=cliente_id,
@@ -183,6 +202,8 @@ def inativar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
+    _exigir_cliente_ativo(db, cliente_id)
+
     documento = inativar_documento(
         db=db,
         cliente_id=cliente_id,
