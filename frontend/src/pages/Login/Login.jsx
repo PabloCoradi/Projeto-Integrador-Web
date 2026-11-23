@@ -157,7 +157,7 @@ function Login() {
           />
         </svg>
 
-        {/* Linha ciano da onda, desenhada por cima das advogadas */}
+        {/* Linha ciano da onda, posicionada atrás das advogadas pelo z-index */}
         <svg
           className="login__onda login__onda--linha"
           viewBox="0 0 700 330"

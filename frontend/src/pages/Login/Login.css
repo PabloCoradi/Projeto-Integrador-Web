@@ -197,7 +197,8 @@
 }
 
 .login__onda--linha {
-  z-index: 4;
+  /* Mantém o traço sobre a onda escura, mas atrás da foto das advogadas. */
+  z-index: 2;
   pointer-events: none;
 }
 

@@ -56,6 +56,10 @@ textarea:focus-visible {
   animation: page-in 300ms ease-out both;
 }
 
+.page--dashboard {
+  width: min(100%, 1280px);
+}
+
 .page-heading { margin: 0 0 29px; }
 
 .page-heading--action {
@@ -807,13 +811,16 @@ textarea:focus-visible {
 
 .metrics-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 20px;
 }
 
 .metric-card {
   position: relative;
-  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  min-height: 180px;
   padding: 21px 22px;
   overflow: hidden;
   border: 1px solid var(--line);
@@ -865,7 +872,7 @@ textarea:focus-visible {
 }
 
 .metric-card__note {
-  margin: 0;
+  margin: auto 0 0;
   color: var(--soft-muted);
   font-size: 0.68rem;
 }
@@ -1365,8 +1372,9 @@ textarea:focus-visible {
   .sidebar-scrim.is-open { opacity: 1; pointer-events: auto; }
   .topbar__menu { display: block; }
   .topbar__breadcrumb { margin-right: auto; margin-left: 16px; }
-  .metrics-grid { grid-template-columns: 1fr; }
-  .metric-card { min-height: 145px; }
+  .page--dashboard { width: 100%; }
+  .metrics-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .metric-card { min-height: 160px; }
 }
 
 @media (max-width: 700px) {
@@ -1378,6 +1386,8 @@ textarea:focus-visible {
   .topbar__breadcrumb strong::before { display: none; }
   .topbar__session { gap: 8px; }
   .topbar__logout { min-height: 36px; }
+
+  .metrics-grid { grid-template-columns: 1fr; gap: 14px; }
 
   .page-heading,
   .page-heading--action {
