@@ -253,13 +253,6 @@ function Login() {
             </button>
           </form>
 
-          <button
-            type="button"
-            className="login__redefinir"
-            onClick={() => navigate("/redefinir-senha")}
-          >
-            Redefinir senha
-          </button>
         </div>
       </main>
     </div>

@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import {
   BrowserRouter,
@@ -9,6 +10,8 @@ import {
 } from "react-router-dom";
 
 import "./App.css";
+
+import { apiRequest } from "./services/api";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Clientes from "./pages/Clientes/Clientes";
@@ -114,7 +117,7 @@ function Marca() {
     <div className="brand-lockup" aria-label="Giongo & Raguzzoni">
       <span className="brand-lockup__accent" aria-hidden="true" />
       <span>
-        GIONGO &amp;
+        GIONGO &
         <br />
         RAGUZZONI
       </span>
@@ -198,8 +201,10 @@ function Sidebar({ aberta, aoFechar }) {
   );
 }
 
-function Topbar({ pagina, aoAbrirMenu }) {
+function Topbar({ pagina, aoAbrirMenu, aoAlterarSenha }) {
   const { usuario, logout } = useAuth();
+  const [menuUsuarioAberto, setMenuUsuarioAberto] = useState(false);
+
   const inicial = usuario?.nome?.trim()?.[0]?.toUpperCase() || "U";
 
   return (
@@ -222,26 +227,197 @@ function Topbar({ pagina, aoAbrirMenu }) {
 
       <div className="topbar__session">
         <span className="topbar__session-divider" />
+
         <span className="topbar__avatar">{inicial}</span>
+
         <span className="topbar__user">
           <strong>{usuario?.nome || "Usuário autenticado"}</strong>
           <small>Sessão ativa</small>
         </span>
-        <button
-          type="button"
-          className="button button--quiet topbar__logout"
-          onClick={logout}
-        >
-          Sair
-        </button>
+
+        <div className="topbar__user-menu">
+          <button
+            type="button"
+            className="button button--quiet topbar__logout"
+            onClick={() => setMenuUsuarioAberto((aberto) => !aberto)}
+            aria-expanded={menuUsuarioAberto}
+            aria-haspopup="true"
+          >
+            Conta ▾
+          </button>
+
+          {menuUsuarioAberto && (
+            <div className="topbar__dropdown">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuUsuarioAberto(false);
+                  aoAlterarSenha();
+                }}
+              >
+                Alterar minha senha
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuUsuarioAberto(false);
+                  logout();
+                }}
+              >
+                Sair
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </header>
   );
 }
 
+function ModalAlterarSenha({ aoFechar }) {
+  const [senhaAtual, setSenhaAtual] = useState("");
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [erro, setErro] = useState("");
+  const [sucesso, setSucesso] = useState("");
+  const [salvando, setSalvando] = useState(false);
+
+  async function handleSubmit(evento) {
+    evento.preventDefault();
+
+    setErro("");
+    setSucesso("");
+
+    if (novaSenha !== confirmarSenha) {
+      setErro("A nova senha e a confirmação não coincidem.");
+      return;
+    }
+
+    if (senhaAtual === novaSenha) {
+      setErro("A nova senha deve ser diferente da atual.");
+      return;
+    }
+
+    try {
+      setSalvando(true);
+
+      const resposta = await apiRequest("/api/auth/alterar-minha-senha", {
+        method: "POST",
+        body: JSON.stringify({
+          senha_atual: senhaAtual,
+          nova_senha: novaSenha,
+          confirmar_senha: confirmarSenha,
+        }),
+      });
+
+      setSucesso(resposta.message || "Senha alterada com sucesso!");
+
+      setSenhaAtual("");
+      setNovaSenha("");
+      setConfirmarSenha("");
+    } catch (error) {
+      setErro(error.message || "Não foi possível alterar a senha.");
+    } finally {
+      setSalvando(false);
+    }
+  }
+
+  return (
+    <div className="senha-modal-overlay">
+      <div
+        className="senha-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="senha-modal-titulo"
+      >
+        <button
+          type="button"
+          className="senha-modal__fechar"
+          onClick={aoFechar}
+          aria-label="Fechar"
+        >
+          ×
+        </button>
+
+        <h2 id="senha-modal-titulo">Alterar minha senha</h2>
+
+        <p>Informe sua senha atual e escolha uma nova senha.</p>
+
+        {erro && <div className="error-message">{erro}</div>}
+        {sucesso && <div className="success-message">{sucesso}</div>}
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label htmlFor="senha-atual">Senha atual</label>
+            <input
+              id="senha-atual"
+              type="password"
+              value={senhaAtual}
+              onChange={(e) => setSenhaAtual(e.target.value)}
+              autoComplete="current-password"
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="nova-senha">Nova senha</label>
+            <input
+              id="nova-senha"
+              type="password"
+              value={novaSenha}
+              onChange={(e) => setNovaSenha(e.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
+              required
+            />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="confirmar-senha">Confirmar nova senha</label>
+            <input
+              id="confirmar-senha"
+              type="password"
+              value={confirmarSenha}
+              onChange={(e) => setConfirmarSenha(e.target.value)}
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
+              required
+            />
+          </div>
+
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-button"
+              onClick={aoFechar}
+              disabled={salvando}
+            >
+              Fechar
+            </button>
+
+            <button
+              type="submit"
+              className="primary-button"
+              disabled={salvando}
+            >
+              {salvando ? "Salvando..." : "Alterar senha"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 function Layout() {
   const location = useLocation();
+
   const [menuAberto, setMenuAberto] = useState(false);
+  const [modalSenhaAberto, setModalSenhaAberto] = useState(false);
+
   const { podeVisualizar, podeEditar } = useAuth();
 
   const rotaInicial = PAGINAS_INICIAIS.find((pagina) =>
@@ -258,10 +434,23 @@ function Layout() {
 
   return (
     <div className="app">
-      <Sidebar aberta={menuAberto} aoFechar={() => setMenuAberto(false)} />
+      <Sidebar
+        aberta={menuAberto}
+        aoFechar={() => setMenuAberto(false)}
+      />
 
       <div className="workspace">
-        <Topbar pagina={pagina} aoAbrirMenu={() => setMenuAberto(true)} />
+        <Topbar
+          pagina={pagina}
+          aoAbrirMenu={() => setMenuAberto(true)}
+          aoAlterarSenha={() => setModalSenhaAberto(true)}
+        />
+
+        {modalSenhaAberto && (
+          <ModalAlterarSenha
+            aoFechar={() => setModalSenhaAberto(false)}
+          />
+        )}
 
         <main className="content">
           <Routes>

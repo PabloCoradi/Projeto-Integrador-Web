@@ -11,11 +11,13 @@ from app.models.usuario import Usuario
 from app.schemas.auth import (
     LoginRequest,
     RedefinirSenhaRequest,
+    AlterarMinhaSenhaRequest,
     TokenResponse,
 )
 from app.services.auth_service import (
     autenticar_usuario,
     redefinir_senha,
+    alterar_minha_senha,
 )
 
 
@@ -115,3 +117,27 @@ def usuario_atual(
             for permissao in usuario.permissoes
         ],
     }
+
+
+@router.post("/alterar-minha-senha")
+def alterar_minha_senha_endpoint(
+    dados: AlterarMinhaSenhaRequest,
+    usuario: Usuario = Depends(get_usuario_atual),
+    db: Session = Depends(get_db),
+):
+    try:
+        mensagem = alterar_minha_senha(
+            db=db,
+            usuario=usuario,
+            senha_atual=dados.senha_atual,
+            nova_senha=dados.nova_senha,
+            confirmar_senha=dados.confirmar_senha,
+        )
+
+        return {"message": mensagem}
+
+    except ValueError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(erro),
+        )
