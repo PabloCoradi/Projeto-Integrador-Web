@@ -16,7 +16,7 @@ import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function DocumentosCliente({ cliente, onFechar }) {
+function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada }) {
   const { podeEditar } = useAuth();
   const podeEditarClientes = podeEditar("clientes");
 
@@ -29,6 +29,8 @@ function DocumentosCliente({ cliente, onFechar }) {
   const [envio, setEnvio] = useState(null);
 
   const inputRef = useRef(null);
+  // Só repassa a quantidade depois que a lista carregou com sucesso.
+  const listaCarregadaRef = useRef(false);
 
   const carregar = useCallback(async () => {
     try {
@@ -37,6 +39,7 @@ function DocumentosCliente({ cliente, onFechar }) {
         listarTagsUsadas().catch(() => []),
       ]);
       setDocumentos(lista);
+      listaCarregadaRef.current = true;
       setTagsUsadas(tags);
     } catch (e) {
       setErro(e.message);
@@ -48,6 +51,11 @@ function DocumentosCliente({ cliente, onFechar }) {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  // Avisa a listagem para atualizar o contador do botão "Documentos".
+  useEffect(() => {
+    if (listaCarregadaRef.current) onQuantidadeAlterada?.(documentos.length);
+  }, [documentos, onQuantidadeAlterada]);
 
   const sugestoes = useMemo(
     () => Array.from(new Set([...TAGS_PADRAO, ...tagsUsadas])),

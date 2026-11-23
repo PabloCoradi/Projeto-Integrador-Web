@@ -1,6 +1,7 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import BotaoArquivos from "../../components/BotaoArquivos";
 
 import {
   atualizarCaso,
@@ -39,6 +40,21 @@ function Casos() {
 
   const [casoDosArquivos, setCasoDosArquivos] = useState(null);
   const painelArquivosRef = useRef(null);
+
+  // Mantém o contador do botão "Arquivos" em dia após envios e exclusões.
+  const idCasoDosArquivos = casoDosArquivos?.id;
+  const atualizarQuantidadeArquivos = useCallback(
+    (quantidade) => {
+      setCasos((lista) =>
+        lista.some((c) => c.id === idCasoDosArquivos && c.quantidade_arquivos !== quantidade)
+          ? lista.map((c) =>
+              c.id === idCasoDosArquivos ? { ...c, quantidade_arquivos: quantidade } : c
+            )
+          : lista
+      );
+    },
+    [idCasoDosArquivos]
+  );
 
   async function carregarCasos(filtrosAtuais = filtros) {
     setErro("");
@@ -365,6 +381,7 @@ function Casos() {
             key={casoDosArquivos.id}
             caso={casoDosArquivos}
             onFechar={() => setCasoDosArquivos(null)}
+            onQuantidadeAlterada={atualizarQuantidadeArquivos}
           />
         </div>
       )}
@@ -489,13 +506,11 @@ function Casos() {
 
                     <td>
                       <span className="table-actions">
-                        <button
-                          type="button"
-                          className="text-action"
+                        <BotaoArquivos
+                          rotulo="Arquivos"
+                          quantidade={caso.quantidade_arquivos}
                           onClick={() => abrirArquivos(caso)}
-                        >
-                          Arquivos
-                        </button>
+                        />
 
                         {podeEditarCasos && (
                           <>

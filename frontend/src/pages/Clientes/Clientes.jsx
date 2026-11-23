@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import BotaoArquivos from "../../components/BotaoArquivos";
 
 import DocumentosCliente from "./DocumentosCliente";
 
@@ -46,6 +47,25 @@ function Clientes() {
 
   const [clienteDosDocumentos, setClienteDosDocumentos] = useState(null);
   const painelDocumentosRef = useRef(null);
+
+  // Mantém o contador do botão "Documentos" em dia após envios e exclusões.
+  const idClienteDosDocumentos = clienteDosDocumentos?.id;
+  const atualizarQuantidadeDocumentos = useCallback(
+    (quantidade) => {
+      setClientes((lista) =>
+        lista.some(
+          (c) => c.id === idClienteDosDocumentos && c.quantidade_documentos !== quantidade
+        )
+          ? lista.map((c) =>
+              c.id === idClienteDosDocumentos
+                ? { ...c, quantidade_documentos: quantidade }
+                : c
+            )
+          : lista
+      );
+    },
+    [idClienteDosDocumentos]
+  );
 
   function abrirDocumentos(cliente) {
     setClienteDosDocumentos(cliente);
@@ -398,6 +418,7 @@ function Clientes() {
             key={clienteDosDocumentos.id}
             cliente={clienteDosDocumentos}
             onFechar={() => setClienteDosDocumentos(null)}
+            onQuantidadeAlterada={atualizarQuantidadeDocumentos}
           />
         </div>
       )}
@@ -485,13 +506,11 @@ function Clientes() {
 
                     <td>
                       <span className="table-actions">
-                        <button
-                          type="button"
-                          className="text-action"
+                        <BotaoArquivos
+                          rotulo="Documentos"
+                          quantidade={cliente.quantidade_documentos}
                           onClick={() => abrirDocumentos(cliente)}
-                        >
-                          Documentos
-                        </button>
+                        />
 
                         {podeEditarClientes && (
                           <>

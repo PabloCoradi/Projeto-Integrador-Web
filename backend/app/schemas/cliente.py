@@ -90,6 +90,7 @@ class ClienteResponse(BaseModel):
     endereco: str | None
     observacoes: str | None
     ativo: bool
+    quantidade_documentos: int = 0
     criado_em: datetime
     atualizado_em: datetime
 

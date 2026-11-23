@@ -21,7 +21,7 @@ import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function ArquivosCaso({ caso, onFechar }) {
+function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada }) {
   const { podeEditar } = useAuth();
   const podeEditarCasos = podeEditar("casos");
 
@@ -34,6 +34,8 @@ function ArquivosCaso({ caso, onFechar }) {
   const [filtroTag, setFiltroTag] = useState("");
 
   const inputRef = useRef(null);
+  // Só repassa a quantidade depois que a lista carregou com sucesso.
+  const listaCarregadaRef = useRef(false);
 
   const tagsDoCaso = useMemo(
     () => Array.from(new Set(arquivos.map((a) => a.tag))).sort(),
@@ -56,6 +58,7 @@ function ArquivosCaso({ caso, onFechar }) {
         listarDocumentosDoCaso(caso.id),
       ]);
       setArquivos(dados);
+      listaCarregadaRef.current = true;
       setDocumentosCliente(documentos);
     } catch (e) {
       setErro(e.message);
@@ -67,6 +70,11 @@ function ArquivosCaso({ caso, onFechar }) {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  // Avisa a listagem para atualizar o contador do botão "Arquivos".
+  useEffect(() => {
+    if (listaCarregadaRef.current) onQuantidadeAlterada?.(arquivos.length);
+  }, [arquivos, onQuantidadeAlterada]);
 
   async function aoEscolherArquivos(evento) {
     if (!podeEditarCasos) {
