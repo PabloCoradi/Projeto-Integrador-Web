@@ -16,9 +16,10 @@ import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function DocumentosCliente({ cliente, onFechar }) {
+function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada, somenteLeitura = false }) {
   const { podeEditar } = useAuth();
-  const podeEditarClientes = podeEditar("clientes");
+  // Cliente inativo: os documentos podem ser consultados, mas não alterados.
+  const podeEditarClientes = podeEditar("clientes") && !somenteLeitura;
 
   const [documentos, setDocumentos] = useState([]);
   const [tagsUsadas, setTagsUsadas] = useState([]);
@@ -29,6 +30,8 @@ function DocumentosCliente({ cliente, onFechar }) {
   const [envio, setEnvio] = useState(null);
 
   const inputRef = useRef(null);
+  // Só repassa a quantidade depois que a lista carregou com sucesso.
+  const listaCarregadaRef = useRef(false);
 
   const carregar = useCallback(async () => {
     try {
@@ -37,6 +40,7 @@ function DocumentosCliente({ cliente, onFechar }) {
         listarTagsUsadas().catch(() => []),
       ]);
       setDocumentos(lista);
+      listaCarregadaRef.current = true;
       setTagsUsadas(tags);
     } catch (e) {
       setErro(e.message);
@@ -48,6 +52,11 @@ function DocumentosCliente({ cliente, onFechar }) {
   useEffect(() => {
     carregar();
   }, [carregar]);
+
+  // Avisa a listagem para atualizar o contador do botão "Documentos".
+  useEffect(() => {
+    if (listaCarregadaRef.current) onQuantidadeAlterada?.(documentos.length);
+  }, [documentos, onQuantidadeAlterada]);
 
   const sugestoes = useMemo(
     () => Array.from(new Set([...TAGS_PADRAO, ...tagsUsadas])),
@@ -183,6 +192,13 @@ function DocumentosCliente({ cliente, onFechar }) {
           className="error-message file-manager__error"
         >
           {erro}
+        </div>
+      )}
+
+      {somenteLeitura && (
+        <div className="alert alert--warning" role="status">
+          Este cliente está inativo. Os documentos estão disponíveis só para consulta.
+          Para enviar, alterar ou excluir documentos, reative o cliente.
         </div>
       )}
 

@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, Text
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import Boolean, DateTime, String, Text, func, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column
 
 from app.core.database import Base
+from app.models.documento_cliente import DocumentoCliente
 
 
 class Cliente(Base):
@@ -73,3 +74,12 @@ class Cliente(Base):
     @property
     def tem_foto(self) -> bool:
         return bool(self.foto_chave_storage)
+
+# Quantidade de documentos ativos do cliente, calculada na mesma consulta que
+# busca o cliente (usada para destacar o botão "Documentos" na listagem).
+Cliente.quantidade_documentos = column_property(
+    select(func.count(DocumentoCliente.id))
+    .where(DocumentoCliente.cliente_id == Cliente.id, DocumentoCliente.ativo.is_(True))
+    .correlate_except(DocumentoCliente)
+    .scalar_subquery()
+)

@@ -1,3 +1,5 @@
+from typing import Literal
+
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
@@ -6,12 +8,14 @@ from app.core.dependencies import exigir_permissao
 from app.models.usuario import Usuario
 from app.schemas.caso import CasoCreate, CasoResponse, CasoUpdate
 from app.services.caso_service import (
+    ClienteInativoError,
     ClienteNaoEncontradoError,
     atualizar_caso,
     buscar_caso,
     criar_caso,
     inativar_caso,
     listar_casos,
+    reativar_caso,
 )
 from app.services.foto_caso_service import (
     CasoFotoNaoEncontradoError,
@@ -54,6 +58,7 @@ def listar(
     cliente_id: int | None = None,
     tipo_atendimento: str | None = None,
     q: str | None = None,
+    situacao: Literal["ativos", "inativos"] = "ativos",
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "visualizar")),
 ):
@@ -62,6 +67,7 @@ def listar(
         cliente_id=cliente_id,
         tipo_atendimento=tipo_atendimento,
         q=q,
+        inativos=situacao == "inativos",
     )
 
 
@@ -165,3 +171,26 @@ def inativar(
         "message": "Caso inativado com sucesso.",
         "caso_id": caso.id,
     }
+
+
+@router.patch("/{caso_id}/reativar", response_model=CasoResponse)
+def reativar(
+    caso_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
+):
+    try:
+        caso = reativar_caso(db=db, caso_id=caso_id)
+    except ClienteInativoError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(erro),
+        )
+
+    if caso is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Caso não encontrado.",
+        )
+
+    return caso

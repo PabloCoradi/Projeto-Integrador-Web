@@ -67,6 +67,13 @@
   font-weight: 700;
 }
 
+.cases-browser__tools {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 12px;
+}
+
 .cases-filters {
   min-width: 0;
   margin: 0 0 24px;
@@ -181,6 +188,27 @@
   align-items: stretch;
   padding: 14px 18px 17px;
   border-top: 1px solid #edf0f1;
+}
+
+.case-folder__meta {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px;
+}
+
+.case-folder__actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: auto;
+}
+
+.case-folder__actions .case-folder__open {
+  flex: 1 1 100%;
+  margin-top: 2px;
 }
 
 .case-folder__type {
@@ -361,6 +389,7 @@
   .cases-browser { padding: 21px 17px; }
   .cases-browser__heading { align-items: flex-start; flex-wrap: wrap; }
   .cases-browser__heading p { max-width: 34ch; }
+  .cases-browser__tools { width: 100%; justify-content: space-between; flex-wrap: wrap; }
   .cases-filters { margin: 0 0 22px; padding: 15px; }
   .page--cases .filters-row { margin-right: 0; margin-left: 0; }
   .case-photo-field { align-items: flex-start; padding: 13px; }

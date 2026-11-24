@@ -1,8 +1,9 @@
 import { apiRequest, apiUpload } from "./api";
 
-export function listarCasos({ clienteId, tipoAtendimento, q } = {}) {
+export function listarCasos({ clienteId, tipoAtendimento, q, situacao } = {}) {
   const params = new URLSearchParams();
 
+  if (situacao === "inativos") params.set("situacao", "inativos");
   if (clienteId) params.set("cliente_id", clienteId);
   if (tipoAtendimento) params.set("tipo_atendimento", tipoAtendimento);
   if (q) params.set("q", q);
@@ -47,6 +48,12 @@ export function removerFotoCaso(id) {
 export function inativarCaso(id) {
   return apiRequest(`/api/casos/${id}`, {
     method: "DELETE",
+  });
+}
+
+export function reativarCaso(id) {
+  return apiRequest(`/api/casos/${id}/reativar`, {
+    method: "PATCH",
   });
 }
 

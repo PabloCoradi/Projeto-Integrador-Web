@@ -96,7 +96,7 @@ def salvar_foto_cliente(db: Session, cliente_id: int, arquivo: UploadFile) -> Cl
 
 
 def gerar_link_foto_cliente(db: Session, cliente_id: int) -> dict:
-    cliente = buscar_cliente(db=db, cliente_id=cliente_id)
+    cliente = buscar_cliente(db=db, cliente_id=cliente_id, incluir_inativos=True)
     if cliente is None or not cliente.foto_chave_storage:
         raise ClienteFotoNaoEncontradoError("Foto do cliente não encontrada.")
 

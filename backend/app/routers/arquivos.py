@@ -37,6 +37,24 @@ router = APIRouter(
 )
 
 
+def _exigir_caso_ativo(db: Session, caso_id: int) -> None:
+    """Arquivos de caso inativo podem ser consultados, mas não alterados."""
+
+    caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True)
+
+    if caso is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Caso não encontrado.",
+        )
+
+    if not caso.ativo:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Este caso está inativo. Reative-o para alterar os arquivos.",
+        )
+
+
 @router.post(
     "/",
     response_model=ArquivoCasoResponse,
@@ -49,6 +67,8 @@ def anexar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
 ):
+    _exigir_caso_ativo(db, caso_id)
+
     try:
         return anexar_arquivo(
             db=db,
@@ -84,7 +104,7 @@ def listar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "visualizar")),
 ):
-    if buscar_caso(db=db, caso_id=caso_id) is None:
+    if buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True) is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Caso não encontrado.",
@@ -142,6 +162,8 @@ def alterar_tag(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
 ):
+    _exigir_caso_ativo(db, caso_id)
+
     arquivo = atualizar_tag_arquivo(
         db=db,
         caso_id=caso_id,
@@ -165,6 +187,8 @@ def inativar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
 ):
+    _exigir_caso_ativo(db, caso_id)
+
     arquivo = inativar_arquivo(
         db=db,
         caso_id=caso_id,

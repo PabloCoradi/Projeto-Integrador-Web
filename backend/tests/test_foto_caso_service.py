@@ -97,6 +97,19 @@ class PersistenciaFotoCasoTest(unittest.TestCase):
             self.assertFalse(removido.tem_foto)
             self.assertFalse(CasoResponse.model_validate(removido).tem_foto)
 
+    def test_genera_link_de_foto_para_caso_inativo_em_consulta(self) -> None:
+        self.caso.foto_chave_storage = f"casos/{self.caso.id}/foto/inativa.webp"
+        self.caso.ativo = False
+        self.session.commit()
+
+        with patch(
+            "app.services.foto_caso_service.gerar_url_download",
+            return_value="https://storage.exemplo/foto-inativa",
+        ):
+            link = gerar_link_foto_caso(self.session, self.caso.id)
+
+        self.assertEqual(link["url"], "https://storage.exemplo/foto-inativa")
+
 
 if __name__ == "__main__":
     unittest.main()

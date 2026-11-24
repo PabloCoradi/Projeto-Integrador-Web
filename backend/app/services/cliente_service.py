@@ -24,6 +24,12 @@ def criar_cliente(
             )
         )
 
+        if cliente_existente and not cliente_existente.ativo:
+            raise ValueError(
+                "Já existe um cliente inativo com este CPF/CNPJ "
+                f"({cliente_existente.nome}). Reative-o em Clientes > Inativos."
+            )
+
         if cliente_existente:
             raise ValueError(
                 "Já existe um cliente cadastrado com este CPF/CNPJ."
@@ -56,11 +62,13 @@ def criar_cliente(
 
 def listar_clientes(
     db: Session,
+    inativos: bool = False,
 ) -> list[Cliente]:
+    """Lista os clientes ativos, ou só os inativados quando inativos=True."""
 
     clientes = db.scalars(
         select(Cliente)
-        .where(Cliente.ativo.is_(True))
+        .where(Cliente.ativo.is_(not inativos))
         .order_by(Cliente.nome)
     ).all()
 
@@ -70,14 +78,16 @@ def listar_clientes(
 def buscar_cliente(
     db: Session,
     cliente_id: int,
+    incluir_inativos: bool = False,
 ) -> Cliente | None:
+    """Busca um cliente ativo; incluir_inativos=True serve só para consultas."""
 
-    return db.scalar(
-        select(Cliente).where(
-            Cliente.id == cliente_id,
-            Cliente.ativo.is_(True),
-        )
-    )
+    consulta = select(Cliente).where(Cliente.id == cliente_id)
+
+    if not incluir_inativos:
+        consulta = consulta.where(Cliente.ativo.is_(True))
+
+    return db.scalar(consulta)
 
 
 def atualizar_cliente(
@@ -159,6 +169,24 @@ def inativar_cliente(
         return None
 
     cliente.ativo = False
+
+    db.commit()
+    db.refresh(cliente)
+
+    return cliente
+
+
+def reativar_cliente(
+    db: Session,
+    cliente_id: int,
+) -> Cliente | None:
+
+    cliente = db.get(Cliente, cliente_id)
+
+    if cliente is None:
+        return None
+
+    cliente.ativo = True
 
     db.commit()
     db.refresh(cliente)

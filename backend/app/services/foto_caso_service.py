@@ -98,7 +98,7 @@ def salvar_foto_caso(db: Session, caso_id: int, arquivo: UploadFile) -> Caso:
 
 
 def gerar_link_foto_caso(db: Session, caso_id: int) -> dict:
-    caso = buscar_caso(db=db, caso_id=caso_id)
+    caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True)
     if caso is None or not caso.foto_chave_storage:
         raise CasoFotoNaoEncontradoError("Foto do caso não encontrada.")
 

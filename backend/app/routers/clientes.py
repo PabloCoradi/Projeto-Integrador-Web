@@ -1,5 +1,6 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi import File, UploadFile
+from typing import Literal
+
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -16,6 +17,7 @@ from app.services.cliente_service import (
     criar_cliente,
     inativar_cliente,
     listar_clientes,
+    reativar_cliente,
 )
 from app.services.foto_cliente_service import (
     ClienteFotoNaoEncontradoError,
@@ -64,10 +66,11 @@ def cadastrar_cliente(
     response_model=list[ClienteResponse],
 )
 def listar(
+    situacao: Literal["ativos", "inativos"] = "ativos",
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "visualizar")),
 ):
-    return listar_clientes(db)
+    return listar_clientes(db, inativos=situacao == "inativos")
 
 
 @router.get(
@@ -187,3 +190,23 @@ def inativar(
         "message": "Cliente inativado com sucesso.",
         "cliente_id": cliente.id,
     }
+
+
+@router.patch(
+    "/{cliente_id}/reativar",
+    response_model=ClienteResponse,
+)
+def reativar(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
+):
+    cliente = reativar_cliente(db=db, cliente_id=cliente_id)
+
+    if cliente is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Cliente não encontrado.",
+        )
+
+    return cliente
