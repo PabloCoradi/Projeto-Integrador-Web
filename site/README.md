@@ -9,15 +9,18 @@ A partir da raiz do repositório:
 ```bash
 cd site
 npm install
-npm run dev      # http://localhost:5173
+npm run dev      # normalmente http://localhost:5173
 ```
+
+> Se o painel (`frontend/`) já estiver rodando na `5173`, o Vite sobe o site na próxima porta livre (`5174`). O endereço certo aparece no terminal.
 
 Para gerar a versão de produção, rode `npm run build`. Os arquivos saem na pasta `dist/`.
 
 ### Notícias (vêm do backend)
 
 As páginas `/noticias` e `/noticias/:slug` buscam os artigos **publicados** na API pública do backend
-(`GET /api/public/artigos` e `GET /api/public/artigos/{slug}`). O resto do site não depende do backend.
+(`GET /api/public/artigos` e `GET /api/public/artigos/{slug}`). O resto do site não depende do backend:
+sem ele, só a página de Notícias fica sem conteúdo.
 
 O endereço da API fica na variável `VITE_API_URL`. Copie o exemplo e ajuste se precisar:
 
@@ -25,15 +28,18 @@ O endereço da API fica na variável `VITE_API_URL`. Copie o exemplo e ajuste se
 cp .env.example .env   # VITE_API_URL=http://127.0.0.1:8000
 ```
 
-Sem o arquivo `.env`, o site usa `http://127.0.0.1:8000`. Em produção, coloque a URL pública da API
-antes de rodar `npm run build` (o Vite grava o endereço nos arquivos gerados). O backend precisa liberar
-o endereço do site em `CORS_ORIGINS`.
+Sem o arquivo `.env`, o site usa `http://127.0.0.1:8000`. Em produção, o `.env.production` deixa
+`VITE_API_URL` vazia: o site chama `/api/...` no próprio endereço e o Nginx repassa para o backend.
+O Vite grava esse valor no `npm run build`, então qualquer mudança exige gerar o build de novo.
+Rodando localmente, o backend precisa liberar o endereço do site em `CORS_ORIGINS`.
 
 Para aparecer no site, o artigo precisa estar com status **publicado** e ter **resumo** e **conteúdo**.
-No conteúdo, cada linha em branco separa um parágrafo. Como os artigos ainda não têm imagem, os cards
-alternam entre as três fotos do Figma (`src/data/imagensNoticias.js`).
+No conteúdo, cada linha em branco separa um parágrafo. A imagem de cada notícia é a **capa escolhida no
+painel** (uma imagem enviada ou uma das imagens padrão); o site recebe o endereço dela no campo `imagem_url`.
 
-> As imagens já estão em `public/assets`. O script `npm run assets` só serve para baixá-las atraves do mcp que fizemos no figma para baixar todos os assets em uma pasta, mas como tem validade nao esta mais funcional.
+> As imagens fixas do site (fotos, ícones e logos) já estão em `public/assets`. O script `npm run assets`
+> foi usado uma única vez para baixá-las do Figma, por uma integração com link temporário que já expirou;
+> hoje ele não funciona mais e não é necessário.
 
 ## Desktop e celular
 
@@ -66,23 +72,29 @@ como o modo apresentação do Figma; `0` não cresceria nada). Nas regras de des
 
 ```
 src/
-  assets.js          caminhos das imagens
-  data/              textos: FAQ, áreas, depoimentos, advogadas, contato
-                     e as fotos dos cards de notícias (imagensNoticias.js)
+  assets.js          caminhos das imagens de public/assets
+  data/              textos: FAQ, áreas, depoimentos, advogadas e contato
   services/          artigos.js: busca as notícias na API do backend
   components/        Cabecalho, Rodape, Contato, CtaFaq, Hero, TituloSecao,
                      BotaoVidro, Sanfona, Seletor, CarrosselAreas,
-                     CarrosselDepoimentos, BotaoWhatsapp, useMobile (hook)
-  pages/             uma pasta de página por rota (JSX + CSS)
+                     CarrosselDepoimentos, BotaoWhatsapp,
+                     ControleRolagem (volta ao topo ao trocar de página),
+                     useMobile (hook), inerte e rolarParaContato (funções de apoio)
+  pages/             um par de arquivos por rota: Pagina.jsx + Pagina.css
   styles/global.css  tokens do design system (cores, tipografia, efeito vidro)
 ```
 
-Para adicionar uma notícia, publique um artigo pelo backend (veja "Notícias" acima).
+Para adicionar uma notícia, escreva e publique um artigo na tela **Artigos** do painel (veja "Notícias" acima).
 O botão "Ver mais..." aparece sozinho quando houver mais notícias publicadas (3 por vez no desktop, 2 no celular).
 
 ## Deploy
 
-É um app de rota única (SPA). No servidor, redirecione todas as rotas para `index.html`:
+O site roda na VM de produção junto com o painel e o backend (veja a seção "Produção" do
+[README da raiz](../README.md)):
 
-- **Vercel:** funciona sem configuração.
-- **Netlify:** crie o arquivo `public/_redirects` com `/* /index.html 200`.
+1. Gere o build na VM: `npm ci && npm run build` (usa o `.env.production`).
+2. Copie o conteúdo de `dist/` para a pasta que o Nginx entrega na porta 80.
+
+É um app de rota única (SPA): o Nginx (`deploy/nginx/default.conf`) já manda todas as rotas para o
+`index.html` (`try_files $uri $uri/ /index.html`), então links como `/noticias/algum-slug` funcionam
+mesmo abertos direto no navegador.

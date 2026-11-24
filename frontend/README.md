@@ -35,9 +35,19 @@ Documentação técnica e guia de inicialização da interface web. O frontend �
    http://localhost:5173
    ```
 
-> ⚠️ A URL da API (`http://127.0.0.1:8000`) está fixa no arquivo `src/services/api.js`. Não é necessário criar arquivo `.env` para rodar o projeto localmente. Se um dia o backend passar a rodar em outro endereço/porta, esse é o arquivo que precisa ser atualizado.
+5. Entre com o administrador criado pelo script `python -m scripts.criar_usuario` (veja o [README do backend](../backend/README.md)). Os demais usuários são cadastrados por ele na tela **Administradores**.
 
-> ⚠️ Mantenha o frontend rodando na porta `5173` (a padrão do Vite). O backend está configurado para aceitar requisições vindas apenas de `http://localhost:5173`; se você mudar a porta, as requisições serão bloqueadas pelo navegador (erro de CORS).
+### Endereço da API
+
+O endereço da API vem da variável `VITE_API_URL`. Sem ela, o painel usa `http://127.0.0.1:8000`, então **não é preciso criar `.env` para rodar localmente**. Para apontar para outro backend, crie um arquivo `.env` na pasta `frontend/`:
+
+```
+VITE_API_URL=http://127.0.0.1:8001
+```
+
+Em produção, o arquivo `.env.production` deixa `VITE_API_URL` vazia: o painel chama `/api/...` no próprio endereço, e o Nginx repassa para o backend. O Vite grava esse valor no `npm run build`, então qualquer mudança exige gerar o build de novo.
+
+> ⚠️ O backend só aceita chamadas das origens listadas em `CORS_ORIGINS` (por padrão, as portas `5173` e `5174` de `localhost` e `127.0.0.1`). Se o painel rodar em outra porta, inclua o endereço em `CORS_ORIGINS` no `.env` do backend, senão o navegador bloqueia as requisições (erro de CORS). Se o site institucional já estiver usando a `5173`, o Vite sobe o painel na `5174`, que também é aceita.
 
 ---
 
@@ -54,12 +64,21 @@ Documentação técnica e guia de inicialização da interface web. O frontend �
 
 ```text
 frontend/
+├── .env.production   # VITE_API_URL vazia: em produção a API é chamada em /api
 ├── src/
-│   ├── pages/       # Telas da aplicação (Dashboard, Clientes, Casos, Artigos, Administradores, Login)
-│   ├── contexts/     # Contextos React (ex: AuthContext, autenticação)
-│   ├── services/     # Comunicação com a API (api.js)
-│   └── App.jsx        # Rotas da aplicação
+│   ├── pages/        # Telas: Dashboard, Clientes, Casos, Artigos, Administradores, Login
+│   ├── components/   # Peças reutilizadas entre telas (ex.: botão de arquivos, filtro Ativos/Inativos, etiquetas)
+│   ├── contexts/     # AuthContext: login, usuário logado e permissões
+│   ├── services/     # Comunicação com a API (api.js e um arquivo por módulo)
+│   ├── utils/        # Funções de apoio (ex.: formatação de datas e tamanhos)
+│   ├── assets/       # Ícones e imagens do painel e do login
+│   ├── App.jsx       # Rotas, menu lateral e barra superior
+│   └── App.css       # Estilos gerais do painel
 ```
+
+### Permissões na tela
+
+O menu lateral e as rotas mostram só os módulos que o usuário pode **visualizar**, e os botões de cadastrar, editar e inativar só aparecem para quem pode **editar** (veja `podeVisualizar` e `podeEditar` no `AuthContext`). Isso é só para a interface: quem garante as permissões de verdade é o backend.
 
 ---
 

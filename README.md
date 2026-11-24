@@ -6,17 +6,35 @@ Se você nunca usou Git/GitHub antes, não se preocupe: este documento tem tudo 
 
 ---
 
+## 🧭 O que o sistema faz
+
+* **Painel administrativo** (`frontend/`), usado pelo escritório, com login:
+  * **Clientes:** cadastro, foto e documentos pessoais (RG, CPF, comprovantes...).
+  * **Casos:** cada caso pertence a um cliente e guarda seus arquivos com etiquetas (petição, contrato, sentença...).
+  * **Artigos:** textos escritos no painel e publicados no site, com imagem de capa.
+  * **Dashboard:** números do escritório, casos por tipo e atividade recente.
+  * **Administradores:** cadastro de usuários e das permissões de cada um (ver/editar por módulo).
+* **Site institucional** (`site/`), público: apresentação do escritório, áreas de atuação, perguntas frequentes e as notícias publicadas pelo painel.
+
+Clientes, casos e usuários não são apagados: eles são **inativados** e podem ser consultados e reativados pelo filtro "Inativos" de cada tela.
+
+---
+
 ## 📁 Estrutura do Repositório
 
 ```text
 Projeto-Integrador-Web/
-├── backend/            # API em Python (FastAPI) — regras de negócio e banco de dados
-├── frontend/           # Interface web em React (Vite) — o que o usuário vê e usa
-├── site/               # Site institucional público em React (Vite) — páginas do escritório
-├── docker-compose.yml  # Sobe o banco de dados Postgres localmente via Docker
-├── PRD.pdf             # Documento de requisitos do produto
+├── backend/                 # API em Python (FastAPI) — regras de negócio e banco de dados
+├── frontend/                # Painel administrativo em React (Vite) — usado pelo escritório
+├── site/                    # Site institucional público em React (Vite) — páginas do escritório
+├── deploy/nginx/            # Configuração do Nginx usada em produção
+├── docker-compose.yml       # Sobe o banco de dados Postgres localmente (desenvolvimento)
+├── docker-compose.prod.yml  # Banco, backend e Nginx na VM de produção
+├── Commands                 # Anotações de comandos usados na VM
+├── PRD.pdf                  # Documento de requisitos do produto
+├── Banco de Dados.png       # Diagrama do banco de dados
 ├── .gitignore
-└── README.md           # Este arquivo (documentação geral)
+└── README.md                # Este arquivo (documentação geral)
 ```
 
 > ⚠️ As pastas se chamam exatamente `backend` e `frontend` (não `back`/`front`). Preste atenção ao nome quando for usar `cd` no terminal.
@@ -29,7 +47,7 @@ Para instruções detalhadas de instalação e execução de cada camada, acesse
 
 **Importante:** siga sempre essa ordem ao rodar o projeto: 1) suba o **banco de dados** (Docker), 2) suba o **Backend**, 3) depois suba o **Frontend**.
 
-> O **site institucional** (`site/`) é independente: não precisa de banco nem de backend. Basta `cd site`, `npm install` e `npm run dev`.
+> O **site institucional** (`site/`) roda sozinho com `cd site`, `npm install` e `npm run dev`. Só a página de **Notícias** depende do backend (e do banco): sem eles, ela fica vazia e o resto do site funciona normalmente.
 
 ---
 
@@ -140,5 +158,28 @@ Após o push, acesse o GitHub e abra um **Pull Request (PR)** apontando a sua br
 
 ---
 
+## 🚀 Produção
+
+Em produção, tudo roda numa VM Linux com o `docker-compose.prod.yml` (o `docker-compose.yml` é só para desenvolvimento):
+
+| Serviço | O que faz |
+|---|---|
+| `db` | PostgreSQL, com os dados num volume do Docker |
+| `backend` | A API (FastAPI) |
+| `nginx` | Entrega o **site** na porta 80 e o **painel** na porta 8080, e repassa `/api/` para o backend |
+
+* Os arquivos de configuração com senhas (`db.env`, `backend.env`) ficam **fora** do repositório, na VM.
+* Os builds do painel e do site são gerados na VM (`npm ci && npm run build`) e copiados para as pastas servidas pelo Nginx.
+* Os arquivos enviados (documentos, fotos e imagens de capa) ficam no **RustFS**, um armazenamento compatível com S3, e não no banco.
+* O backend **não** aplica as migrações sozinho: depois de atualizar, rode `alembic upgrade head` dentro do container.
+* Nunca use `docker compose down -v` em produção: o `-v` apaga o volume do banco.
+
+---
+
 ## 👥 Equipe
-Projeto desenvolvido para a disciplina de Projeto Integrador Web.
+Projeto desenvolvido para a disciplina de Projeto Integrador Web por:
+
+* Alan Posselt
+* Arthur Vicente Jacinto
+* Henrique Steffani
+* Pablo Coradi
