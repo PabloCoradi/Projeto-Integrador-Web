@@ -1,4 +1,6 @@
-﻿from fastapi import APIRouter, Depends, HTTPException, status
+﻿from typing import Literal
+
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -20,10 +22,14 @@ router = APIRouter(
 
 @router.get("/", response_model=list[UsuarioAdminResponse])
 def listar_usuarios(
+    situacao: Literal["ativos", "inativos"] = "ativos",
     db: Session = Depends(get_db),
     admin: Usuario = Depends(get_admin_atual),
 ):
-    return administrador_service.listar_usuarios(db)
+    return administrador_service.listar_usuarios(
+        db,
+        inativos=situacao == "inativos",
+    )
 
 
 @router.post(
@@ -94,5 +100,25 @@ def inativar_usuario(
     except ValueError as erro:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(erro),
+        ) from erro
+
+
+@router.patch("/{usuario_id}/reativar", response_model=UsuarioAdminResponse)
+def reativar_usuario(
+    usuario_id: int,
+    db: Session = Depends(get_db),
+    admin: Usuario = Depends(get_admin_atual),
+):
+    try:
+        return administrador_service.reativar_usuario(db, usuario_id)
+    except LookupError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=str(erro),
+        ) from erro
+    except ValueError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
             detail=str(erro),
         ) from erro

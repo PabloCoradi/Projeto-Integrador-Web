@@ -1,6 +1,7 @@
 ﻿import { useEffect, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import FiltroSituacao from "../../components/FiltroSituacao";
 
 const MODULOS = [
   { id: "dashboard", nome: "Dashboard" },
@@ -29,11 +30,13 @@ export default function Administradores() {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState("");
   const [sucesso, setSucesso] = useState("");
+  const [situacao, setSituacao] = useState("ativos");
+  const exibindoInativos = situacao === "inativos";
 
-  async function carregarUsuarios() {
+  async function carregarUsuarios(situacaoAtual = situacao) {
     try {
       setCarregando(true);
-      const dados = await apiRequest("/api/administradores/");
+      const dados = await apiRequest(`/api/administradores/?situacao=${situacaoAtual}`);
       setUsuarios(dados);
       setErro("");
     } catch (error) {
@@ -44,8 +47,41 @@ export default function Administradores() {
   }
 
   useEffect(() => {
-    carregarUsuarios();
-  }, []);
+    carregarUsuarios(situacao);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [situacao]);
+
+  function trocarSituacao(novaSituacao) {
+    if (novaSituacao === situacao) return;
+
+    setErro("");
+    setSucesso("");
+    setUsuarios([]);
+    setSituacao(novaSituacao);
+  }
+
+  async function reativarUsuario(usuarioAlvo) {
+    if (
+      !window.confirm(
+        `Reativar o usuário ${usuarioAlvo.nome}? Ele volta a poder entrar no sistema.`
+      )
+    ) {
+      return;
+    }
+
+    setErro("");
+    setSucesso("");
+
+    try {
+      await apiRequest(`/api/administradores/${usuarioAlvo.id}/reativar`, {
+        method: "PATCH",
+      });
+      setSucesso("Usuário reativado com sucesso.");
+      await carregarUsuarios();
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
 
   function atualizarPermissao(modulo, campo, valor) {
     setPermissoes((atuais) =>
@@ -163,7 +199,13 @@ export default function Administradores() {
         `/api/administradores/${usuarioAlvo.id}/inativar`,
         { method: "PATCH" }
       );
-      setSucesso("Usuário desativado com sucesso.");
+      if (editando === usuarioAlvo.id) {
+        limparFormulario();
+      }
+
+      setSucesso(
+        "Usuário desativado com sucesso. Ele não consegue mais entrar e pode ser reativado em Inativos."
+      );
       await carregarUsuarios();
     } catch (error) {
       setErro(error.message);
@@ -325,12 +367,29 @@ export default function Administradores() {
       </div>
 
       <div className="content-card admin-list-card">
-        <h2>Usuários cadastrados</h2>
+        <div className="list-heading">
+          <div>
+            <h2>{exibindoInativos ? "Usuários desativados" : "Usuários cadastrados"}</h2>
+            {exibindoInativos && (
+              <p>Usuários desativados não conseguem entrar no sistema até serem reativados.</p>
+            )}
+          </div>
+
+          <FiltroSituacao
+            valor={situacao}
+            onChange={trocarSituacao}
+            rotulo="Mostrar usuários"
+          />
+        </div>
 
         {carregando ? (
           <p>Carregando usuários...</p>
         ) : usuarios.length === 0 ? (
-          <p>Nenhum usuário cadastrado.</p>
+          <p>
+            {exibindoInativos
+              ? "Nenhum usuário desativado."
+              : "Nenhum usuário cadastrado."}
+          </p>
         ) : (
           <div className="admin-table-wrapper" role="region" aria-label="Usuários cadastrados" tabIndex={0}>
             <table className="data-table">
@@ -359,20 +418,31 @@ export default function Administradores() {
                     </td>
                     <td>
                       <div className="admin-actions">
-                        <button
-                          type="button"
-                          onClick={() => iniciarEdicao(item)}
-                        >
-                          Editar
-                        </button>
+                        {item.ativo ? (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => iniciarEdicao(item)}
+                            >
+                              Editar
+                            </button>
 
-                        {item.ativo && !item.is_admin && (
+                            {!item.is_admin && (
+                              <button
+                                type="button"
+                                className="danger-button"
+                                onClick={() => inativarUsuario(item)}
+                              >
+                                Desativar
+                              </button>
+                            )}
+                          </>
+                        ) : (
                           <button
                             type="button"
-                            className="danger-button"
-                            onClick={() => inativarUsuario(item)}
+                            onClick={() => reativarUsuario(item)}
                           >
-                            Desativar
+                            Reativar
                           </button>
                         )}
                       </div>

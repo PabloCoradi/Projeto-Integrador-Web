@@ -35,10 +35,13 @@ def _validar_permissoes(permissoes):
             permissao.pode_visualizar = True
 
 
-def listar_usuarios(db: Session):
+def listar_usuarios(db: Session, inativos: bool = False):
+    """Lista os usuários ativos, ou só os desativados quando inativos=True."""
+
     return (
         db.query(Usuario)
         .options(selectinload(Usuario.permissoes))
+        .filter(Usuario.ativo.is_(not inativos))
         .order_by(Usuario.nome)
         .all()
     )
@@ -52,6 +55,12 @@ def criar_usuario(db: Session, dados):
     existente = db.query(Usuario).filter(
         Usuario.email == email
     ).first()
+
+    if existente and not existente.ativo:
+        raise ValueError(
+            "Este e-mail pertence a um usuário desativado "
+            f"({existente.nome}). Reative-o em Administradores > Inativos."
+        )
 
     if existente:
         raise ValueError("Este e-mail já está cadastrado.")
@@ -171,7 +180,25 @@ def desativar_usuario(db: Session, usuario_id: int):
             "Não é permitido desativar um administrador."
         )
 
+    if not usuario.ativo:
+        raise ValueError("Este usuário já está desativado.")
+
     usuario.ativo = False
     db.commit()
 
     return usuario
+
+
+def reativar_usuario(db: Session, usuario_id: int):
+    usuario = obter_usuario(db, usuario_id)
+
+    if not usuario:
+        raise LookupError("Usuário não encontrado.")
+
+    if usuario.ativo:
+        raise ValueError("Este usuário já está ativo.")
+
+    usuario.ativo = True
+    db.commit()
+
+    return obter_usuario(db, usuario_id)
