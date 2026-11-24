@@ -211,6 +211,13 @@
   margin-top: 2px;
 }
 
+/* Caso de cliente inativo, na aba Inativos */
+.case-folder__hint {
+  color: var(--soft-muted);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
 .case-folder__type {
   align-self: flex-start;
   max-width: 100%;

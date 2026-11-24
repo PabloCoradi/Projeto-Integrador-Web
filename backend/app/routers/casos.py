@@ -10,6 +10,7 @@ from app.schemas.caso import CasoCreate, CasoResponse, CasoUpdate
 from app.services.caso_service import (
     ClienteInativoError,
     ClienteNaoEncontradoError,
+    SituacaoInvalidaError,
     atualizar_caso,
     buscar_caso,
     criar_caso,
@@ -159,7 +160,13 @@ def inativar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
 ):
-    caso = inativar_caso(db=db, caso_id=caso_id)
+    try:
+        caso = inativar_caso(db=db, caso_id=caso_id)
+    except SituacaoInvalidaError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(erro),
+        )
 
     if caso is None:
         raise HTTPException(
@@ -181,7 +188,7 @@ def reativar(
 ):
     try:
         caso = reativar_caso(db=db, caso_id=caso_id)
-    except ClienteInativoError as erro:
+    except (ClienteInativoError, SituacaoInvalidaError) as erro:
         raise HTTPException(
             status_code=status.HTTP_409_CONFLICT,
             detail=str(erro),

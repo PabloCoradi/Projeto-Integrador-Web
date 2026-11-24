@@ -227,8 +227,9 @@ function ArquivosCaso({ caso, onQuantidadeAlterada, somenteLeitura = false }) {
 
       {somenteLeitura && (
         <div className="alert alert--warning" role="status">
-          Este caso está inativo. Os arquivos estão disponíveis só para consulta.
-          Para enviar, alterar ou excluir arquivos, reative o caso.
+          {caso.ativo === false
+            ? "Este caso está inativo. Os arquivos estão disponíveis só para consulta. Para enviar, alterar ou excluir arquivos, reative o caso."
+            : "O cliente deste caso está inativo. Os arquivos estão disponíveis só para consulta. Para enviar, alterar ou excluir arquivos, reative o cliente."}
         </div>
       )}
 

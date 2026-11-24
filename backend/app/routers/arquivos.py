@@ -54,6 +54,12 @@ def _exigir_caso_ativo(db: Session, caso_id: int) -> None:
             detail="Este caso está inativo. Reative-o para alterar os arquivos.",
         )
 
+    if not caso.cliente.ativo:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="O cliente deste caso está inativo. Reative o cliente para alterar os arquivos.",
+        )
+
 
 @router.post(
     "/",

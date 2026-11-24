@@ -18,6 +18,7 @@ from app.services.cliente_service import (
     inativar_cliente,
     listar_clientes,
     reativar_cliente,
+    SituacaoInvalidaError,
 )
 from app.services.foto_cliente_service import (
     ClienteFotoNaoEncontradoError,
@@ -178,7 +179,13 @@ def inativar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
-    cliente = inativar_cliente(db=db, cliente_id=cliente_id)
+    try:
+        cliente = inativar_cliente(db=db, cliente_id=cliente_id)
+    except SituacaoInvalidaError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(erro),
+        )
 
     if cliente is None:
         raise HTTPException(
@@ -201,7 +208,13 @@ def reativar(
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
 ):
-    cliente = reativar_cliente(db=db, cliente_id=cliente_id)
+    try:
+        cliente = reativar_cliente(db=db, cliente_id=cliente_id)
+    except SituacaoInvalidaError as erro:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=str(erro),
+        )
 
     if cliente is None:
         raise HTTPException(

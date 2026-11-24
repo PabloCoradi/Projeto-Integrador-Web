@@ -35,6 +35,7 @@ function Casos() {
 
   const [casos, setCasos] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [clientesInativos, setClientesInativos] = useState([]);
   const [formAberto, setFormAberto] = useState(false);
 
   const [filtros, setFiltros] = useState({
@@ -67,6 +68,14 @@ function Casos() {
   const [situacao, setSituacao] = useState("ativos");
   const exibindoInativos = situacao === "inativos";
   const idCasoDosArquivos = casoDosArquivos?.id;
+
+  // Caso que está no formulário de edição, aberto pelo cartão da lista
+  // ou pelo painel do caso. É dele que vem a foto atual mostrada no formulário.
+  const casoEditado = editandoId
+    ? casos.find((caso) => caso.id === editandoId) ||
+      (casoDosArquivos?.id === editandoId ? casoDosArquivos : null)
+    : null;
+
   const atualizarQuantidadeArquivos = useCallback((quantidade) => {
     setCasos((lista) => lista.map((caso) =>
       caso.id === idCasoDosArquivos
@@ -97,12 +106,16 @@ function Casos() {
   useEffect(() => {
     async function iniciar() {
       try {
-        const [listaClientes, listaCasos] = await Promise.all([
+        const [listaClientes, listaClientesInativos, listaCasos] = await Promise.all([
           apiRequest("/api/clientes/"),
+          // Só para mostrar os dados do cliente no painel de um caso de
+          // cliente inativo; o formulário continua oferecendo só os ativos.
+          apiRequest("/api/clientes/?situacao=inativos").catch(() => []),
           listarCasos(),
         ]);
 
         setClientes(listaClientes);
+        setClientesInativos(listaClientesInativos);
         setCasos(listaCasos);
       } catch (error) {
         setErro(error.message);
@@ -123,7 +136,7 @@ function Casos() {
   }
 
   function dadosDoCliente(clienteId) {
-    return clientes.find((cliente) => cliente.id === clienteId);
+    return [...clientes, ...clientesInativos].find((cliente) => cliente.id === clienteId);
   }
 
   function trocarSituacao(novaSituacao) {
@@ -228,7 +241,7 @@ function Casos() {
 
   function retirarFotoSelecionada() {
     setFotoSelecionada(null);
-    if (editandoId && casoDosArquivos?.tem_foto) {
+    if (casoEditado?.tem_foto) {
       setRemoverFotoExistente(true);
     } else {
       setRemoverFotoExistente(false);
@@ -278,7 +291,7 @@ function Casos() {
           setCasoDosArquivos(casoSalvo);
           setEditandoId(casoSalvo.id);
           setForm((atual) => ({ ...atual, cliente_id: String(casoSalvo.cliente_id) }));
-        } else {
+        } else if (casoDosArquivos?.id === idEditado) {
           setCasoDosArquivos(casoSalvo);
         }
         await carregarCasos();
@@ -286,7 +299,9 @@ function Casos() {
         return;
       }
 
-      if (idEditado) setCasoDosArquivos(casoSalvo);
+      // Se a edição foi aberta de dentro do caso, o painel mostra os dados novos;
+      // se foi aberta pelo cartão da lista, a tela continua na lista.
+      if (idEditado && casoDosArquivos?.id === idEditado) setCasoDosArquivos(casoSalvo);
 
       cancelarEdicao();
       await carregarCasos();
@@ -385,11 +400,11 @@ function Casos() {
               <div className="case-photo-field__preview" aria-hidden="true">
                 {previaFotoLocal ? (
                   <img src={previaFotoLocal} alt="" />
-                ) : editandoId && casoDosArquivos?.tem_foto && !removerFotoExistente ? (
+                ) : casoEditado?.tem_foto && !removerFotoExistente ? (
                   <FotoCaso
-                    key={`${casoDosArquivos.id}-${casoDosArquivos.atualizado_em}`}
-                    caso={casoDosArquivos}
-                    nome={nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)}
+                    key={`${casoEditado.id}-${casoEditado.atualizado_em}`}
+                    caso={casoEditado}
+                    nome={nomeDoCliente(casoEditado.cliente_id, casoEditado.cliente_nome)}
                   />
                 ) : (
                   <span>{iniciaisCliente(nomeDoCliente(Number(form.cliente_id)))}</span>
@@ -417,9 +432,9 @@ function Casos() {
                     onClick={() => fotoInputRef.current?.click()}
                     disabled={salvando}
                   >
-                    {fotoSelecionada || (casoDosArquivos?.tem_foto && !removerFotoExistente) ? "Trocar foto" : "Adicionar foto"}
+                    {fotoSelecionada || (casoEditado?.tem_foto && !removerFotoExistente) ? "Trocar foto" : "Adicionar foto"}
                   </button>
-                  {(fotoSelecionada || (editandoId && casoDosArquivos?.tem_foto && !removerFotoExistente)) && (
+                  {(fotoSelecionada || (casoEditado?.tem_foto && !removerFotoExistente)) && (
                     <button
                       type="button"
                       className="button button--quiet case-photo-field__remove"
@@ -567,7 +582,7 @@ function Casos() {
               </div>
             </div>
             <div className="case-detail__actions">
-              {podeEditarCasos && casoDosArquivos.ativo && (
+              {podeEditarCasos && casoDosArquivos.ativo && casoDosArquivos.cliente_ativo && (
                 <>
                   <button type="button" className="button button--quiet" onClick={() => iniciarEdicao(casoDosArquivos)}>
                     Editar caso
@@ -598,7 +613,7 @@ function Casos() {
             key={casoDosArquivos.id}
             caso={casoDosArquivos}
             onQuantidadeAlterada={atualizarQuantidadeArquivos}
-            somenteLeitura={!casoDosArquivos.ativo}
+            somenteLeitura={!casoDosArquivos.ativo || !casoDosArquivos.cliente_ativo}
           />
         </div>
       )}
@@ -723,7 +738,11 @@ function Casos() {
                   <div className="case-folder__body">
                     <div className="case-folder__meta">
                       <span className="case-folder__type">{caso.tipo_atendimento}</span>
-                      {exibindoInativos && <span className="inactive-chip">Inativo</span>}
+                      {exibindoInativos && (
+                        <span className="inactive-chip">
+                          {caso.cliente_ativo ? "Inativo" : "Cliente inativo"}
+                        </span>
+                      )}
                     </div>
                     <h3 className="case-folder__title">{caso.titulo}</h3>
                     <div className="case-folder__actions">
@@ -734,9 +753,15 @@ function Casos() {
                       />
                       {exibindoInativos ? (
                         podeEditarCasos && (
-                          <button type="button" className="text-action text-action--restore" onClick={() => reativar(caso)}>
-                            Reativar
-                          </button>
+                          caso.cliente_ativo ? (
+                            <button type="button" className="text-action text-action--restore" onClick={() => reativar(caso)}>
+                              Reativar
+                            </button>
+                          ) : (
+                            <small className="case-folder__hint">
+                              Volta sozinho quando o cliente for reativado
+                            </small>
+                          )
                         )
                       ) : (
                         <>

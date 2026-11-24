@@ -6,12 +6,14 @@ correspondente: quem só vê "artigos", por exemplo, não recebe números
 nem nomes de clientes e casos.
 """
 
+from collections import Counter
 from datetime import datetime, timedelta
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from app.core.tempo import agora_utc
+from app.core.texto import normalizar_busca
 from app.models.arquivo_caso import ArquivoCaso
 from app.models.artigo import Artigo
 from app.models.caso import Caso
@@ -19,6 +21,7 @@ from app.models.cliente import Cliente
 from app.models.documento_cliente import DocumentoCliente
 from app.models.permissao import Permissao
 from app.models.usuario import Usuario
+from app.services.caso_service import caso_em_andamento
 
 DIAS_RECENTES = 30
 LIMITE_ATIVIDADES = 8
@@ -72,20 +75,34 @@ def _resumo_clientes(db: Session, desde: datetime) -> dict:
     }
 
 
-def _resumo_casos(db: Session, desde: datetime) -> dict:
-    ativo = Caso.ativo.is_(True)
+def _agrupar_tipos(nomes: list[str]) -> list[dict]:
+    """Junta grafias diferentes do mesmo tipo ("Cível", "civel", "CÍVEL ").
 
-    total_por_tipo = func.count(Caso.id).label("total")
-    por_tipo = db.execute(
-        select(Caso.tipo_atendimento, total_por_tipo)
-        .where(ativo)
-        .group_by(Caso.tipo_atendimento)
-        .order_by(total_por_tipo.desc(), Caso.tipo_atendimento)
-    ).all()
+    Cada grupo aparece com a grafia mais usada.
+    """
+
+    grupos: dict[str, Counter] = {}
+    for nome in nomes:
+        grupos.setdefault(normalizar_busca(nome), Counter())[nome.strip()] += 1
+
+    tipos = [
+        {"tipo": grafias.most_common(1)[0][0], "total": sum(grafias.values())}
+        for grafias in grupos.values()
+    ]
+
+    return sorted(tipos, key=lambda item: (-item["total"], normalizar_busca(item["tipo"])))
+
+
+def _resumo_casos(db: Session, desde: datetime) -> dict:
+    # Caso de cliente inativo não conta como caso em andamento.
+    ativo = caso_em_andamento()
+
+    tipos = _agrupar_tipos(
+        list(db.scalars(select(Caso.tipo_atendimento).where(ativo)).all())
+    )
 
     # Os tipos menos frequentes viram um único "Outros" para o gráfico
     # não ficar comprido demais.
-    tipos = [{"tipo": tipo, "total": total} for tipo, total in por_tipo]
     if len(tipos) > LIMITE_TIPOS:
         restantes = sum(item["total"] for item in tipos[LIMITE_TIPOS - 1 :])
         tipos = tipos[: LIMITE_TIPOS - 1] + [{"tipo": "Outros", "total": restantes}]
@@ -159,7 +176,7 @@ def _atividades(db: Session, modulos: set[str]) -> list[dict]:
         for caso, nome_cliente in db.execute(
             select(Caso, Cliente.nome)
             .join(Cliente, Cliente.id == Caso.cliente_id)
-            .where(Caso.ativo.is_(True))
+            .where(Caso.ativo.is_(True), Cliente.ativo.is_(True))
             .order_by(Caso.criado_em.desc())
             .limit(limite)
         ):
@@ -173,7 +190,7 @@ def _atividades(db: Session, modulos: set[str]) -> list[dict]:
         for arquivo, titulo_caso in db.execute(
             select(ArquivoCaso, Caso.titulo)
             .join(Caso, Caso.id == ArquivoCaso.caso_id)
-            .where(ArquivoCaso.ativo.is_(True), Caso.ativo.is_(True))
+            .where(ArquivoCaso.ativo.is_(True), caso_em_andamento())
             .order_by(ArquivoCaso.criado_em.desc())
             .limit(limite)
         ):
