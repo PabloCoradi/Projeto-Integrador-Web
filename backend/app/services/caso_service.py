@@ -1,11 +1,15 @@
 from sqlalchemy import or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, selectinload
 
 from app.models.caso import Caso
 from app.models.cliente import Cliente
 
 
 class ClienteNaoEncontradoError(Exception):
+    pass
+
+
+class ClienteInativoError(Exception):
     pass
 
 
@@ -45,8 +49,15 @@ def listar_casos(
     cliente_id: int | None = None,
     tipo_atendimento: str | None = None,
     q: str | None = None,
+    inativos: bool = False,
 ) -> list[Caso]:
-    consulta = select(Caso).where(Caso.ativo.is_(True))
+    """Lista os casos ativos, ou só os inativados quando inativos=True."""
+
+    consulta = (
+        select(Caso)
+        .options(selectinload(Caso.cliente))
+        .where(Caso.ativo.is_(not inativos))
+    )
 
     if cliente_id is not None:
         consulta = consulta.where(Caso.cliente_id == cliente_id)
@@ -70,13 +81,19 @@ def listar_casos(
     return list(db.scalars(consulta).all())
 
 
-def buscar_caso(db: Session, caso_id: int) -> Caso | None:
-    return db.scalar(
-        select(Caso).where(
-            Caso.id == caso_id,
-            Caso.ativo.is_(True),
-        )
-    )
+def buscar_caso(
+    db: Session,
+    caso_id: int,
+    incluir_inativos: bool = False,
+) -> Caso | None:
+    """Busca um caso ativo; incluir_inativos=True serve só para consultas."""
+
+    consulta = select(Caso).where(Caso.id == caso_id)
+
+    if not incluir_inativos:
+        consulta = consulta.where(Caso.ativo.is_(True))
+
+    return db.scalar(consulta)
 
 
 def atualizar_caso(db: Session, caso_id: int, campos: dict) -> Caso | None:
@@ -104,6 +121,24 @@ def inativar_caso(db: Session, caso_id: int) -> Caso | None:
         return None
 
     caso.ativo = False
+    db.commit()
+    db.refresh(caso)
+
+    return caso
+
+
+def reativar_caso(db: Session, caso_id: int) -> Caso | None:
+    caso = db.get(Caso, caso_id)
+
+    if caso is None:
+        return None
+
+    if not caso.cliente.ativo:
+        raise ClienteInativoError(
+            "O cliente deste caso está inativo. Reative o cliente antes de reativar o caso."
+        )
+
+    caso.ativo = True
     db.commit()
     db.refresh(caso)
 

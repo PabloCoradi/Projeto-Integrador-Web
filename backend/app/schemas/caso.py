@@ -88,9 +88,11 @@ class CasoResponse(BaseModel):
 
     id: int
     cliente_id: int
+    cliente_nome: str
     titulo: str
     tipo_atendimento: str
     observacoes: str | None
     ativo: bool
+    quantidade_arquivos: int = 0
     criado_em: datetime
     atualizado_em: datetime

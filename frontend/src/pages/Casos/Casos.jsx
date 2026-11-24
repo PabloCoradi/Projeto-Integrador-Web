@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import BotaoArquivos from "../../components/BotaoArquivos";
+import FiltroSituacao from "../../components/FiltroSituacao";
 
 import {
   atualizarCaso,
   criarCaso,
   inativarCaso,
   listarCasos,
+  reativarCaso,
 } from "../../services/casos";
 
 import ArquivosCaso from "./ArquivosCaso";
@@ -40,7 +43,25 @@ function Casos() {
   const [casoDosArquivos, setCasoDosArquivos] = useState(null);
   const painelArquivosRef = useRef(null);
 
-  async function carregarCasos(filtrosAtuais = filtros) {
+  const [situacao, setSituacao] = useState("ativos");
+  const exibindoInativos = situacao === "inativos";
+
+  // Mantém o contador do botão "Arquivos" em dia após envios e exclusões.
+  const idCasoDosArquivos = casoDosArquivos?.id;
+  const atualizarQuantidadeArquivos = useCallback(
+    (quantidade) => {
+      setCasos((lista) =>
+        lista.some((c) => c.id === idCasoDosArquivos && c.quantidade_arquivos !== quantidade)
+          ? lista.map((c) =>
+              c.id === idCasoDosArquivos ? { ...c, quantidade_arquivos: quantidade } : c
+            )
+          : lista
+      );
+    },
+    [idCasoDosArquivos]
+  );
+
+  async function carregarCasos(filtrosAtuais = filtros, situacaoAtual = situacao) {
     setErro("");
     setCarregando(true);
 
@@ -48,6 +69,7 @@ function Casos() {
       const lista = await listarCasos({
         tipoAtendimento: filtrosAtuais.tipoAtendimento.trim(),
         q: filtrosAtuais.q.trim(),
+        situacao: situacaoAtual,
       });
 
       setCasos(lista);
@@ -78,11 +100,45 @@ function Casos() {
     iniciar();
   }, []);
 
-  function nomeDoCliente(clienteId) {
+  function nomeDoCliente(caso) {
     return (
-      clientes.find((cliente) => cliente.id === clienteId)?.nome ||
-      `Cliente #${clienteId}`
+      caso.cliente_nome ||
+      clientes.find((cliente) => cliente.id === caso.cliente_id)?.nome ||
+      `Cliente #${caso.cliente_id}`
     );
+  }
+
+  function trocarSituacao(novaSituacao) {
+    if (novaSituacao === situacao) return;
+
+    setCasoDosArquivos(null);
+    setCasos([]);
+    setSituacao(novaSituacao);
+    carregarCasos(filtros, novaSituacao);
+  }
+
+  async function reativar(caso) {
+    if (!podeEditarCasos) return;
+
+    const confirmou = window.confirm(
+      `Reativar o caso "${caso.titulo}"? Ele volta a aparecer na lista de ativos.`
+    );
+
+    if (!confirmou) return;
+
+    setErro("");
+
+    try {
+      await reativarCaso(caso.id);
+
+      if (casoDosArquivos?.id === caso.id) {
+        setCasoDosArquivos(null);
+      }
+
+      await carregarCasos();
+    } catch (error) {
+      setErro(error.message);
+    }
   }
 
   function alterarForm(campo, valor) {
@@ -365,17 +421,29 @@ function Casos() {
             key={casoDosArquivos.id}
             caso={casoDosArquivos}
             onFechar={() => setCasoDosArquivos(null)}
+            onQuantidadeAlterada={atualizarQuantidadeArquivos}
+            somenteLeitura={!casoDosArquivos.ativo}
           />
         </div>
       )}
 
       <section className="surface data-panel">
-        <div className="section-heading">
-          <h2>Casos cadastrados</h2>
+        <div className="section-heading list-heading">
+          <div>
+            <h2>{exibindoInativos ? "Casos inativos" : "Casos cadastrados"}</h2>
 
-          <p>
-            Use os filtros e clique em Buscar para atualizar os resultados.
-          </p>
+            <p>
+              {exibindoInativos
+                ? "Casos inativados ficam guardados aqui e podem ser reativados."
+                : "Use os filtros e clique em Buscar para atualizar os resultados."}
+            </p>
+          </div>
+
+          <FiltroSituacao
+            valor={situacao}
+            onChange={trocarSituacao}
+            rotulo="Mostrar casos"
+          />
         </div>
 
         <form
@@ -451,7 +519,7 @@ function Casos() {
           </div>
         ) : casos.length === 0 ? (
           <div className="empty-state empty-state--compact">
-            Nenhum caso encontrado.
+            {exibindoInativos ? "Nenhum caso inativo encontrado." : "Nenhum caso encontrado."}
           </div>
         ) : (
           <div className="table-scroll">
@@ -471,11 +539,19 @@ function Casos() {
                   <tr key={caso.id}>
                     <td>
                       <strong>
-                        {nomeDoCliente(caso.cliente_id)}
+                        {nomeDoCliente(caso)}
                       </strong>
                     </td>
 
-                    <td>{caso.titulo}</td>
+                    <td>
+                      {caso.titulo}
+                      {exibindoInativos && (
+                        <>
+                          {" "}
+                          <span className="inactive-chip">Inativo</span>
+                        </>
+                      )}
+                    </td>
 
                     <td>
                       <span className="type-chip">
@@ -488,14 +564,31 @@ function Casos() {
                     </td>
 
                     <td>
+                      {exibindoInativos ? (
+                        <span className="table-actions">
+                          <BotaoArquivos
+                            rotulo="Arquivos"
+                            quantidade={caso.quantidade_arquivos}
+                            onClick={() => abrirArquivos(caso)}
+                          />
+
+                          {podeEditarCasos && (
+                            <button
+                              type="button"
+                              className="text-action text-action--restore"
+                              onClick={() => reativar(caso)}
+                            >
+                              Reativar
+                            </button>
+                          )}
+                        </span>
+                      ) : (
                       <span className="table-actions">
-                        <button
-                          type="button"
-                          className="text-action"
+                        <BotaoArquivos
+                          rotulo="Arquivos"
+                          quantidade={caso.quantidade_arquivos}
                           onClick={() => abrirArquivos(caso)}
-                        >
-                          Arquivos
-                        </button>
+                        />
 
                         {podeEditarCasos && (
                           <>
@@ -517,6 +610,7 @@ function Casos() {
                           </>
                         )}
                       </span>
+                      )}
                     </td>
                   </tr>
                 ))}

@@ -1,6 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
+import BotaoArquivos from "../../components/BotaoArquivos";
+import FiltroSituacao from "../../components/FiltroSituacao";
 
 import DocumentosCliente from "./DocumentosCliente";
 
@@ -43,9 +45,30 @@ function Clientes() {
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState("");
+  const [situacao, setSituacao] = useState("ativos");
+  const exibindoInativos = situacao === "inativos";
 
   const [clienteDosDocumentos, setClienteDosDocumentos] = useState(null);
   const painelDocumentosRef = useRef(null);
+
+  // Mantém o contador do botão "Documentos" em dia após envios e exclusões.
+  const idClienteDosDocumentos = clienteDosDocumentos?.id;
+  const atualizarQuantidadeDocumentos = useCallback(
+    (quantidade) => {
+      setClientes((lista) =>
+        lista.some(
+          (c) => c.id === idClienteDosDocumentos && c.quantidade_documentos !== quantidade
+        )
+          ? lista.map((c) =>
+              c.id === idClienteDosDocumentos
+                ? { ...c, quantidade_documentos: quantidade }
+                : c
+            )
+          : lista
+      );
+    },
+    [idClienteDosDocumentos]
+  );
 
   function abrirDocumentos(cliente) {
     setClienteDosDocumentos(cliente);
@@ -58,12 +81,12 @@ function Clientes() {
     });
   }
 
-  async function carregarClientes() {
+  async function carregarClientes(situacaoAtual = situacao) {
     try {
       setCarregando(true);
       setErro("");
 
-      const dados = await apiRequest("/api/clientes/");
+      const dados = await apiRequest(`/api/clientes/?situacao=${situacaoAtual}`);
       setClientes(dados);
     } catch (error) {
       setErro(error.message);
@@ -73,8 +96,44 @@ function Clientes() {
   }
 
   useEffect(() => {
-    carregarClientes();
-  }, []);
+    carregarClientes(situacao);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [situacao]);
+
+  function trocarSituacao(novaSituacao) {
+    if (novaSituacao === situacao) return;
+
+    setClienteDosDocumentos(null);
+    setBusca("");
+    setClientes([]);
+    setSituacao(novaSituacao);
+  }
+
+  async function reativarCliente(cliente) {
+    if (!podeEditarClientes) return;
+
+    const confirmou = window.confirm(
+      `Reativar o cliente "${cliente.nome}"? Ele volta a aparecer na lista de ativos.`
+    );
+
+    if (!confirmou) return;
+
+    try {
+      setErro("");
+
+      await apiRequest(`/api/clientes/${cliente.id}/reativar`, {
+        method: "PATCH",
+      });
+
+      if (clienteDosDocumentos?.id === cliente.id) {
+        setClienteDosDocumentos(null);
+      }
+
+      await carregarClientes();
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
 
   const clientesFiltrados = useMemo(() => {
     const termo = normalizar(busca.trim());
@@ -398,17 +457,31 @@ function Clientes() {
             key={clienteDosDocumentos.id}
             cliente={clienteDosDocumentos}
             onFechar={() => setClienteDosDocumentos(null)}
+            onQuantidadeAlterada={atualizarQuantidadeDocumentos}
+            somenteLeitura={!clienteDosDocumentos.ativo}
           />
         </div>
       )}
 
       <section className="surface data-panel">
-        <div className="section-heading">
-          <h2>Clientes cadastrados</h2>
+        <div className="section-heading list-heading">
+          <div>
+            <h2>
+              {exibindoInativos ? "Clientes inativos" : "Clientes cadastrados"}
+            </h2>
 
-          <p>
-            Consulte os registros ativos e acesse as ações disponíveis.
-          </p>
+            <p>
+              {exibindoInativos
+                ? "Clientes inativados ficam guardados aqui e podem ser reativados."
+                : "Consulte os registros ativos e acesse as ações disponíveis."}
+            </p>
+          </div>
+
+          <FiltroSituacao
+            valor={situacao}
+            onChange={trocarSituacao}
+            rotulo="Mostrar clientes"
+          />
         </div>
         {!carregando && clientes.length > 0 && (
           <div className="search-block">
@@ -437,7 +510,9 @@ function Clientes() {
           </div>
         ) : clientes.length === 0 ? (
           <div className="empty-state empty-state--compact">
-            Nenhum cliente cadastrado.
+            {exibindoInativos
+              ? "Nenhum cliente inativo."
+              : "Nenhum cliente cadastrado."}
           </div>
         ) : clientesFiltrados.length === 0 ? (
           <div className="empty-state empty-state--compact">
@@ -468,6 +543,10 @@ function Clientes() {
                         <strong>
                           {cliente.nome}
                         </strong>
+
+                        {exibindoInativos && (
+                          <span className="inactive-chip">Inativo</span>
+                        )}
                       </span>
                     </td>
 
@@ -484,14 +563,31 @@ function Clientes() {
                     </td>
 
                     <td>
+                      {exibindoInativos ? (
+                        <span className="table-actions">
+                          <BotaoArquivos
+                            rotulo="Documentos"
+                            quantidade={cliente.quantidade_documentos}
+                            onClick={() => abrirDocumentos(cliente)}
+                          />
+
+                          {podeEditarClientes && (
+                            <button
+                              type="button"
+                              className="text-action text-action--restore"
+                              onClick={() => reativarCliente(cliente)}
+                            >
+                              Reativar
+                            </button>
+                          )}
+                        </span>
+                      ) : (
                       <span className="table-actions">
-                        <button
-                          type="button"
-                          className="text-action"
+                        <BotaoArquivos
+                          rotulo="Documentos"
+                          quantidade={cliente.quantidade_documentos}
                           onClick={() => abrirDocumentos(cliente)}
-                        >
-                          Documentos
-                        </button>
+                        />
 
                         {podeEditarClientes && (
                           <>
@@ -513,6 +609,7 @@ function Clientes() {
                           </>
                         )}
                       </span>
+                      )}
                     </td>
                   </tr>
                 ))}

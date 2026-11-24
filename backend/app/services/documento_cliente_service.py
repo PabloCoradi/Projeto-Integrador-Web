@@ -149,7 +149,7 @@ def listar_documentos_do_caso(
     db: Session,
     caso_id: int,
 ) -> list[DocumentoCliente] | None:
-    caso = buscar_caso(db=db, caso_id=caso_id)
+    caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True)
 
     if caso is None:
         return None
@@ -162,7 +162,7 @@ def buscar_documento_do_caso(
     caso_id: int,
     documento_id: int,
 ) -> DocumentoCliente | None:
-    caso = buscar_caso(db=db, caso_id=caso_id)
+    caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True)
 
     if caso is None:
         return None

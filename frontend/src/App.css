@@ -708,6 +708,109 @@ textarea:focus-visible {
 
 .text-action--danger { color: var(--danger); }
 
+/* Seletor Ativos | Inativos das listagens */
+.list-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.status-toggle {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--canvas);
+}
+
+.status-toggle button {
+  min-height: 30px;
+  padding: 0 14px;
+  color: var(--muted);
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.74rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease;
+}
+
+.status-toggle button:hover { color: var(--ink); }
+
+.status-toggle button.is-active {
+  color: #fff;
+  background: var(--accent);
+}
+
+.inactive-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  color: #6e7378;
+  border-radius: 999px;
+  background: #edf0f2;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.content-card td .text-action--restore,
+.text-action--restore { color: var(--accent-deep); }
+
+/* Botão "Arquivos"/"Documentos" com a quantidade anexada */
+.content-card td .file-count,
+.file-count {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 6px 4px 8px;
+  color: var(--soft-muted);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  font-size: 0.72rem;
+  font-weight: 750;
+  cursor: pointer;
+  transition: border-color 150ms ease, background 150ms ease;
+}
+
+.content-card td .file-count:hover,
+.file-count:hover {
+  color: var(--accent-deep);
+  border-color: var(--accent);
+  text-decoration: none;
+}
+
+.file-count__icon { flex: 0 0 auto; opacity: 0.55; }
+
+.file-count__badge {
+  min-width: 18px;
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: #edf0f2;
+  font-size: 0.66rem;
+  text-align: center;
+}
+
+.content-card td .file-count--has,
+.file-count--has {
+  color: var(--accent-deep);
+  border-color: #bfe0e1;
+  background: var(--accent-soft);
+}
+
+.file-count--has .file-count__icon { opacity: 1; }
+
+.file-count--has .file-count__badge {
+  color: #fff;
+  background: var(--accent);
+}
+
 .type-chip,
 .article-status {
   display: inline-flex;

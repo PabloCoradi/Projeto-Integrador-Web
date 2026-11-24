@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Boolean, DateTime, ForeignKey, String, Text, func, select
+from sqlalchemy.orm import Mapped, column_property, mapped_column, relationship
 
 from app.core.database import Base
+from app.models.arquivo_caso import ArquivoCaso
 from app.models.cliente import Cliente
 
 
@@ -57,3 +58,17 @@ class Caso(Base):
     )
 
     cliente: Mapped["Cliente"] = relationship()
+
+    @property
+    def cliente_nome(self) -> str:
+        return self.cliente.nome
+
+
+# Quantidade de arquivos ativos do caso, calculada na mesma consulta que
+# busca o caso (usada para destacar o botão "Arquivos" na listagem).
+Caso.quantidade_arquivos = column_property(
+    select(func.count(ArquivoCaso.id))
+    .where(ArquivoCaso.caso_id == Caso.id, ArquivoCaso.ativo.is_(True))
+    .correlate_except(ArquivoCaso)
+    .scalar_subquery()
+)
