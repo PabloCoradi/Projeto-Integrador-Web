@@ -72,6 +72,15 @@ class Caso(Base):
     def cliente_nome(self) -> str:
         return self.cliente.nome
 
+    @property
+    def cliente_ativo(self) -> bool:
+        return self.cliente.ativo
+
+    @property
+    def em_andamento(self) -> bool:
+        """Um caso só está em andamento se ele e o cliente estiverem ativos."""
+        return self.ativo and self.cliente.ativo
+
 
 # Quantidade de arquivos ativos do caso, calculada na mesma consulta que
 # busca o caso (usada para destacar o botão "Arquivos" na listagem).

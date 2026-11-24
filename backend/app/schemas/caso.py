@@ -89,6 +89,7 @@ class CasoResponse(BaseModel):
     id: int
     cliente_id: int
     cliente_nome: str
+    cliente_ativo: bool
     titulo: str
     tipo_atendimento: str
     observacoes: str | None

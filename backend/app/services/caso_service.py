@@ -1,6 +1,7 @@
-from sqlalchemy import or_, select
+from sqlalchemy import and_, not_, select
 from sqlalchemy.orm import Session, selectinload
 
+from app.core.texto import normalizar_busca
 from app.models.caso import Caso
 from app.models.cliente import Cliente
 
@@ -11,6 +12,22 @@ class ClienteNaoEncontradoError(Exception):
 
 class ClienteInativoError(Exception):
     pass
+
+
+class SituacaoInvalidaError(Exception):
+    """Pedido de inativar o que já está inativo (ou reativar o que já está ativo)."""
+
+
+def caso_em_andamento():
+    """Condição SQL: o caso e o cliente dele estão ativos."""
+
+    cliente_ativo = (
+        select(Cliente.id)
+        .where(Cliente.id == Caso.cliente_id, Cliente.ativo.is_(True))
+        .exists()
+    )
+
+    return and_(Caso.ativo.is_(True), cliente_ativo)
 
 
 def criar_caso(
@@ -51,34 +68,39 @@ def listar_casos(
     q: str | None = None,
     inativos: bool = False,
 ) -> list[Caso]:
-    """Lista os casos ativos, ou só os inativados quando inativos=True."""
+    """Lista os casos em andamento, ou os inativos quando inativos=True.
+
+    Casos de cliente inativo contam como inativos. Os filtros de tipo e de
+    texto ignoram acentos e maiúsculas ("civel" encontra "Cível").
+    """
+
+    em_andamento = caso_em_andamento()
 
     consulta = (
         select(Caso)
         .options(selectinload(Caso.cliente))
-        .where(Caso.ativo.is_(not inativos))
+        .where(not_(em_andamento) if inativos else em_andamento)
     )
 
     if cliente_id is not None:
         consulta = consulta.where(Caso.cliente_id == cliente_id)
 
-    if tipo_atendimento:
-        consulta = consulta.where(
-            Caso.tipo_atendimento == tipo_atendimento.strip()
-        )
-
-    if q:
-        termo = f"%{q.strip()}%"
-        consulta = consulta.where(
-            or_(
-                Caso.titulo.ilike(termo),
-                Caso.observacoes.ilike(termo),
-            )
-        )
-
     consulta = consulta.order_by(Caso.criado_em.desc())
+    casos = list(db.scalars(consulta).all())
 
-    return list(db.scalars(consulta).all())
+    tipo = normalizar_busca(tipo_atendimento)
+    if tipo:
+        casos = [c for c in casos if tipo in normalizar_busca(c.tipo_atendimento)]
+
+    termo = normalizar_busca(q)
+    if termo:
+        casos = [
+            c for c in casos
+            if termo in normalizar_busca(c.titulo)
+            or termo in normalizar_busca(c.observacoes)
+        ]
+
+    return casos
 
 
 def buscar_caso(
@@ -86,12 +108,12 @@ def buscar_caso(
     caso_id: int,
     incluir_inativos: bool = False,
 ) -> Caso | None:
-    """Busca um caso ativo; incluir_inativos=True serve só para consultas."""
+    """Busca um caso em andamento; incluir_inativos=True serve só para consultas."""
 
     consulta = select(Caso).where(Caso.id == caso_id)
 
     if not incluir_inativos:
-        consulta = consulta.where(Caso.ativo.is_(True))
+        consulta = consulta.where(caso_em_andamento())
 
     return db.scalar(consulta)
 
@@ -115,10 +137,13 @@ def atualizar_caso(db: Session, caso_id: int, campos: dict) -> Caso | None:
 
 
 def inativar_caso(db: Session, caso_id: int) -> Caso | None:
-    caso = buscar_caso(db=db, caso_id=caso_id)
+    caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True)
 
     if caso is None:
         return None
+
+    if not caso.ativo:
+        raise SituacaoInvalidaError("Este caso já está inativo.")
 
     caso.ativo = False
     db.commit()
@@ -137,6 +162,9 @@ def reativar_caso(db: Session, caso_id: int) -> Caso | None:
         raise ClienteInativoError(
             "O cliente deste caso está inativo. Reative o cliente antes de reativar o caso."
         )
+
+    if caso.ativo:
+        raise SituacaoInvalidaError("Este caso já está ativo.")
 
     caso.ativo = True
     db.commit()

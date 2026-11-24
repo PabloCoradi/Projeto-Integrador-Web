@@ -297,7 +297,8 @@ function Clientes() {
     if (!podeEditarClientes) return;
 
     const confirmou = window.confirm(
-      'Inativar o cliente "' + cliente.nome + '"?'
+      'Inativar o cliente "' + cliente.nome + '"?\n\n' +
+        "Os casos dele também vão para Casos > Inativos e voltam sozinhos quando o cliente for reativado."
     );
 
     if (!confirmou) return;

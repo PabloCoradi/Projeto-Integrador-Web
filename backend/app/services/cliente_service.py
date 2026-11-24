@@ -2,7 +2,35 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from app.core.texto import somente_digitos
 from app.models.cliente import Cliente
+
+
+class SituacaoInvalidaError(Exception):
+    """Pedido de inativar o que já está inativo (ou reativar o que já está ativo)."""
+
+
+def _cliente_com_mesmo_documento(
+    db: Session,
+    cpf_cnpj: str,
+    ignorar_id: int | None = None,
+) -> Cliente | None:
+    """Procura um cliente com o mesmo CPF/CNPJ, ignorando pontos, traços e barras."""
+
+    digitos = somente_digitos(cpf_cnpj)
+
+    if not digitos:
+        return None
+
+    candidatos = db.scalars(
+        select(Cliente).where(Cliente.cpf_cnpj.is_not(None))
+    ).all()
+
+    for cliente in candidatos:
+        if cliente.id != ignorar_id and somente_digitos(cliente.cpf_cnpj) == digitos:
+            return cliente
+
+    return None
 
 
 def criar_cliente(
@@ -18,11 +46,7 @@ def criar_cliente(
     cpf_cnpj = cpf_cnpj.strip() if cpf_cnpj else None
 
     if cpf_cnpj:
-        cliente_existente = db.scalar(
-            select(Cliente).where(
-                Cliente.cpf_cnpj == cpf_cnpj,
-            )
-        )
+        cliente_existente = _cliente_com_mesmo_documento(db, cpf_cnpj)
 
         if cliente_existente and not cliente_existente.ativo:
             raise ValueError(
@@ -113,11 +137,10 @@ def atualizar_cliente(
         cpf_cnpj = cpf_cnpj.strip() or None
 
         if cpf_cnpj:
-            cliente_existente = db.scalar(
-                select(Cliente).where(
-                    Cliente.cpf_cnpj == cpf_cnpj,
-                    Cliente.id != cliente_id,
-                )
+            cliente_existente = _cliente_com_mesmo_documento(
+                db,
+                cpf_cnpj,
+                ignorar_id=cliente_id,
             )
 
             if cliente_existente:
@@ -168,6 +191,9 @@ def inativar_cliente(
     if cliente is None:
         return None
 
+    if not cliente.ativo:
+        raise SituacaoInvalidaError("Este cliente já está inativo.")
+
     cliente.ativo = False
 
     db.commit()
@@ -185,6 +211,9 @@ def reativar_cliente(
 
     if cliente is None:
         return None
+
+    if cliente.ativo:
+        raise SituacaoInvalidaError("Este cliente já está ativo.")
 
     cliente.ativo = True
 
