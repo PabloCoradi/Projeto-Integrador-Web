@@ -10,13 +10,11 @@ from app.core.limiter import limiter
 from app.models.usuario import Usuario
 from app.schemas.auth import (
     LoginRequest,
-    RedefinirSenhaRequest,
     AlterarMinhaSenhaRequest,
     TokenResponse,
 )
 from app.services.auth_service import (
     autenticar_usuario,
-    redefinir_senha,
     alterar_minha_senha,
 )
 
@@ -60,34 +58,6 @@ def login(
         "access_token": access_token,
         "token_type": "bearer",
     }
-
-
-@router.post("/redefinir-senha")
-def redefinir_senha_endpoint(
-    dados: RedefinirSenhaRequest,
-    db: Session = Depends(get_db),
-):
-    try:
-        mensagem = redefinir_senha(
-            db=db,
-            email=dados.email,
-            nova_senha=dados.nova_senha,
-            confirmar_senha=dados.confirmar_senha,
-        )
-
-        return {"message": mensagem}
-
-    except ValueError as erro:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(erro),
-        )
-
-    except LookupError as erro:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail=str(erro),
-        )
 
 
 @router.get("/me")
