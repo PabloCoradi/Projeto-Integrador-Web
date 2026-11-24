@@ -157,7 +157,7 @@ function Login() {
           />
         </svg>
 
-        {/* Linha ciano da onda, desenhada por cima das advogadas */}
+        {/* Linha ciano da onda, posicionada atrás das advogadas pelo z-index */}
         <svg
           className="login__onda login__onda--linha"
           viewBox="0 0 700 330"
@@ -207,11 +207,14 @@ function Login() {
 
                 <input
                   id="email"
+                  name="email"
                   type="email"
                   value={email}
                   onChange={(event) => setEmail(event.target.value)}
                   placeholder="seu@email.com"
                   autoComplete="email"
+                  spellCheck={false}
+                  required
                 />
               </div>
             </div>
@@ -224,11 +227,13 @@ function Login() {
 
                 <input
                   id="senha"
+                  name="senha"
                   type={mostrarSenha ? "text" : "password"}
                   value={senha}
                   onChange={(event) => setSenha(event.target.value)}
                   placeholder="Digite sua senha"
                   autoComplete="current-password"
+                  required
                 />
 
                 <button

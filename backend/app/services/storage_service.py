@@ -44,6 +44,18 @@ def gerar_chave_imagem_artigo() -> str:
     return f"artigos/{uuid.uuid4().hex}.webp"
 
 
+def gerar_chave_foto_caso(caso_id: int) -> str:
+    """Fotos de identificação ficam separadas dos documentos do caso."""
+
+    return f"casos/{caso_id}/foto/{uuid.uuid4().hex}.webp"
+
+
+def gerar_chave_foto_cliente(cliente_id: int) -> str:
+    """Fotos de identificação ficam separadas dos documentos do cliente."""
+
+    return f"clientes/{cliente_id}/foto/{uuid.uuid4().hex}.webp"
+
+
 def enviar_arquivo(arquivo, chave: str, content_type: str) -> None:
 
     try:
@@ -102,3 +114,12 @@ def baixar_arquivo(chave: str):
         resposta.get("ContentType"),
         resposta.get("ContentLength"),
     )
+
+
+def remover_arquivo_storage(chave: str) -> None:
+    try:
+        _cliente.delete_object(Bucket=settings.RUSTFS_BUCKET, Key=chave)
+    except (BotoCoreError, ClientError) as erro:
+        raise FalhaStorageError(
+            "Não foi possível remover o arquivo do armazenamento."
+        ) from erro

@@ -21,7 +21,7 @@ import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = false }) {
+function ArquivosCaso({ caso, onQuantidadeAlterada, somenteLeitura = false }) {
   const { podeEditar } = useAuth();
   // Caso inativo: os arquivos podem ser consultados, mas não alterados.
   const podeEditarCasos = podeEditar("casos") && !somenteLeitura;
@@ -208,35 +208,18 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
   const enviando = envio !== null;
 
   return (
-    <div className="content-card cliente-form-card">
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>
+    <section className="content-card cliente-form-card file-manager" aria-labelledby="arquivos-caso-titulo">
+      <div className="file-manager__heading">
+        <h2 id="arquivos-caso-titulo">
           Arquivos do caso: {caso.titulo}
         </h2>
 
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={onFechar}
-          disabled={enviando}
-        >
-          Fechar
-        </button>
       </div>
 
       {erro && (
         <div
           role="alert"
-          className="error-message"
-          style={{ whiteSpace: "pre-line" }}
+          className="error-message file-manager__error"
         >
           {erro}
         </div>
@@ -250,15 +233,8 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
       )}
 
       {podeEditarCasos && (
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "flex-end",
-              flexWrap: "wrap",
-            }}
-          >
+        <div className="file-manager__upload">
+          <div className="file-manager__upload-controls">
             <CampoTag
               id="tag-arquivo-caso"
               value={tag}
@@ -272,6 +248,7 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
               ref={inputRef}
               type="file"
               multiple
+              aria-label="Selecionar arquivos para anexar"
               onChange={aoEscolherArquivos}
               style={{ display: "none" }}
             />
@@ -282,11 +259,11 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
               onClick={() => inputRef.current?.click()}
               disabled={enviando}
             >
-              {enviando ? "Enviando..." : "+ Anexar arquivos"}
+              {enviando ? "Enviando..." : "+ Anexar documentos"}
             </button>
           </div>
 
-          <p style={{ marginTop: 8, fontSize: 13 }}>
+          <p className="file-manager__help">
             Qualquer tipo de arquivo (fotos, vídeos, áudios, documentos),
             até {LIMITE_MB} MB cada. Você pode selecionar vários de uma vez;
             todos recebem a tag escolhida. Se a tag ficar em branco, eles são
@@ -294,35 +271,28 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
           </p>
 
           {enviando && (
-            <div style={{ marginTop: 16 }}>
+            <div className="file-manager__progress-wrap" aria-live="polite">
               <p>
                 Enviando {envio.indice} de {envio.total}: {envio.nome}
               </p>
 
               <div
                 role="progressbar"
+                aria-label="Progresso do envio de arquivos"
                 aria-valuenow={envio.percentual}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                style={{
-                  height: 8,
-                  marginTop: 8,
-                  borderRadius: 4,
-                  background: "#e5e7eb",
-                  overflow: "hidden",
-                }}
+                aria-valuetext={`${envio.percentual}% concluído`}
+                className="file-manager__progress"
               >
                 <div
                   style={{
                     width: `${envio.percentual}%`,
-                    height: "100%",
-                    background: "#1f2937",
-                    transition: "width 0.2s",
                   }}
                 />
               </div>
 
-              <p style={{ marginTop: 6, fontSize: 13 }}>
+              <p className="file-manager__progress-caption">
                 {envio.percentual < 100
                   ? `${envio.percentual}%`
                   : "Finalizando (salvando no armazenamento)..."}
@@ -344,8 +314,8 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
       ) : arquivosFiltrados.length === 0 ? (
         <p>Nenhum arquivo anexado a este caso.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table>
+        <div className="table-scroll file-manager__table" role="region" aria-label="Arquivos anexados ao caso" tabIndex={0}>
+          <table className="data-table file-table">
             <thead>
               <tr>
                 <th>Tag</th>
@@ -363,7 +333,7 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
                     <EtiquetaTag tag={arquivo.tag} />
                   </td>
 
-                  <td style={{ wordBreak: "break-word" }}>
+                  <td className="file-table__name">
                     {arquivo.nome_original}
                   </td>
 
@@ -372,13 +342,7 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
                   <td>{formatarData(arquivo.criado_em)}</td>
 
                   <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    <div className="file-table__actions">
                       <button
                         type="button"
                         onClick={() => abrir(arquivo, true)}
@@ -419,9 +383,9 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
         </div>
       )}
 
-      <h3 style={{ marginTop: 32, marginBottom: 8 }}>Documentos do cliente</h3>
+      <h3 className="file-manager__related-title">Documentos do cliente</h3>
 
-      <p style={{ marginTop: 0, marginBottom: 16, fontSize: 13 }}>
+      <p className="file-manager__help file-manager__related-help">
         Puxados automaticamente do cadastro do cliente. Para incluir ou
         remover, use a aba Clientes.
       </p>
@@ -431,8 +395,8 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
       ) : documentosCliente.length === 0 ? (
         <p>O cliente deste caso não possui documentos anexados.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table>
+        <div className="table-scroll file-manager__table" role="region" aria-label="Documentos do cliente" tabIndex={0}>
+          <table className="data-table file-table">
             <thead>
               <tr>
                 <th>Tag</th>
@@ -450,7 +414,7 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
                     <EtiquetaTag tag={documento.tag} />
                   </td>
 
-                  <td style={{ wordBreak: "break-word" }}>
+                  <td className="file-table__name">
                     {documento.nome_original}
                   </td>
 
@@ -459,13 +423,7 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
                   <td>{formatarData(documento.criado_em)}</td>
 
                   <td>
-                    <div
-                      style={{
-                        display: "flex",
-                        gap: 8,
-                        flexWrap: "wrap",
-                      }}
-                    >
+                    <div className="file-table__actions">
                       <button
                         type="button"
                         onClick={() => abrirDocumentoCliente(documento, true)}
@@ -487,7 +445,7 @@ function ArquivosCaso({ caso, onFechar, onQuantidadeAlterada, somenteLeitura = f
           </table>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

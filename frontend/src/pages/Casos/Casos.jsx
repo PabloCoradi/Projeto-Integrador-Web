@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import BotaoArquivos from "../../components/BotaoArquivos";
@@ -7,12 +7,17 @@ import FiltroSituacao from "../../components/FiltroSituacao";
 import {
   atualizarCaso,
   criarCaso,
+  enviarFotoCaso,
   inativarCaso,
+  removerFotoCaso,
   listarCasos,
   reativarCaso,
 } from "../../services/casos";
 
 import ArquivosCaso from "./ArquivosCaso";
+import FotoCaso from "./FotoCaso";
+import { iniciaisCliente } from "./fotoCasoUtils";
+import "./Casos.css";
 
 const FORM_VAZIO = {
   cliente_id: "",
@@ -21,12 +26,16 @@ const FORM_VAZIO = {
   observacoes: "",
 };
 
+const TIPOS_FOTO_CASO = "image/jpeg,image/png,image/webp";
+const LIMITE_FOTO_CASO_MB = 5;
+
 function Casos() {
   const { podeEditar } = useAuth();
   const podeEditarCasos = podeEditar("casos");
 
   const [casos, setCasos] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [formAberto, setFormAberto] = useState(false);
 
   const [filtros, setFiltros] = useState({
     tipoAtendimento: "",
@@ -35,6 +44,8 @@ function Casos() {
 
   const [form, setForm] = useState(FORM_VAZIO);
   const [editandoId, setEditandoId] = useState(null);
+  const [fotoSelecionada, setFotoSelecionada] = useState(null);
+  const [removerFotoExistente, setRemoverFotoExistente] = useState(false);
 
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(true);
@@ -42,24 +53,27 @@ function Casos() {
 
   const [casoDosArquivos, setCasoDosArquivos] = useState(null);
   const painelArquivosRef = useRef(null);
+  const fotoInputRef = useRef(null);
+
+  const previaFotoLocal = useMemo(
+    () => fotoSelecionada ? URL.createObjectURL(fotoSelecionada) : "",
+    [fotoSelecionada]
+  );
+
+  useEffect(() => () => {
+    if (previaFotoLocal) URL.revokeObjectURL(previaFotoLocal);
+  }, [previaFotoLocal]);
 
   const [situacao, setSituacao] = useState("ativos");
   const exibindoInativos = situacao === "inativos";
-
-  // Mantém o contador do botão "Arquivos" em dia após envios e exclusões.
   const idCasoDosArquivos = casoDosArquivos?.id;
-  const atualizarQuantidadeArquivos = useCallback(
-    (quantidade) => {
-      setCasos((lista) =>
-        lista.some((c) => c.id === idCasoDosArquivos && c.quantidade_arquivos !== quantidade)
-          ? lista.map((c) =>
-              c.id === idCasoDosArquivos ? { ...c, quantidade_arquivos: quantidade } : c
-            )
-          : lista
-      );
-    },
-    [idCasoDosArquivos]
-  );
+  const atualizarQuantidadeArquivos = useCallback((quantidade) => {
+    setCasos((lista) => lista.map((caso) =>
+      caso.id === idCasoDosArquivos
+        ? { ...caso, quantidade_arquivos: quantidade }
+        : caso
+    ));
+  }, [idCasoDosArquivos]);
 
   async function carregarCasos(filtrosAtuais = filtros, situacaoAtual = situacao) {
     setErro("");
@@ -100,18 +114,22 @@ function Casos() {
     iniciar();
   }, []);
 
-  function nomeDoCliente(caso) {
+  function nomeDoCliente(clienteId, nomeDoCaso = "") {
     return (
-      caso.cliente_nome ||
-      clientes.find((cliente) => cliente.id === caso.cliente_id)?.nome ||
-      `Cliente #${caso.cliente_id}`
+      nomeDoCaso ||
+      clientes.find((cliente) => cliente.id === clienteId)?.nome ||
+      `Cliente #${clienteId}`
     );
+  }
+
+  function dadosDoCliente(clienteId) {
+    return clientes.find((cliente) => cliente.id === clienteId);
   }
 
   function trocarSituacao(novaSituacao) {
     if (novaSituacao === situacao) return;
-
     setCasoDosArquivos(null);
+    setFormAberto(false);
     setCasos([]);
     setSituacao(novaSituacao);
     carregarCasos(filtros, novaSituacao);
@@ -119,22 +137,30 @@ function Casos() {
 
   async function reativar(caso) {
     if (!podeEditarCasos) return;
-
     const confirmou = window.confirm(
       `Reativar o caso "${caso.titulo}"? Ele volta a aparecer na lista de ativos.`
     );
-
     if (!confirmou) return;
 
     setErro("");
-
     try {
       await reativarCaso(caso.id);
+      setCasoDosArquivos(null);
+      await carregarCasos();
+    } catch (error) {
+      setErro(error.message);
+    }
+  }
 
-      if (casoDosArquivos?.id === caso.id) {
-        setCasoDosArquivos(null);
-      }
+  async function inativar(caso) {
+    if (!podeEditarCasos) return;
+    const confirmou = window.confirm(`Inativar o caso "${caso.titulo}"?`);
+    if (!confirmou) return;
 
+    setErro("");
+    try {
+      await inativarCaso(caso.id);
+      setCasoDosArquivos(null);
       await carregarCasos();
     } catch (error) {
       setErro(error.message);
@@ -151,7 +177,10 @@ function Casos() {
   function iniciarEdicao(caso) {
     if (!podeEditarCasos) return;
 
+    setFormAberto(true);
     setEditandoId(caso.id);
+    setFotoSelecionada(null);
+    setRemoverFotoExistente(false);
 
     setForm({
       cliente_id: String(caso.cliente_id),
@@ -172,6 +201,38 @@ function Casos() {
     setEditandoId(null);
     setForm(FORM_VAZIO);
     setErro("");
+    setFormAberto(false);
+    setFotoSelecionada(null);
+    setRemoverFotoExistente(false);
+  }
+
+  function escolherFoto(evento) {
+    const arquivo = evento.target.files?.[0];
+    evento.target.value = "";
+    if (!arquivo) return;
+
+    if (!TIPOS_FOTO_CASO.split(",").includes(arquivo.type)) {
+      setErro("Formato não aceito. Escolha uma foto JPG, PNG ou WEBP.");
+      return;
+    }
+
+    if (arquivo.size > LIMITE_FOTO_CASO_MB * 1024 * 1024) {
+      setErro(`A foto precisa ter no máximo ${LIMITE_FOTO_CASO_MB} MB.`);
+      return;
+    }
+
+    setErro("");
+    setFotoSelecionada(arquivo);
+    setRemoverFotoExistente(false);
+  }
+
+  function retirarFotoSelecionada() {
+    setFotoSelecionada(null);
+    if (editandoId && casoDosArquivos?.tem_foto) {
+      setRemoverFotoExistente(true);
+    } else {
+      setRemoverFotoExistente(false);
+    }
   }
 
   async function salvar(evento) {
@@ -188,20 +249,44 @@ function Casos() {
     try {
       const observacoes = form.observacoes.trim() || null;
 
-      if (editandoId) {
-        await atualizarCaso(editandoId, {
+      const idEditado = editandoId;
+      let casoSalvo;
+
+      if (idEditado) {
+        casoSalvo = await atualizarCaso(idEditado, {
           titulo: form.titulo,
           tipo_atendimento: form.tipo_atendimento,
           observacoes,
         });
       } else {
-        await criarCaso({
+        casoSalvo = await criarCaso({
           cliente_id: Number(form.cliente_id),
           titulo: form.titulo,
           tipo_atendimento: form.tipo_atendimento,
           observacoes,
         });
       }
+
+      try {
+        if (fotoSelecionada) {
+          casoSalvo = await enviarFotoCaso(casoSalvo.id, fotoSelecionada);
+        } else if (idEditado && removerFotoExistente) {
+          casoSalvo = await removerFotoCaso(casoSalvo.id);
+        }
+      } catch (errorFoto) {
+        if (!idEditado) {
+          setCasoDosArquivos(casoSalvo);
+          setEditandoId(casoSalvo.id);
+          setForm((atual) => ({ ...atual, cliente_id: String(casoSalvo.cliente_id) }));
+        } else {
+          setCasoDosArquivos(casoSalvo);
+        }
+        await carregarCasos();
+        setErro(`Os dados do caso foram salvos, mas a foto não foi atualizada: ${errorFoto.message}`);
+        return;
+      }
+
+      if (idEditado) setCasoDosArquivos(casoSalvo);
 
       cancelarEdicao();
       await carregarCasos();
@@ -212,35 +297,8 @@ function Casos() {
     }
   }
 
-  async function inativar(caso) {
-    if (!podeEditarCasos) return;
-
-    const confirmou = window.confirm(
-      `Inativar o caso "${caso.titulo}"?`
-    );
-
-    if (!confirmou) return;
-
-    setErro("");
-
-    try {
-      await inativarCaso(caso.id);
-
-      if (editandoId === caso.id) {
-        cancelarEdicao();
-      }
-
-      if (casoDosArquivos?.id === caso.id) {
-        setCasoDosArquivos(null);
-      }
-
-      await carregarCasos();
-    } catch (error) {
-      setErro(error.message);
-    }
-  }
-
   function abrirArquivos(caso) {
+    setFormAberto(false);
     setCasoDosArquivos(caso);
 
     setTimeout(() => {
@@ -249,6 +307,15 @@ function Casos() {
         block: "start",
       });
     }, 0);
+  }
+
+  function abrirAnexos() {
+    painelArquivosRef.current?.querySelector('input[type="file"]')?.click();
+  }
+
+  function voltarParaCasos() {
+    cancelarEdicao();
+    setCasoDosArquivos(null);
   }
 
   function limparFiltros() {
@@ -261,21 +328,37 @@ function Casos() {
     carregarCasos(vazio);
   }
 
+  const clienteDoCaso = casoDosArquivos
+    ? dadosDoCliente(casoDosArquivos.cliente_id)
+    : null;
+
   return (
     <div className="page page--cases">
+      {!casoDosArquivos && (
       <header className="page-heading page-heading--action">
         <div>
           <h1>Casos</h1>
 
-          <p>
-            Cadastre, consulte e gerencie os casos vinculados aos clientes.
-          </p>
+          <p>Organize os atendimentos, documentos e informações de cada cliente.</p>
         </div>
 
-        <span className="status-label">
-          CLIENTES ATIVOS
-        </span>
+        {podeEditarCasos && !exibindoInativos && (
+          <button
+            type="button"
+            className="button button--primary cases-create-button"
+            onClick={() => {
+              if (formAberto) cancelarEdicao();
+              else setFormAberto(true);
+            }}
+            aria-expanded={formAberto}
+            aria-controls="formulario-caso"
+          >
+            <span aria-hidden="true">{formAberto ? "−" : "+"}</span>
+            {formAberto ? "Fechar formulário" : "Criar caso"}
+          </button>
+        )}
       </header>
+      )}
 
       {erro && (
         <div role="alert" className="alert alert--error">
@@ -283,8 +366,8 @@ function Casos() {
         </div>
       )}
 
-      {podeEditarCasos && (
-        <section className="surface surface--accent form-panel">
+      {podeEditarCasos && formAberto && (
+        <section id="formulario-caso" className="surface surface--accent form-panel cases-form-panel">
           <div className="section-heading">
             <h2>
               {editandoId ? "Editar caso" : "Novo caso"}
@@ -298,6 +381,58 @@ function Casos() {
           </div>
 
           <form onSubmit={salvar}>
+            <div className="case-photo-field">
+              <div className="case-photo-field__preview" aria-hidden="true">
+                {previaFotoLocal ? (
+                  <img src={previaFotoLocal} alt="" />
+                ) : editandoId && casoDosArquivos?.tem_foto && !removerFotoExistente ? (
+                  <FotoCaso
+                    key={`${casoDosArquivos.id}-${casoDosArquivos.atualizado_em}`}
+                    caso={casoDosArquivos}
+                    nome={nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)}
+                  />
+                ) : (
+                  <span>{iniciaisCliente(nomeDoCliente(Number(form.cliente_id)))}</span>
+                )}
+              </div>
+              <div className="case-photo-field__content">
+                <div>
+                  <strong>Foto da pasta</strong>
+                  <p>Identifique o cliente com uma foto. JPG, PNG ou WEBP, até {LIMITE_FOTO_CASO_MB} MB.</p>
+                  {fotoSelecionada && <small>{fotoSelecionada.name}</small>}
+                  {removerFotoExistente && <small>A foto atual será removida ao salvar.</small>}
+                </div>
+                <input
+                  ref={fotoInputRef}
+                  id="caso-foto"
+                  type="file"
+                  accept={TIPOS_FOTO_CASO}
+                  onChange={escolherFoto}
+                  hidden
+                />
+                <div className="case-photo-field__actions">
+                  <button
+                    type="button"
+                    className="button button--quiet"
+                    onClick={() => fotoInputRef.current?.click()}
+                    disabled={salvando}
+                  >
+                    {fotoSelecionada || (casoDosArquivos?.tem_foto && !removerFotoExistente) ? "Trocar foto" : "Adicionar foto"}
+                  </button>
+                  {(fotoSelecionada || (editandoId && casoDosArquivos?.tem_foto && !removerFotoExistente)) && (
+                    <button
+                      type="button"
+                      className="button button--quiet case-photo-field__remove"
+                      onClick={retirarFotoSelecionada}
+                      disabled={salvando}
+                    >
+                      Remover foto
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="form-grid">
               <div className="form-field">
                 <label htmlFor="caso-cliente">
@@ -417,37 +552,79 @@ function Casos() {
 
       {casoDosArquivos && (
         <div ref={painelArquivosRef}>
+          <section className="case-detail" aria-labelledby="case-detail-title">
+            <div className="case-detail__intro">
+              <FotoCaso
+                key={`${casoDosArquivos.id}-${casoDosArquivos.atualizado_em}`}
+                caso={casoDosArquivos}
+                nome={nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)}
+                className="case-photo--detail"
+              />
+              <div>
+                <p className="case-detail__eyebrow">{nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)}</p>
+                <h2 id="case-detail-title">{casoDosArquivos.titulo}</h2>
+                <p>{casoDosArquivos.tipo_atendimento}</p>
+              </div>
+            </div>
+            <div className="case-detail__actions">
+              {podeEditarCasos && casoDosArquivos.ativo && (
+                <>
+                  <button type="button" className="button button--quiet" onClick={() => iniciarEdicao(casoDosArquivos)}>
+                    Editar caso
+                  </button>
+                  <button type="button" className="button button--primary" onClick={abrirAnexos}>
+                    Anexar documento
+                  </button>
+                </>
+              )}
+              <button type="button" className="button button--quiet" onClick={voltarParaCasos}>
+                Voltar para casos
+              </button>
+            </div>
+            <dl className="case-detail__client-info">
+              <div><dt>CPF/CNPJ</dt><dd>{clienteDoCaso?.cpf_cnpj || "Não informado"}</dd></div>
+              <div><dt>E-mail</dt><dd>{clienteDoCaso?.email || "Não informado"}</dd></div>
+              <div><dt>Telefone</dt><dd>{clienteDoCaso?.telefone || "Não informado"}</dd></div>
+              <div><dt>Endereço</dt><dd>{clienteDoCaso?.endereco || "Não informado"}</dd></div>
+              {clienteDoCaso?.observacoes && (
+                <div className="case-detail__client-notes"><dt>Observações do cliente</dt><dd>{clienteDoCaso.observacoes}</dd></div>
+              )}
+              {casoDosArquivos.observacoes && (
+                <div className="case-detail__client-notes"><dt>Informações do caso</dt><dd>{casoDosArquivos.observacoes}</dd></div>
+              )}
+            </dl>
+          </section>
           <ArquivosCaso
             key={casoDosArquivos.id}
             caso={casoDosArquivos}
-            onFechar={() => setCasoDosArquivos(null)}
             onQuantidadeAlterada={atualizarQuantidadeArquivos}
             somenteLeitura={!casoDosArquivos.ativo}
           />
         </div>
       )}
 
-      <section className="surface data-panel">
-        <div className="section-heading list-heading">
+      {!casoDosArquivos && <section className="cases-browser" aria-labelledby="casos-cadastrados-titulo">
+        <div className="cases-browser__heading">
           <div>
-            <h2>{exibindoInativos ? "Casos inativos" : "Casos cadastrados"}</h2>
-
+            <h2 id="casos-cadastrados-titulo">
+              {exibindoInativos ? "Casos inativos" : "Seus casos"}
+            </h2>
             <p>
               {exibindoInativos
                 ? "Casos inativados ficam guardados aqui e podem ser reativados."
-                : "Use os filtros e clique em Buscar para atualizar os resultados."}
+                : "Selecione uma pasta para consultar os dados e documentos do atendimento."}
             </p>
           </div>
-
-          <FiltroSituacao
-            valor={situacao}
-            onChange={trocarSituacao}
-            rotulo="Mostrar casos"
-          />
+          <div className="cases-browser__tools">
+            <FiltroSituacao valor={situacao} onChange={trocarSituacao} rotulo="Mostrar casos" />
+            <span className="cases-browser__count">
+              {casos.length} {casos.length === 1 ? "caso" : "casos"}
+            </span>
+          </div>
         </div>
 
         <form
-          className="filters-row"
+          className="filters-row cases-filters"
           onSubmit={(evento) => {
             evento.preventDefault();
             carregarCasos();
@@ -460,7 +637,9 @@ function Casos() {
 
             <input
               id="filtro-q"
+              name="q"
               type="text"
+              autoComplete="off"
               placeholder="Digite um termo para pesquisar"
               value={filtros.q}
               onChange={(event) =>
@@ -479,7 +658,9 @@ function Casos() {
 
             <input
               id="filtro-tipo"
+              name="tipo_atendimento"
               type="text"
+              autoComplete="off"
               placeholder="Todos os tipos"
               value={filtros.tipoAtendimento}
               onChange={(event) =>
@@ -522,107 +703,70 @@ function Casos() {
             {exibindoInativos ? "Nenhum caso inativo encontrado." : "Nenhum caso encontrado."}
           </div>
         ) : (
-          <div className="table-scroll">
-            <table className="data-table cases-table">
-              <thead>
-                <tr>
-                  <th>Cliente</th>
-                  <th>Título</th>
-                  <th>Tipo</th>
-                  <th>Observações</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                {casos.map((caso) => (
-                  <tr key={caso.id}>
-                    <td>
-                      <strong>
-                        {nomeDoCliente(caso)}
-                      </strong>
-                    </td>
-
-                    <td>
-                      {caso.titulo}
-                      {exibindoInativos && (
+          <div className="cases-grid" role="list" aria-label="Casos cadastrados">
+            {casos.map((caso) => {
+              const nomeCliente = nomeDoCliente(caso.cliente_id, caso.cliente_nome);
+              return (
+                <article className="case-folder" key={caso.id} role="listitem">
+                  <div className="case-folder__topline">
+                    <FotoCaso
+                      key={`${caso.id}-${caso.atualizado_em}`}
+                      caso={caso}
+                      nome={nomeCliente}
+                      className="case-photo--card"
+                    />
+                    <div className="case-folder__identity">
+                      <span>Cliente</span>
+                      <strong>{nomeCliente}</strong>
+                    </div>
+                  </div>
+                  <div className="case-folder__body">
+                    <div className="case-folder__meta">
+                      <span className="case-folder__type">{caso.tipo_atendimento}</span>
+                      {exibindoInativos && <span className="inactive-chip">Inativo</span>}
+                    </div>
+                    <h3 className="case-folder__title">{caso.titulo}</h3>
+                    <div className="case-folder__actions">
+                      <BotaoArquivos
+                        rotulo="Arquivos"
+                        quantidade={caso.quantidade_arquivos}
+                        onClick={() => abrirArquivos(caso)}
+                      />
+                      {exibindoInativos ? (
+                        podeEditarCasos && (
+                          <button type="button" className="text-action text-action--restore" onClick={() => reativar(caso)}>
+                            Reativar
+                          </button>
+                        )
+                      ) : (
                         <>
-                          {" "}
-                          <span className="inactive-chip">Inativo</span>
+                          <button
+                            type="button"
+                            className="case-folder__open"
+                            onClick={() => abrirArquivos(caso)}
+                            aria-label={`Abrir caso ${caso.titulo}, cliente ${nomeCliente}`}
+                          >
+                            Abrir pasta <span aria-hidden="true">↗</span>
+                          </button>
+                          {podeEditarCasos && (
+                            <>
+                              <button type="button" className="text-action" onClick={() => iniciarEdicao(caso)}>Editar</button>
+                              <button type="button" className="text-action text-action--danger" onClick={() => inativar(caso)}>Inativar</button>
+                            </>
+                          )}
                         </>
                       )}
-                    </td>
-
-                    <td>
-                      <span className="type-chip">
-                        {caso.tipo_atendimento}
-                      </span>
-                    </td>
-
-                    <td>
-                      {caso.observacoes || "—"}
-                    </td>
-
-                    <td>
-                      {exibindoInativos ? (
-                        <span className="table-actions">
-                          <BotaoArquivos
-                            rotulo="Arquivos"
-                            quantidade={caso.quantidade_arquivos}
-                            onClick={() => abrirArquivos(caso)}
-                          />
-
-                          {podeEditarCasos && (
-                            <button
-                              type="button"
-                              className="text-action text-action--restore"
-                              onClick={() => reativar(caso)}
-                            >
-                              Reativar
-                            </button>
-                          )}
-                        </span>
-                      ) : (
-                      <span className="table-actions">
-                        <BotaoArquivos
-                          rotulo="Arquivos"
-                          quantidade={caso.quantidade_arquivos}
-                          onClick={() => abrirArquivos(caso)}
-                        />
-
-                        {podeEditarCasos && (
-                          <>
-                            <button
-                              type="button"
-                              className="text-action"
-                              onClick={() => iniciarEdicao(caso)}
-                            >
-                              Editar
-                            </button>
-
-                            <button
-                              type="button"
-                              className="text-action text-action--danger"
-                              onClick={() => inativar(caso)}
-                            >
-                              Inativar
-                            </button>
-                          </>
-                        )}
-                      </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
           </div>
         )}
-      </section>
 
-      <p className="stage-footer">
-        ETAPA 03 / CASOS • CADASTRO E LISTAGEM
-      </p>
+
+      </section>}
+
     </div>
   );
 }

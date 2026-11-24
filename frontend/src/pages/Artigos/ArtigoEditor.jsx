@@ -179,6 +179,14 @@ function ArtigoEditor() {
     }
   }
 
+  function navegarAbas(event) {
+    if (event.key !== "ArrowLeft" && event.key !== "ArrowRight") return;
+    event.preventDefault();
+    const proximo = painel === "editor" ? "previa" : "editor";
+    setPainel(proximo);
+    document.getElementById(`aba-artigo-${proximo}`)?.focus();
+  }
+
   function voltar() {
     if (alterado && !window.confirm("Descartar as alterações não salvas?")) return;
     navigate("/artigos");
@@ -204,8 +212,8 @@ function ArtigoEditor() {
   const paragrafos = dividirParagrafos(campos.conteudo);
 
   return (
-    <div className="artigo-editor">
-      <div className="page-header artigo-editor__topo">
+    <div className="page page--articles artigo-editor">
+      <header className="page-heading page-heading--action artigo-editor__topo">
         <div>
           <button type="button" className="artigo-editor__voltar" onClick={voltar}>
             ← Artigos
@@ -246,7 +254,7 @@ function ArtigoEditor() {
             {publicado ? "Salvar e atualizar no site" : "Publicar"}
           </button>
         </div>
-      </div>
+      </header>
 
       <div className="artigo-editor__avisos" aria-live="polite">
         {erro && (
@@ -267,19 +275,27 @@ function ArtigoEditor() {
       <div className="artigo-editor__abas" role="tablist" aria-label="Painel visível">
         <button
           type="button"
+          id="aba-artigo-editor"
           role="tab"
           aria-selected={painel === "editor"}
+          aria-controls="painel-artigo-editor"
+          tabIndex={painel === "editor" ? 0 : -1}
           className={painel === "editor" ? "ativa" : ""}
           onClick={() => setPainel("editor")}
+          onKeyDown={navegarAbas}
         >
           Editor
         </button>
         <button
           type="button"
+          id="aba-artigo-previa"
           role="tab"
           aria-selected={painel === "previa"}
+          aria-controls="painel-artigo-previa"
+          tabIndex={painel === "previa" ? 0 : -1}
           className={painel === "previa" ? "ativa" : ""}
           onClick={() => setPainel("previa")}
+          onKeyDown={navegarAbas}
         >
           Pré-visualização
         </button>
@@ -287,6 +303,10 @@ function ArtigoEditor() {
 
       <div className="artigo-editor__area">
         <form
+          id="painel-artigo-editor"
+          role="tabpanel"
+          aria-labelledby="aba-artigo-editor"
+          tabIndex={painel === "editor" ? 0 : -1}
           className={`content-card artigo-editor__form ${painel === "editor" ? "visivel" : ""}`}
           onSubmit={(event) => {
             event.preventDefault();
@@ -302,7 +322,6 @@ function ArtigoEditor() {
               maxLength={250}
               placeholder="Título claro e objetivo"
               required
-              autoFocus={novo}
             />
             <small>{campos.titulo.length}/250</small>
           </label>
@@ -340,6 +359,10 @@ function ArtigoEditor() {
         </form>
 
         <aside
+          id="painel-artigo-previa"
+          role="tabpanel"
+          aria-labelledby="aba-artigo-previa"
+          tabIndex={painel === "previa" ? 0 : -1}
           className={`content-card artigo-editor__previa ${painel === "previa" ? "visivel" : ""}`}
           aria-label="Pré-visualização"
         >
@@ -349,6 +372,8 @@ function ArtigoEditor() {
               className="artigo-editor__previa-capa"
               src={urlDaCapa(campos)}
               alt={campos.imagem_alt.trim()}
+              width="720"
+              height="480"
             />
             <h2>{campos.titulo.trim() || "Título do artigo"}</h2>
             {paragrafos.length > 0 ? (

@@ -89,6 +89,7 @@ class ClienteResponse(BaseModel):
     telefone: str | None
     endereco: str | None
     observacoes: str | None
+    tem_foto: bool
     ativo: bool
     quantidade_documentos: int = 0
     criado_em: datetime

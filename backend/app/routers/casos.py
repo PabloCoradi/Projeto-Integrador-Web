@@ -1,6 +1,6 @@
-﻿from typing import Literal
+from typing import Literal
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -17,6 +17,14 @@ from app.services.caso_service import (
     listar_casos,
     reativar_caso,
 )
+from app.services.foto_caso_service import (
+    CasoFotoNaoEncontradoError,
+    FotoCasoInvalidaError,
+    gerar_link_foto_caso,
+    remover_foto_caso,
+    salvar_foto_caso,
+)
+from app.services.storage_service import FalhaStorageError
 
 router = APIRouter(
     prefix="/api/casos",
@@ -78,6 +86,49 @@ def buscar(
         )
 
     return caso
+
+
+@router.post("/{caso_id}/foto", response_model=CasoResponse)
+def enviar_foto(
+    caso_id: int,
+    arquivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
+):
+    try:
+        return salvar_foto_caso(db=db, caso_id=caso_id, arquivo=arquivo)
+    except CasoFotoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro)) from erro
+    except FotoCasoInvalidaError as erro:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(erro)) from erro
+    except FalhaStorageError as erro:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro)) from erro
+
+
+@router.get("/{caso_id}/foto/link")
+def link_foto(
+    caso_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("casos", "visualizar")),
+):
+    try:
+        return gerar_link_foto_caso(db=db, caso_id=caso_id)
+    except CasoFotoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro)) from erro
+    except FalhaStorageError as erro:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro)) from erro
+
+
+@router.delete("/{caso_id}/foto", response_model=CasoResponse)
+def excluir_foto(
+    caso_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("casos", "editar")),
+):
+    try:
+        return remover_foto_caso(db=db, caso_id=caso_id)
+    except CasoFotoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro)) from erro
 
 
 @router.put("/{caso_id}", response_model=CasoResponse)

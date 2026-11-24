@@ -47,6 +47,11 @@ class Cliente(Base):
         nullable=True,
     )
 
+    foto_chave_storage: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
     ativo: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
@@ -66,6 +71,9 @@ class Cliente(Base):
         onupdate=datetime.utcnow,
     )
 
+    @property
+    def tem_foto(self) -> bool:
+        return bool(self.foto_chave_storage)
 
 # Quantidade de documentos ativos do cliente, calculada na mesma consulta que
 # busca o cliente (usada para destacar o botão "Documentos" na listagem).

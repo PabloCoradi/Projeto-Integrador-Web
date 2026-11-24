@@ -173,25 +173,25 @@ export default function Administradores() {
   if (!usuario?.is_admin) {
     return (
       <div className="content-card">
-        <h2>Acesso restrito</h2>
+        <h1>Acesso restrito</h1>
         <p>Somente administradores podem acessar esta página.</p>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="page-header">
+    <div className="page page--administradores">
+      <header className="page-heading">
         <div>
           <h1>Administradores</h1>
           <p>Gerencie os usuários e suas permissões de acesso.</p>
         </div>
-      </div>
+      </header>
 
-      {erro && <div className="error-message">{erro}</div>}
+      {erro && <div className="error-message" role="alert">{erro}</div>}
 
       {sucesso && (
-        <div className="success-message">{sucesso}</div>
+        <div className="success-message" role="status" aria-live="polite">{sucesso}</div>
       )}
 
       <div className="content-card admin-form-card">
@@ -203,6 +203,7 @@ export default function Administradores() {
               <label htmlFor="admin-nome">Nome completo</label>
               <input
                 id="admin-nome"
+                name="nome"
                 value={nome}
                 onChange={(e) => setNome(e.target.value)}
                 required
@@ -214,8 +215,9 @@ export default function Administradores() {
               <label htmlFor="admin-email">E-mail</label>
               <input
                 id="admin-email"
+                name="email"
                 type="email"
-                autoComplete="off"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -228,6 +230,7 @@ export default function Administradores() {
               </label>
               <input
                 id="admin-senha"
+                name="senha"
                 type="password"
                 autoComplete="new-password"
                 value={senha}
@@ -242,8 +245,8 @@ export default function Administradores() {
 
           <h3 className="permissions-title">Permissões por módulo</h3>
 
-          <div className="permissions-table">
-            <table>
+          <div className="permissions-table" role="region" aria-label="Permissões por módulo" tabIndex={0}>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Módulo</th>
@@ -329,8 +332,8 @@ export default function Administradores() {
         ) : usuarios.length === 0 ? (
           <p>Nenhum usuário cadastrado.</p>
         ) : (
-          <div className="admin-table-wrapper">
-            <table>
+          <div className="admin-table-wrapper" role="region" aria-label="Usuários cadastrados" tabIndex={0}>
+            <table className="data-table">
               <thead>
                 <tr>
                   <th>Nome</th>

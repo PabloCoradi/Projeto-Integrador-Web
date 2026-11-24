@@ -1,5 +1,13 @@
 /* Dashboard: complementa os estilos base de App.css (.metric-card, .welcome-banner...) */
 
+.eyebrow {
+  display: block;
+  color: var(--accent-deep);
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.12em;
+}
+
 .dashboard-date::first-letter { text-transform: uppercase; }
 
 .metrics-grid--dashboard {

@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { apiRequest } from "../../services/api";
+import logo from "../../assets/login/logo-giongo-raguzzoni.svg";
 
 function RedefinirSenha() {
   const navigate = useNavigate();
@@ -55,18 +56,19 @@ function RedefinirSenha() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
+    <main className="login-page login-page--reset">
+      <div className="login-card login-card--reset">
+        <img className="login-card__logo" src={logo} alt="Giongo & Raguzzoni" width="209" height="59" />
         <h1>Redefinir senha</h1>
 
         <p>Informe seu e-mail e escolha uma nova senha.</p>
 
         {erro && (
-          <div className="error-message">{erro}</div>
+          <div className="error-message" role="alert">{erro}</div>
         )}
 
         {sucesso && (
-          <div className="success-message">{sucesso}</div>
+          <div className="success-message" role="status" aria-live="polite">{sucesso}</div>
         )}
 
         <form onSubmit={handleSubmit}>
@@ -74,10 +76,13 @@ function RedefinirSenha() {
             <label htmlFor="email">E-mail</label>
             <input
               id="email"
+              name="email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="seu@email.com"
+              autoComplete="username"
+              required
             />
           </div>
 
@@ -85,10 +90,15 @@ function RedefinirSenha() {
             <label htmlFor="novaSenha">Nova senha</label>
             <input
               id="novaSenha"
+              name="nova_senha"
               type="password"
               value={novaSenha}
               onChange={(event) => setNovaSenha(event.target.value)}
               placeholder="Digite a nova senha"
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
+              required
             />
           </div>
 
@@ -96,10 +106,15 @@ function RedefinirSenha() {
             <label htmlFor="confirmarSenha">Confirmar senha</label>
             <input
               id="confirmarSenha"
+              name="confirmar_senha"
               type="password"
               value={confirmarSenha}
               onChange={(event) => setConfirmarSenha(event.target.value)}
               placeholder="Confirme a nova senha"
+              autoComplete="new-password"
+              minLength={8}
+              maxLength={128}
+              required
             />
           </div>
 
@@ -108,7 +123,7 @@ function RedefinirSenha() {
             className="primary-button login-button"
             disabled={salvando}
           >
-            {salvando ? "Alterando..." : "Alterar senha"}
+            {salvando ? "Alterando…" : "Alterar senha"}
           </button>
         </form>
 
@@ -120,7 +135,7 @@ function RedefinirSenha() {
           Voltar para o login
         </button>
       </div>
-    </div>
+    </main>
   );
 }
 

@@ -92,6 +92,7 @@ class CasoResponse(BaseModel):
     titulo: str
     tipo_atendimento: str
     observacoes: str | None
+    tem_foto: bool
     ativo: bool
     quantidade_arquivos: int = 0
     criado_em: datetime
