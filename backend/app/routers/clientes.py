@@ -1,4 +1,5 @@
 ﻿from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import File, UploadFile
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -16,6 +17,14 @@ from app.services.cliente_service import (
     inativar_cliente,
     listar_clientes,
 )
+from app.services.foto_cliente_service import (
+    ClienteFotoNaoEncontradoError,
+    FotoClienteInvalidaError,
+    gerar_link_foto_cliente,
+    remover_foto_cliente,
+    salvar_foto_cliente,
+)
+from app.services.storage_service import FalhaStorageError
 
 router = APIRouter(
     prefix="/api/clientes",
@@ -79,6 +88,49 @@ def buscar(
         )
 
     return cliente
+
+
+@router.post("/{cliente_id}/foto", response_model=ClienteResponse)
+def enviar_foto(
+    cliente_id: int,
+    arquivo: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
+):
+    try:
+        return salvar_foto_cliente(db=db, cliente_id=cliente_id, arquivo=arquivo)
+    except ClienteFotoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
+    except FotoClienteInvalidaError as erro:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(erro))
+    except FalhaStorageError as erro:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro))
+
+
+@router.get("/{cliente_id}/foto/link")
+def link_foto(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "visualizar")),
+):
+    try:
+        return gerar_link_foto_cliente(db=db, cliente_id=cliente_id)
+    except ClienteFotoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
+    except FalhaStorageError as erro:
+        raise HTTPException(status_code=status.HTTP_502_BAD_GATEWAY, detail=str(erro))
+
+
+@router.delete("/{cliente_id}/foto", response_model=ClienteResponse)
+def excluir_foto(
+    cliente_id: int,
+    db: Session = Depends(get_db),
+    usuario: Usuario = Depends(exigir_permissao("clientes", "editar")),
+):
+    try:
+        return remover_foto_cliente(db=db, cliente_id=cliente_id)
+    except ClienteFotoNaoEncontradoError as erro:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(erro))
 
 
 @router.put(

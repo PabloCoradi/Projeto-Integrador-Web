@@ -209,7 +209,7 @@ function Artigos() {
             type="button"
             onClick={() => navigate("/artigos/novo")}
           >
-            + Novo artigo
+            Novo artigo
           </button>
         )}
       </header>
@@ -247,12 +247,14 @@ function Artigos() {
 
             <input
               id="artigo-busca"
+              name="q"
               type="search"
               value={busca}
               onChange={(event) =>
                 setBusca(event.target.value)
               }
-              placeholder="Pesquise por título, resumo ou conteúdo..."
+              placeholder="Pesquise por título, resumo ou conteúdo…"
+              autoComplete="off"
             />
           </div>
 
@@ -313,17 +315,17 @@ function Artigos() {
         </p>
 
         {carregando && dados.items.length === 0 ? (
-          <div className="empty-state">
-            Carregando artigos...
+          <div className="empty-state" role="status" aria-live="polite">
+            Carregando artigos…
           </div>
         ) : dados.items.length === 0 ? (
-          <div className="empty-state">
+          <div className="empty-state" role="status" aria-live="polite">
             {possuiFiltros
               ? "Nenhum artigo encontrado com esses filtros."
               : "Nenhum artigo cadastrado ainda."}
           </div>
         ) : (
-          <div className="table-scroll artigos-tabela">
+          <div className="table-scroll artigos-tabela" role="region" aria-label="Lista de artigos" tabIndex={0}>
             <table
               className="data-table articles-table"
               aria-busy={carregando}
@@ -476,9 +478,6 @@ function Artigos() {
         )}
       </section>
 
-      <p className="stage-footer">
-        ETAPA 05 / ARTIGOS • LISTAGEM E PUBLICAÇÃO
-      </p>
     </div>
   );
 }

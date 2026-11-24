@@ -46,6 +46,11 @@ class Cliente(Base):
         nullable=True,
     )
 
+    foto_chave_storage: Mapped[str | None] = mapped_column(
+        String(500),
+        nullable=True,
+    )
+
     ativo: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,
@@ -64,3 +69,7 @@ class Cliente(Base):
         default=datetime.utcnow,
         onupdate=datetime.utcnow,
     )
+
+    @property
+    def tem_foto(self) -> bool:
+        return bool(self.foto_chave_storage)

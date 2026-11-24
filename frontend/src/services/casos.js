@@ -30,6 +30,20 @@ export function atualizarCaso(id, dados) {
   });
 }
 
+export function enviarFotoCaso(id, arquivo, onProgress) {
+  const formData = new FormData();
+  formData.append("arquivo", arquivo);
+  return apiUpload(`/api/casos/${id}/foto`, formData, onProgress);
+}
+
+export function gerarLinkFotoCaso(id) {
+  return apiRequest(`/api/casos/${id}/foto/link`);
+}
+
+export function removerFotoCaso(id) {
+  return apiRequest(`/api/casos/${id}/foto`, { method: "DELETE" });
+}
+
 export function inativarCaso(id) {
   return apiRequest(`/api/casos/${id}`, {
     method: "DELETE",

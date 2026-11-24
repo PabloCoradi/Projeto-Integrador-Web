@@ -89,6 +89,7 @@ class ClienteResponse(BaseModel):
     telefone: str | None
     endereco: str | None
     observacoes: str | None
+    tem_foto: bool
     ativo: bool
     criado_em: datetime
     atualizado_em: datetime

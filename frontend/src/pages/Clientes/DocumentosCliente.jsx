@@ -163,17 +163,9 @@ function DocumentosCliente({ cliente, onFechar }) {
   const enviando = envio !== null;
 
   return (
-    <div className="content-card cliente-form-card">
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: 16,
-          marginBottom: 24,
-        }}
-      >
-        <h2 style={{ margin: 0 }}>Documentos de {cliente.nome}</h2>
+    <section className="content-card cliente-form-card file-manager" aria-labelledby="documentos-cliente-titulo">
+      <div className="file-manager__heading">
+        <h2 id="documentos-cliente-titulo">Documentos de {cliente.nome}</h2>
 
         <button
           type="button"
@@ -188,23 +180,15 @@ function DocumentosCliente({ cliente, onFechar }) {
       {erro && (
         <div
           role="alert"
-          className="error-message"
-          style={{ whiteSpace: "pre-line" }}
+          className="error-message file-manager__error"
         >
           {erro}
         </div>
       )}
 
       {podeEditarClientes && (
-        <div style={{ marginBottom: 24 }}>
-          <div
-            style={{
-              display: "flex",
-              gap: 12,
-              alignItems: "flex-end",
-              flexWrap: "wrap",
-            }}
-          >
+        <div className="file-manager__upload">
+          <div className="file-manager__upload-controls">
             <CampoTag
               id="tag-documento"
               value={tag}
@@ -218,6 +202,7 @@ function DocumentosCliente({ cliente, onFechar }) {
               ref={inputRef}
               type="file"
               multiple
+              aria-label="Selecionar documentos para anexar"
               onChange={aoEscolherArquivos}
               style={{ display: "none" }}
             />
@@ -232,7 +217,7 @@ function DocumentosCliente({ cliente, onFechar }) {
             </button>
           </div>
 
-          <p style={{ marginTop: 8, fontSize: 13 }}>
+          <p className="file-manager__help">
             Todos os arquivos selecionados recebem a tag escolhida. Se a tag
             ficar em branco, eles são salvos como <strong>OUTROS</strong>. Até{" "}
             {LIMITE_MB} MB cada. Esses documentos aparecem automaticamente nos
@@ -240,30 +225,23 @@ function DocumentosCliente({ cliente, onFechar }) {
           </p>
 
           {enviando && (
-            <div style={{ marginTop: 16 }}>
+            <div className="file-manager__progress-wrap" aria-live="polite">
               <p>
                 Enviando {envio.indice} de {envio.total}: {envio.nome}
               </p>
 
               <div
                 role="progressbar"
+                aria-label="Progresso do envio de documentos"
                 aria-valuenow={envio.percentual}
                 aria-valuemin={0}
                 aria-valuemax={100}
-                style={{
-                  height: 8,
-                  marginTop: 8,
-                  borderRadius: 4,
-                  background: "#e5e7eb",
-                  overflow: "hidden",
-                }}
+                aria-valuetext={`${envio.percentual}% concluído`}
+                className="file-manager__progress"
               >
                 <div
                   style={{
                     width: `${envio.percentual}%`,
-                    height: "100%",
-                    background: "#1f2937",
-                    transition: "width 0.2s",
                   }}
                 />
               </div>
@@ -284,8 +262,8 @@ function DocumentosCliente({ cliente, onFechar }) {
       ) : documentosFiltrados.length === 0 ? (
         <p>Nenhum documento anexado a este cliente.</p>
       ) : (
-        <div style={{ overflowX: "auto" }}>
-          <table>
+        <div className="table-scroll file-manager__table" role="region" aria-label="Documentos anexados" tabIndex={0}>
+          <table className="data-table file-table">
             <thead>
               <tr>
                 <th>Tag</th>
@@ -302,13 +280,13 @@ function DocumentosCliente({ cliente, onFechar }) {
                   <td>
                     <EtiquetaTag tag={documento.tag} />
                   </td>
-                  <td style={{ wordBreak: "break-word" }}>
+                  <td className="file-table__name">
                     {documento.nome_original}
                   </td>
                   <td>{formatarTamanho(documento.tamanho_bytes)}</td>
                   <td>{formatarData(documento.criado_em)}</td>
                   <td>
-                    <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
+                    <div className="file-table__actions">
                       <button type="button" onClick={() => abrir(documento, true)}>
                         Abrir
                       </button>
@@ -333,7 +311,7 @@ function DocumentosCliente({ cliente, onFechar }) {
           </table>
         </div>
       )}
-    </div>
+    </section>
   );
 }
 

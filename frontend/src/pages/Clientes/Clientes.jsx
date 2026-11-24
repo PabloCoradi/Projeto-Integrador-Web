@@ -1,8 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { apiRequest } from "../../services/api";
+import { enviarFotoCliente, removerFotoCliente } from "../../services/clientes";
 import { useAuth } from "../../contexts/AuthContext";
 
 import DocumentosCliente from "./DocumentosCliente";
+import FotoCliente from "./FotoCliente";
+import { iniciaisCliente } from "./clienteUtils";
+import "./Clientes.css";
 
 const FORMULARIO_VAZIO = {
   nome: "",
@@ -22,15 +26,6 @@ function normalizar(texto) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
-function obterIniciais(nome) {
-  const partes = (nome || "").trim().split(/\s+/).filter(Boolean);
-
-  return (
-    (partes[0]?.[0] || "") +
-    (partes[1]?.[0] || partes[0]?.[1] || "")
-  ).toUpperCase();
-}
-
 function Clientes() {
   const { podeEditar } = useAuth();
   const podeEditarClientes = podeEditar("clientes");
@@ -43,6 +38,18 @@ function Clientes() {
   const [formulario, setFormulario] = useState(FORMULARIO_VAZIO);
   const [salvando, setSalvando] = useState(false);
   const [busca, setBusca] = useState("");
+  const [fotoSelecionada, setFotoSelecionada] = useState(null);
+  const [removerFoto, setRemoverFoto] = useState(false);
+  const inputFotoRef = useRef(null);
+  const clienteEditado = clientes.find((cliente) => cliente.id === editandoId);
+  const fotoPreview = useMemo(
+    () => fotoSelecionada ? URL.createObjectURL(fotoSelecionada) : "",
+    [fotoSelecionada]
+  );
+
+  useEffect(() => () => {
+    if (fotoPreview) URL.revokeObjectURL(fotoPreview);
+  }, [fotoPreview]);
 
   const [clienteDosDocumentos, setClienteDosDocumentos] = useState(null);
   const painelDocumentosRef = useRef(null);
@@ -119,6 +126,8 @@ function Clientes() {
     if (!podeEditarClientes) return;
 
     setFormulario(FORMULARIO_VAZIO);
+    setFotoSelecionada(null);
+    setRemoverFoto(false);
     setEditandoId(null);
     setErro("");
     setMostrarFormulario(true);
@@ -137,6 +146,8 @@ function Clientes() {
     });
 
     setEditandoId(cliente.id);
+    setFotoSelecionada(null);
+    setRemoverFoto(false);
     setErro("");
     setMostrarFormulario(true);
 
@@ -151,6 +162,27 @@ function Clientes() {
 
     setMostrarFormulario(false);
     setEditandoId(null);
+    setFotoSelecionada(null);
+    setRemoverFoto(false);
+  }
+
+  function selecionarFoto(event) {
+    const arquivo = event.target.files?.[0];
+    event.target.value = "";
+    if (!arquivo) return;
+
+    if (!["image/jpeg", "image/png", "image/webp"].includes(arquivo.type)) {
+      setErro("Escolha uma imagem JPG, PNG ou WEBP.");
+      return;
+    }
+    if (arquivo.size > 5 * 1024 * 1024) {
+      setErro("A foto deve ter no máximo 5 MB.");
+      return;
+    }
+
+    setErro("");
+    setFotoSelecionada(arquivo);
+    setRemoverFoto(false);
   }
 
   async function salvarCliente(event) {
@@ -179,7 +211,7 @@ function Clientes() {
       setSalvando(true);
       setErro("");
 
-      await apiRequest(
+      const clienteSalvo = await apiRequest(
         editandoId
           ? "/api/clientes/" + editandoId
           : "/api/clientes/",
@@ -189,8 +221,29 @@ function Clientes() {
         }
       );
 
+      if (fotoSelecionada) {
+        try {
+          await enviarFotoCliente(clienteSalvo.id, fotoSelecionada);
+        } catch (error) {
+          setEditandoId(clienteSalvo.id);
+          setErro(`Cliente salvo, mas a foto não foi enviada: ${error.message}`);
+          await carregarClientes();
+          return;
+        }
+      } else if (removerFoto && editandoId) {
+        try {
+          await removerFotoCliente(editandoId);
+        } catch (error) {
+          setErro(`Dados salvos, mas a foto não foi removida: ${error.message}`);
+          await carregarClientes();
+          return;
+        }
+      }
+
       setMostrarFormulario(false);
       setEditandoId(null);
+      setFotoSelecionada(null);
+      setRemoverFoto(false);
 
       await carregarClientes();
     } catch (error) {
@@ -247,7 +300,7 @@ function Clientes() {
             type="button"
             onClick={abrirFormulario}
           >
-            + Novo Cliente
+            Novo cliente
           </button>
         )}
       </header>
@@ -262,7 +315,7 @@ function Clientes() {
         <section className="surface surface--accent form-panel">
           <div className="section-heading">
             <h2>
-              {editandoId ? "Editar Cliente" : "Novo Cliente"}
+              {editandoId ? "Editar cliente" : "Novo cliente"}
             </h2>
 
             <p>
@@ -273,6 +326,67 @@ function Clientes() {
           </div>
 
           <form onSubmit={salvarCliente}>
+            <div className="client-photo-field">
+              <div className="client-photo-field__preview" aria-hidden="true">
+                {fotoPreview ? (
+                  <img src={fotoPreview} alt="" />
+                ) : clienteEditado?.tem_foto && !removerFoto ? (
+                  <FotoCliente cliente={clienteEditado} className="client-avatar--form" />
+                ) : (
+                  <span className="client-photo-field__initials">
+                    {iniciaisCliente(formulario.nome) || "＋"}
+                  </span>
+                )}
+              </div>
+              <div className="client-photo-field__content">
+                <strong>Foto do cliente</strong>
+                <p>JPG, PNG ou WEBP. A imagem será ajustada automaticamente.</p>
+                <small>Limite de 5 MB</small>
+              </div>
+              <input
+                ref={inputFotoRef}
+                className="visually-hidden"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={selecionarFoto}
+                aria-label="Selecionar foto do cliente"
+              />
+              <div className="client-photo-field__actions">
+                <button
+                  className="button button--quiet"
+                  type="button"
+                  onClick={() => inputFotoRef.current?.click()}
+                  disabled={salvando}
+                >
+                  {(clienteEditado?.tem_foto && !removerFoto) || fotoSelecionada
+                    ? "Trocar foto"
+                    : "Adicionar foto"}
+                </button>
+                {(fotoSelecionada || (clienteEditado?.tem_foto && !removerFoto)) && (
+                  <button
+                    className="button button--quiet client-photo-field__remove"
+                    type="button"
+                    onClick={() => {
+                      setFotoSelecionada(null);
+                      setRemoverFoto(Boolean(clienteEditado?.tem_foto));
+                    }}
+                    disabled={salvando}
+                  >
+                    Remover
+                  </button>
+                )}
+                {removerFoto && clienteEditado?.tem_foto && (
+                  <button
+                    className="button button--quiet"
+                    type="button"
+                    onClick={() => setRemoverFoto(false)}
+                    disabled={salvando}
+                  >
+                    Manter foto
+                  </button>
+                )}
+              </div>
+            </div>
             <div className="form-grid">
               <div className="form-field">
                 <label htmlFor="nome">
@@ -282,6 +396,7 @@ function Clientes() {
                 <input
                   id="nome"
                   name="nome"
+                  autoComplete="name"
                   value={formulario.nome}
                   onChange={alterarCampo}
                   placeholder="Digite o nome completo"
@@ -298,6 +413,7 @@ function Clientes() {
                 <input
                   id="cpf_cnpj"
                   name="cpf_cnpj"
+                  autoComplete="off"
                   value={formulario.cpf_cnpj}
                   onChange={alterarCampo}
                   placeholder="Digite o CPF ou CNPJ"
@@ -314,6 +430,7 @@ function Clientes() {
                   id="email"
                   name="email"
                   type="email"
+                  autoComplete="email"
                   value={formulario.email}
                   onChange={alterarCampo}
                   placeholder="exemplo@dominio.com"
@@ -328,6 +445,8 @@ function Clientes() {
                 <input
                   id="telefone"
                   name="telefone"
+                  type="tel"
+                  autoComplete="tel"
                   value={formulario.telefone}
                   onChange={alterarCampo}
                   placeholder="(00) 00000-0000"
@@ -343,6 +462,7 @@ function Clientes() {
                 <input
                   id="endereco"
                   name="endereco"
+                  autoComplete="street-address"
                   value={formulario.endereco}
                   onChange={alterarCampo}
                   placeholder="Rua, número, bairro e cidade"
@@ -385,7 +505,7 @@ function Clientes() {
                   ? "Salvando..."
                   : editandoId
                     ? "Salvar alterações"
-                    : "Salvar Cliente"}
+                    : "Salvar cliente"}
               </button>
             </div>
           </form>
@@ -418,10 +538,13 @@ function Clientes() {
               </span>
 
               <input
+                type="search"
+                name="busca"
                 value={busca}
                 onChange={(event) => setBusca(event.target.value)}
                 placeholder="Buscar por nome, CPF/CNPJ, e-mail ou telefone..."
                 aria-label="Buscar clientes"
+                autoComplete="off"
               />
             </div>
 
@@ -444,7 +567,7 @@ function Clientes() {
             Nenhum cliente encontrado para a busca.
           </div>
         ) : (
-          <div className="table-scroll">
+          <div className="table-scroll" role="region" aria-label="Lista de clientes" tabIndex={0}>
             <table className="data-table clients-table">
               <thead>
                 <tr>
@@ -461,9 +584,7 @@ function Clientes() {
                   <tr key={cliente.id}>
                     <td>
                       <span className="person-cell">
-                        <span className="person-avatar">
-                          {obterIniciais(cliente.nome)}
-                        </span>
+                        <FotoCliente cliente={cliente} />
 
                         <strong>
                           {cliente.nome}
@@ -522,9 +643,6 @@ function Clientes() {
         )}
       </section>
 
-      <p className="stage-footer">
-        ETAPA 02 / CLIENTES • LISTAGEM E CADASTRO
-      </p>
     </div>
   );
 }
