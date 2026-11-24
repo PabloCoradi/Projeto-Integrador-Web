@@ -20,7 +20,6 @@ import Artigos from "./pages/Artigos/Artigos";
 import ArtigoEditor from "./pages/Artigos/ArtigoEditor";
 import Login from "./pages/Login/Login";
 import Administradores from "./pages/Administradores/Administradores";
-import RedefinirSenha from "./pages/RedefinirSenha/RedefinirSenha";
 
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
 
@@ -674,11 +673,6 @@ function AppRoutes() {
       <Route
         path="/login"
         element={autenticado ? <Navigate to="/" replace /> : <Login />}
-      />
-
-      <Route
-        path="/redefinir-senha"
-        element={<RedefinirSenha />}
       />
 
       <Route

@@ -445,37 +445,6 @@
   opacity: 0.8;
 }
 
-/* Link "Redefinir senha" abaixo do botão Entrar */
-.login__redefinir {
-  position: relative;
-  display: block;
-  width: fit-content;
-  margin: 22px auto 0;
-  padding: 4px 2px;
-
-  color: var(--ciano-escuro);
-  font: inherit;
-  font-size: 15px;
-  font-weight: 500;
-
-  background: transparent;
-  border: 0;
-  border-radius: 6px;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 4px;
-}
-
-.login__redefinir:hover {
-  color: var(--ciano);
-  text-decoration: none;
-}
-
-.login__redefinir:focus-visible {
-  outline: 2px solid var(--ciano);
-  outline-offset: 3px;
-}
-
 /* ================================
    RESPONSIVO
 ================================ */
@@ -551,10 +520,6 @@
   .login__botao {
     height: 60px;
     margin-top: 6px;
-  }
-
-  .login__redefinir {
-    margin-top: 14px;
   }
 }
 
