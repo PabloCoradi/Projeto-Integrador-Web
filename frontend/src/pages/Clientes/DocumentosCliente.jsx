@@ -11,12 +11,13 @@ import {
   listarTagsUsadas,
 } from "../../services/documentosClientes";
 import { formatarData, formatarTamanho } from "../../utils/formatacao";
+import { abrirEmNovaAba } from "../../utils/abrirEmNovaAba";
 import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
 const LIMITE_MB = 500;
 
-function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada, somenteLeitura = false }) {
+function DocumentosCliente({ cliente, titulo, onFechar, onQuantidadeAlterada, somenteLeitura = false }) {
   const { podeEditar } = useAuth();
   // Cliente inativo: os documentos podem ser consultados, mas não alterados.
   const podeEditarClientes = podeEditar("clientes") && !somenteLeitura;
@@ -127,8 +128,15 @@ function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada, somenteLei
     setErro("");
 
     try {
-      const { url } = await gerarLinkDocumento(cliente.id, documento.id, inline);
-      window.open(url, "_blank", "noopener");
+      if (inline) {
+        // Abrir: mostra o documento numa aba nova do navegador.
+        await abrirEmNovaAba(async () => (
+          await gerarLinkDocumento(cliente.id, documento.id, true)
+        ).url);
+      } else {
+        const { url } = await gerarLinkDocumento(cliente.id, documento.id, false);
+        window.open(url, "_blank", "noopener");
+      }
     } catch (e) {
       setErro(e.message);
     }
@@ -174,16 +182,18 @@ function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada, somenteLei
   return (
     <section className="content-card cliente-form-card file-manager" aria-labelledby="documentos-cliente-titulo">
       <div className="file-manager__heading">
-        <h2 id="documentos-cliente-titulo">Documentos de {cliente.nome}</h2>
+        <h2 id="documentos-cliente-titulo">{titulo || `Documentos de ${cliente.nome}`}</h2>
 
-        <button
-          type="button"
-          className="secondary-button"
-          onClick={onFechar}
-          disabled={enviando}
-        >
-          Fechar
-        </button>
+        {onFechar && (
+          <button
+            type="button"
+            className="secondary-button"
+            onClick={onFechar}
+            disabled={enviando}
+          >
+            Fechar
+          </button>
+        )}
       </div>
 
       {erro && (
@@ -297,7 +307,14 @@ function DocumentosCliente({ cliente, onFechar, onQuantidadeAlterada, somenteLei
                     <EtiquetaTag tag={documento.tag} />
                   </td>
                   <td className="file-table__name">
-                    {documento.nome_original}
+                    <button
+                      type="button"
+                      className="file-name-link"
+                      onClick={() => abrir(documento, true)}
+                      title="Abrir em uma nova aba"
+                    >
+                      {documento.nome_original}
+                    </button>
                   </td>
                   <td>{formatarTamanho(documento.tamanho_bytes)}</td>
                   <td>{formatarData(documento.criado_em)}</td>

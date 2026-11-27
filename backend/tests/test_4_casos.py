@@ -52,6 +52,27 @@ class CasosTest(TesteComBancoEmMemoria):
         self.assertEqual([c["titulo"] for c in por_tipo], ["Pensão alimentícia"])
         self.assertEqual([c["titulo"] for c in por_texto], ["Ação trabalhista"])
 
+    def test_busca_por_texto_encontra_pelo_nome_do_cliente(self) -> None:
+        outro_id = self.client.post(
+            "/api/clientes/", json={"nome": "João Pereira"}, headers=self.headers
+        ).json()["id"]
+        self.abrir_caso(titulo="Ação trabalhista")
+        self.abrir_caso(cliente_id=outro_id, titulo="Inventário", tipo_atendimento="Família")
+
+        por_nome = self.client.get(
+            "/api/casos/", params={"q": "joao"}, headers=self.headers
+        ).json()
+        por_sobrenome = self.client.get(
+            "/api/casos/", params={"q": "SILVA"}, headers=self.headers
+        ).json()
+        por_tipo = self.client.get(
+            "/api/casos/", params={"q": "familia"}, headers=self.headers
+        ).json()
+
+        self.assertEqual([c["titulo"] for c in por_nome], ["Inventário"])
+        self.assertEqual([c["titulo"] for c in por_sobrenome], ["Ação trabalhista"])
+        self.assertEqual([c["titulo"] for c in por_tipo], ["Inventário"])
+
     def test_edicao_parcial_altera_so_o_que_foi_enviado(self) -> None:
         caso = self.abrir_caso().json()
 
@@ -80,3 +101,29 @@ class CasosTest(TesteComBancoEmMemoria):
             404,
         )
         self.assertEqual(self.client.get("/api/casos/", headers=self.headers).json(), [])
+
+    def test_caso_inativo_abre_pelo_link_direto_so_quando_pedido(self) -> None:
+        caso_id = self.abrir_caso().json()["id"]
+        self.client.delete(f"/api/casos/{caso_id}", headers=self.headers)
+
+        resposta = self.client.get(
+            f"/api/casos/{caso_id}",
+            params={"incluir_inativos": "true"},
+            headers=self.headers,
+        )
+
+        self.assertEqual(resposta.status_code, 200, resposta.text)
+        self.assertFalse(resposta.json()["ativo"])
+
+    def test_lista_os_casos_de_um_cliente(self) -> None:
+        outro_id = self.client.post(
+            "/api/clientes/", json={"nome": "João Pereira"}, headers=self.headers
+        ).json()["id"]
+        self.abrir_caso(titulo="Ação trabalhista")
+        self.abrir_caso(cliente_id=outro_id, titulo="Inventário")
+
+        casos = self.client.get(
+            "/api/casos/", params={"cliente_id": self.cliente_id}, headers=self.headers
+        ).json()
+
+        self.assertEqual([c["titulo"] for c in casos], ["Ação trabalhista"])

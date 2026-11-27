@@ -16,6 +16,7 @@ import {
   listarDocumentosDoCaso,
 } from "../../services/documentosClientes";
 import { formatarData, formatarTamanho } from "../../utils/formatacao";
+import { abrirEmNovaAba } from "../../utils/abrirEmNovaAba";
 import { CampoTag, EtiquetaTag, FiltroTag } from "../../components/Tags";
 
 // Deve ser igual ao TAMANHO_MAXIMO_MB do backend
@@ -151,36 +152,31 @@ function ArquivosCaso({ caso, onQuantidadeAlterada, somenteLeitura = false }) {
     }
   }
 
-  async function abrir(arquivo, inline) {
+  // Abrir: mostra o arquivo numa aba nova. Baixar: só faz o download.
+  async function abrirLink(obterUrl, inline) {
     setErro("");
 
     try {
-      const { url } = await gerarLinkArquivo(
-        caso.id,
-        arquivo.id,
-        inline
-      );
-
-      window.open(url, "_blank", "noopener");
+      if (inline) {
+        await abrirEmNovaAba(async () => (await obterUrl()).url);
+      } else {
+        const { url } = await obterUrl();
+        window.open(url, "_blank", "noopener");
+      }
     } catch (e) {
       setErro(e.message);
     }
   }
 
-  async function abrirDocumentoCliente(documento, inline) {
-    setErro("");
+  function abrir(arquivo, inline) {
+    return abrirLink(() => gerarLinkArquivo(caso.id, arquivo.id, inline), inline);
+  }
 
-    try {
-      const { url } = await gerarLinkDocumentoDoCaso(
-        caso.id,
-        documento.id,
-        inline
-      );
-
-      window.open(url, "_blank", "noopener");
-    } catch (e) {
-      setErro(e.message);
-    }
+  function abrirDocumentoCliente(documento, inline) {
+    return abrirLink(
+      () => gerarLinkDocumentoDoCaso(caso.id, documento.id, inline),
+      inline
+    );
   }
 
   async function remover(arquivo) {
@@ -335,7 +331,14 @@ function ArquivosCaso({ caso, onQuantidadeAlterada, somenteLeitura = false }) {
                   </td>
 
                   <td className="file-table__name">
-                    {arquivo.nome_original}
+                    <button
+                      type="button"
+                      className="file-name-link"
+                      onClick={() => abrir(arquivo, true)}
+                      title="Abrir em uma nova aba"
+                    >
+                      {arquivo.nome_original}
+                    </button>
                   </td>
 
                   <td>{formatarTamanho(arquivo.tamanho_bytes)}</td>
@@ -416,7 +419,14 @@ function ArquivosCaso({ caso, onQuantidadeAlterada, somenteLeitura = false }) {
                   </td>
 
                   <td className="file-table__name">
-                    {documento.nome_original}
+                    <button
+                      type="button"
+                      className="file-name-link"
+                      onClick={() => abrirDocumentoCliente(documento, true)}
+                      title="Abrir em uma nova aba"
+                    >
+                      {documento.nome_original}
+                    </button>
                   </td>
 
                   <td>{formatarTamanho(documento.tamanho_bytes)}</td>

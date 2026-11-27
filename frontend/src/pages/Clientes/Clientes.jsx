@@ -1,11 +1,11 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+﻿import { useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { apiRequest } from "../../services/api";
 import { enviarFotoCliente, removerFotoCliente } from "../../services/clientes";
 import { useAuth } from "../../contexts/AuthContext";
 import BotaoArquivos from "../../components/BotaoArquivos";
 import FiltroSituacao from "../../components/FiltroSituacao";
 
-import DocumentosCliente from "./DocumentosCliente";
 import FotoCliente from "./FotoCliente";
 import { iniciaisCliente } from "./clienteUtils";
 import "./Clientes.css";
@@ -56,27 +56,11 @@ function Clientes() {
   const [situacao, setSituacao] = useState("ativos");
   const exibindoInativos = situacao === "inativos";
 
-  const [clienteDosDocumentos, setClienteDosDocumentos] = useState(null);
-  const painelDocumentosRef = useRef(null);
-  const idClienteDosDocumentos = clienteDosDocumentos?.id;
+  const navigate = useNavigate();
 
-  const atualizarQuantidadeDocumentos = useCallback((quantidade) => {
-    setClientes((lista) => lista.map((cliente) =>
-      cliente.id === idClienteDosDocumentos
-        ? { ...cliente, quantidade_documentos: quantidade }
-        : cliente
-    ));
-  }, [idClienteDosDocumentos]);
-
-  function abrirDocumentos(cliente) {
-    setClienteDosDocumentos(cliente);
-
-    requestAnimationFrame(() => {
-      painelDocumentosRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-    });
+  // Os documentos e os casos do cliente ficam na página dele.
+  function abrirCliente(cliente) {
+    navigate(`/clientes/${cliente.id}`);
   }
 
   async function carregarClientes(situacaoAtual = situacao) {
@@ -100,7 +84,6 @@ function Clientes() {
 
   function trocarSituacao(novaSituacao) {
     if (novaSituacao === situacao) return;
-    setClienteDosDocumentos(null);
     setBusca("");
     setClientes([]);
     setSituacao(novaSituacao);
@@ -116,7 +99,6 @@ function Clientes() {
     setErro("");
     try {
       await apiRequest(`/api/clientes/${cliente.id}/reativar`, { method: "PATCH" });
-      if (clienteDosDocumentos?.id === cliente.id) setClienteDosDocumentos(null);
       await carregarClientes();
     } catch (error) {
       setErro(error.message);
@@ -312,10 +294,6 @@ function Clientes() {
 
       if (editandoId === cliente.id) {
         fecharFormulario();
-      }
-
-      if (clienteDosDocumentos?.id === cliente.id) {
-        setClienteDosDocumentos(null);
       }
 
       await carregarClientes();
@@ -553,18 +531,6 @@ function Clientes() {
         </section>
       )}
 
-      {clienteDosDocumentos && (
-        <div ref={painelDocumentosRef}>
-          <DocumentosCliente
-            key={clienteDosDocumentos.id}
-            cliente={clienteDosDocumentos}
-            onFechar={() => setClienteDosDocumentos(null)}
-            onQuantidadeAlterada={atualizarQuantidadeDocumentos}
-            somenteLeitura={!clienteDosDocumentos.ativo}
-          />
-        </div>
-      )}
-
       <section className="surface data-panel">
         <div className="section-heading list-heading">
           <div>
@@ -633,9 +599,13 @@ function Clientes() {
                       <span className="person-cell">
                         <FotoCliente cliente={cliente} />
 
-                        <strong>
+                        <Link
+                          to={`/clientes/${cliente.id}`}
+                          className="client-name-link"
+                          title="Abrir a página do cliente"
+                        >
                           {cliente.nome}
-                        </strong>
+                        </Link>
                         {exibindoInativos && <span className="inactive-chip">Inativo</span>}
                       </span>
                     </td>
@@ -658,7 +628,7 @@ function Clientes() {
                           <BotaoArquivos
                             rotulo="Documentos"
                             quantidade={cliente.quantidade_documentos}
-                            onClick={() => abrirDocumentos(cliente)}
+                            onClick={() => abrirCliente(cliente)}
                           />
                           {podeEditarClientes && (
                             <button type="button" className="text-action text-action--restore" onClick={() => reativarCliente(cliente)}>
@@ -671,7 +641,7 @@ function Clientes() {
                           <BotaoArquivos
                             rotulo="Documentos"
                             quantidade={cliente.quantidade_documentos}
-                            onClick={() => abrirDocumentos(cliente)}
+                            onClick={() => abrirCliente(cliente)}
                           />
                           {podeEditarClientes && (
                             <>

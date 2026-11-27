@@ -94,6 +94,7 @@ class CasoResponse(BaseModel):
     tipo_atendimento: str
     observacoes: str | None
     tem_foto: bool
+    cliente_tem_foto: bool = False
     ativo: bool
     quantidade_arquivos: int = 0
     criado_em: datetime

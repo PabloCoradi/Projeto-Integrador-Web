@@ -98,12 +98,18 @@ def salvar_foto_caso(db: Session, caso_id: int, arquivo: UploadFile) -> Caso:
 
 
 def gerar_link_foto_caso(db: Session, caso_id: int) -> dict:
+    """Link da foto da pasta. Sem foto própria, usa a foto do cadastro do cliente."""
+
     caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=True)
-    if caso is None or not caso.foto_chave_storage:
+    if caso is None:
+        raise CasoFotoNaoEncontradoError("Foto do caso não encontrada.")
+
+    chave = caso.foto_chave_storage or caso.cliente.foto_chave_storage
+    if not chave:
         raise CasoFotoNaoEncontradoError("Foto do caso não encontrada.")
 
     url = gerar_url_download(
-        chave=caso.foto_chave_storage,
+        chave=chave,
         nome_original=f"foto-caso-{caso_id}.webp",
         inline=True,
     )

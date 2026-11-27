@@ -75,10 +75,13 @@ def listar(
 @router.get("/{caso_id}", response_model=CasoResponse)
 def buscar(
     caso_id: int,
+    incluir_inativos: bool = False,
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("casos", "visualizar")),
 ):
-    caso = buscar_caso(db=db, caso_id=caso_id)
+    # incluir_inativos=true serve para abrir (só leitura) um caso inativo
+    # pelo link direto, por exemplo a partir da página do cliente.
+    caso = buscar_caso(db=db, caso_id=caso_id, incluir_inativos=incluir_inativos)
 
     if caso is None:
         raise HTTPException(

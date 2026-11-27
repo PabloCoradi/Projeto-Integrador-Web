@@ -70,3 +70,18 @@ class ClientesTest(TesteComBancoEmMemoria):
         no_banco = self.session.get(Cliente, cliente_id)
         self.assertIsNotNone(no_banco)
         self.assertFalse(no_banco.ativo)
+
+    def test_cliente_inativo_abre_na_pagina_do_cliente_so_quando_pedido(self) -> None:
+        cliente_id = self.cadastrar(nome="Maria da Silva").json()["id"]
+        self.client.delete(f"/api/clientes/{cliente_id}", headers=self.headers)
+
+        sem_pedir = self.client.get(f"/api/clientes/{cliente_id}", headers=self.headers)
+        pedindo = self.client.get(
+            f"/api/clientes/{cliente_id}",
+            params={"incluir_inativos": "true"},
+            headers=self.headers,
+        )
+
+        self.assertEqual(sem_pedir.status_code, 404)
+        self.assertEqual(pedindo.status_code, 200, pedindo.text)
+        self.assertFalse(pedindo.json()["ativo"])

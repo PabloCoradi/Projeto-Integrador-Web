@@ -2228,3 +2228,24 @@ textarea:focus-visible {
   .sidebar__link:hover,
   .metric-card:hover { transform: none; }
 }
+
+/* Nome do arquivo nas tabelas de documentos: abre o arquivo numa aba nova */
+.content-card td .file-name-link,
+.file-name-link {
+  min-height: 0;
+  padding: 0;
+  color: var(--accent-deep);
+  border: 0;
+  background: transparent;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  overflow-wrap: anywhere;
+}
+
+.content-card td .file-name-link:hover,
+.file-name-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

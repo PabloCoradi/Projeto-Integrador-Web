@@ -13,8 +13,9 @@ export function listarCasos({ clienteId, tipoAtendimento, q, situacao } = {}) {
   return apiRequest(`/api/casos/${query ? `?${query}` : ""}`);
 }
 
-export function buscarCaso(id) {
-  return apiRequest(`/api/casos/${id}`);
+// incluirInativos=true abre também casos inativos (só para consulta).
+export function buscarCaso(id, incluirInativos = false) {
+  return apiRequest(`/api/casos/${id}${incluirInativos ? "?incluir_inativos=true" : ""}`);
 }
 
 export function criarCaso(dados) {
