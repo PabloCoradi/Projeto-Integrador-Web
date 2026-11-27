@@ -71,7 +71,9 @@ def listar_casos(
     """Lista os casos em andamento, ou os inativos quando inativos=True.
 
     Casos de cliente inativo contam como inativos. Os filtros de tipo e de
-    texto ignoram acentos e maiúsculas ("civel" encontra "Cível").
+    texto ignoram acentos e maiúsculas ("civel" encontra "Cível"). A busca
+    por texto procura no nome do cliente, no título, no tipo de atendimento
+    e nas observações do caso.
     """
 
     em_andamento = caso_em_andamento()
@@ -96,7 +98,9 @@ def listar_casos(
     if termo:
         casos = [
             c for c in casos
-            if termo in normalizar_busca(c.titulo)
+            if termo in normalizar_busca(c.cliente.nome)
+            or termo in normalizar_busca(c.titulo)
+            or termo in normalizar_busca(c.tipo_atendimento)
             or termo in normalizar_busca(c.observacoes)
         ]
 

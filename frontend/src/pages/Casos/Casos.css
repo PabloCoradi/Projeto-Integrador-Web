@@ -416,3 +416,13 @@
   .case-folder__open,
   .case-folder__open > span { transition: none; }
 }
+
+.case-detail__client-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.case-detail__client-link:hover {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}

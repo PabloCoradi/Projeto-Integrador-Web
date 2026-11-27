@@ -69,6 +69,11 @@ class Caso(Base):
         return bool(self.foto_chave_storage)
 
     @property
+    def cliente_tem_foto(self) -> bool:
+        """O cliente tem foto no cadastro; a pasta usa essa foto quando não tem a própria."""
+        return bool(self.cliente.foto_chave_storage)
+
+    @property
     def cliente_nome(self) -> str:
         return self.cliente.nome
 

@@ -80,10 +80,15 @@ def listar(
 )
 def buscar(
     cliente_id: int,
+    incluir_inativos: bool = False,
     db: Session = Depends(get_db),
     usuario: Usuario = Depends(exigir_permissao("clientes", "visualizar")),
 ):
-    cliente = buscar_cliente(db=db, cliente_id=cliente_id)
+    # incluir_inativos=true serve para a página do cliente, que também
+    # consulta (só leitura) clientes inativos.
+    cliente = buscar_cliente(
+        db=db, cliente_id=cliente_id, incluir_inativos=incluir_inativos
+    )
 
     if cliente is None:
         raise HTTPException(

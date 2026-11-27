@@ -15,6 +15,7 @@ import { apiRequest } from "./services/api";
 
 import Dashboard from "./pages/Dashboard/Dashboard";
 import Clientes from "./pages/Clientes/Clientes";
+import ClienteDetalhe from "./pages/Clientes/ClienteDetalhe";
 import Casos from "./pages/Casos/Casos";
 import Artigos from "./pages/Artigos/Artigos";
 import ArtigoEditor from "./pages/Artigos/ArtigoEditor";
@@ -598,6 +599,28 @@ function Layout() {
               element={
                 podeVisualizar("clientes") ? (
                   <Clientes />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+
+            <Route
+              path="/clientes/:clienteId"
+              element={
+                podeVisualizar("clientes") ? (
+                  <ClienteDetalhe key={location.key} />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+
+            <Route
+              path="/casos/:casoId"
+              element={
+                podeVisualizar("casos") ? (
+                  <Casos key={location.key} />
                 ) : (
                   <Navigate to="/" replace />
                 )

@@ -1,17 +1,30 @@
 import { useEffect, useState } from "react";
 import { gerarLinkFotoCaso } from "../../services/casos";
+import { gerarLinkFotoCliente } from "../../services/clientes";
 import { iniciaisCliente } from "./fotoCasoUtils";
 
-function FotoCaso({ caso, nome, className = "" }) {
+// Mostra a foto da pasta. Sem foto própria, a pasta usa a foto do cadastro
+// do cliente (o backend devolve essa foto no mesmo link do caso).
+// Sem `caso` (caso ainda não cadastrado), mostra a foto do `cliente` escolhido.
+function FotoCaso({ caso, cliente, nome, className = "" }) {
   const [url, setUrl] = useState("");
+
+  const usarLinkDoCaso = Boolean(caso && (caso.tem_foto || caso.cliente_tem_foto));
+  const usarLinkDoCliente = !caso && Boolean(cliente?.tem_foto);
+  const idCaso = caso?.id;
+  const idCliente = cliente?.id;
+  const versaoCliente = cliente?.atualizado_em;
 
   useEffect(() => {
     let ativa = true;
+    setUrl("");
 
-    if (!caso?.tem_foto) return undefined;
+    let pedido = null;
+    if (usarLinkDoCaso) pedido = gerarLinkFotoCaso(idCaso);
+    else if (usarLinkDoCliente) pedido = gerarLinkFotoCliente(idCliente);
 
-    gerarLinkFotoCaso(caso.id)
-      .then(({ url: link }) => {
+    pedido
+      ?.then(({ url: link }) => {
         if (ativa) setUrl(link);
       })
       .catch(() => {
@@ -19,7 +32,7 @@ function FotoCaso({ caso, nome, className = "" }) {
       });
 
     return () => { ativa = false; };
-  }, [caso?.id, caso?.tem_foto]);
+  }, [usarLinkDoCaso, usarLinkDoCliente, idCaso, idCliente, versaoCliente]);
 
   return (
     <span className={`case-photo ${className}`} aria-hidden="true">

@@ -1,4 +1,5 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { apiRequest } from "../../services/api";
 import { useAuth } from "../../contexts/AuthContext";
 import BotaoArquivos from "../../components/BotaoArquivos";
@@ -6,6 +7,7 @@ import FiltroSituacao from "../../components/FiltroSituacao";
 
 import {
   atualizarCaso,
+  buscarCaso,
   criarCaso,
   enviarFotoCaso,
   inativarCaso,
@@ -30,8 +32,14 @@ const TIPOS_FOTO_CASO = "image/jpeg,image/png,image/webp";
 const LIMITE_FOTO_CASO_MB = 5;
 
 function Casos() {
-  const { podeEditar } = useAuth();
+  const { podeEditar, podeVisualizar } = useAuth();
   const podeEditarCasos = podeEditar("casos");
+  const podeVerClientes = podeVisualizar("clientes");
+
+  // /casos/:casoId abre direto o caso (por exemplo, a partir da página do cliente).
+  const { casoId } = useParams();
+  const navigate = useNavigate();
+  const [abrindoCaso, setAbrindoCaso] = useState(Boolean(casoId));
 
   const [casos, setCasos] = useState([]);
   const [clientes, setClientes] = useState([]);
@@ -102,6 +110,24 @@ function Casos() {
       setCarregando(false);
     }
   }
+
+  useEffect(() => {
+    if (!casoId) return undefined;
+    let ativa = true;
+
+    buscarCaso(casoId, true)
+      .then((caso) => {
+        if (ativa) setCasoDosArquivos(caso);
+      })
+      .catch((error) => {
+        if (ativa) setErro(error.message);
+      })
+      .finally(() => {
+        if (ativa) setAbrindoCaso(false);
+      });
+
+    return () => { ativa = false; };
+  }, [casoId]);
 
   useEffect(() => {
     async function iniciar() {
@@ -331,6 +357,7 @@ function Casos() {
   function voltarParaCasos() {
     cancelarEdicao();
     setCasoDosArquivos(null);
+    if (casoId) navigate("/casos");
   }
 
   function limparFiltros() {
@@ -346,6 +373,20 @@ function Casos() {
   const clienteDoCaso = casoDosArquivos
     ? dadosDoCliente(casoDosArquivos.cliente_id)
     : null;
+
+  // Prévia da foto no formulário: foto nova escolhida > foto própria da pasta >
+  // foto do cadastro do cliente selecionado > iniciais.
+  const clienteDoForm = form.cliente_id ? dadosDoCliente(Number(form.cliente_id)) : null;
+  const temFotoPropria = Boolean(casoEditado?.tem_foto && !removerFotoExistente);
+  const usaFotoDoCliente = !fotoSelecionada && !temFotoPropria && Boolean(clienteDoForm?.tem_foto);
+
+  if (abrindoCaso) {
+    return (
+      <div className="page page--cases">
+        <div className="empty-state empty-state--compact">Carregando caso...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="page page--cases">
@@ -400,11 +441,17 @@ function Casos() {
               <div className="case-photo-field__preview" aria-hidden="true">
                 {previaFotoLocal ? (
                   <img src={previaFotoLocal} alt="" />
-                ) : casoEditado?.tem_foto && !removerFotoExistente ? (
+                ) : temFotoPropria ? (
                   <FotoCaso
                     key={`${casoEditado.id}-${casoEditado.atualizado_em}`}
                     caso={casoEditado}
                     nome={nomeDoCliente(casoEditado.cliente_id, casoEditado.cliente_nome)}
+                  />
+                ) : usaFotoDoCliente ? (
+                  <FotoCaso
+                    key={`cliente-${clienteDoForm.id}-${clienteDoForm.atualizado_em}`}
+                    cliente={clienteDoForm}
+                    nome={clienteDoForm.nome}
                   />
                 ) : (
                   <span>{iniciaisCliente(nomeDoCliente(Number(form.cliente_id)))}</span>
@@ -415,7 +462,15 @@ function Casos() {
                   <strong>Foto da pasta</strong>
                   <p>Identifique o cliente com uma foto. JPG, PNG ou WEBP, até {LIMITE_FOTO_CASO_MB} MB.</p>
                   {fotoSelecionada && <small>{fotoSelecionada.name}</small>}
-                  {removerFotoExistente && <small>A foto atual será removida ao salvar.</small>}
+                  {removerFotoExistente && (
+                    <small>
+                      A foto atual será removida ao salvar.
+                      {clienteDoForm?.tem_foto && " A pasta voltará a usar a foto do cliente."}
+                    </small>
+                  )}
+                  {usaFotoDoCliente && !removerFotoExistente && (
+                    <small>Usando a foto do cadastro do cliente. Adicione outra só se quiser uma foto diferente para esta pasta.</small>
+                  )}
                 </div>
                 <input
                   ref={fotoInputRef}
@@ -576,7 +631,19 @@ function Casos() {
                 className="case-photo--detail"
               />
               <div>
-                <p className="case-detail__eyebrow">{nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)}</p>
+                <p className="case-detail__eyebrow">
+                  {podeVerClientes ? (
+                    <Link
+                      to={`/clientes/${casoDosArquivos.cliente_id}`}
+                      className="case-detail__client-link"
+                      title="Abrir a página do cliente"
+                    >
+                      {nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)}
+                    </Link>
+                  ) : (
+                    nomeDoCliente(casoDosArquivos.cliente_id, casoDosArquivos.cliente_nome)
+                  )}
+                </p>
                 <h2 id="case-detail-title">{casoDosArquivos.titulo}</h2>
                 <p>{casoDosArquivos.tipo_atendimento}</p>
               </div>
@@ -647,7 +714,7 @@ function Casos() {
         >
           <div className="form-field filters-row__search">
             <label htmlFor="filtro-q">
-              Buscar título ou observações
+              Buscar cliente, título ou observações
             </label>
 
             <input
@@ -655,7 +722,7 @@ function Casos() {
               name="q"
               type="text"
               autoComplete="off"
-              placeholder="Digite um termo para pesquisar"
+              placeholder="Ex.: nome do cliente ou título do caso"
               value={filtros.q}
               onChange={(event) =>
                 setFiltros({

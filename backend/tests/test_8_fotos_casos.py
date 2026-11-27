@@ -34,6 +34,7 @@ class FotosCasosTest(TesteComBancoEmMemoria):
         cliente_id = self.client.post(
             "/api/clientes/", json={"nome": "Maria da Silva"}, headers=self.headers
         ).json()["id"]
+        self.cliente_id = cliente_id
         self.caso_id = self.client.post(
             "/api/casos/",
             json={
@@ -83,6 +84,47 @@ class FotosCasosTest(TesteComBancoEmMemoria):
             headers=self.cabecalho_auth(leitor),
         )
         self.assertEqual(link_leitor.status_code, 200, link_leitor.text)
+
+    def dar_foto_ao_cliente(self, chave: str = "clientes/1/foto/retrato.webp") -> None:
+        from app.models.cliente import Cliente
+
+        cliente = self.session.get(Cliente, self.cliente_id)
+        cliente.foto_chave_storage = chave
+        self.session.commit()
+
+    def test_pasta_sem_foto_usa_a_foto_do_cliente(self) -> None:
+        self.dar_foto_ao_cliente("clientes/1/foto/retrato.webp")
+
+        caso = self.client.get(f"/api/casos/{self.caso_id}", headers=self.headers).json()
+        self.assertFalse(caso["tem_foto"])
+        self.assertTrue(caso["cliente_tem_foto"])
+
+        with patch(
+            "app.services.foto_caso_service.gerar_url_download",
+            return_value="https://storage.exemplo/foto-cliente",
+        ) as gerar:
+            link = self.client.get(
+                f"/api/casos/{self.caso_id}/foto/link", headers=self.headers
+            )
+
+        self.assertEqual(link.status_code, 200, link.text)
+        self.assertEqual(gerar.call_args.kwargs["chave"], "clientes/1/foto/retrato.webp")
+
+    def test_foto_propria_da_pasta_tem_prioridade_sobre_a_do_cliente(self) -> None:
+        self.dar_foto_ao_cliente()
+        self.enviar_foto()
+
+        with patch(
+            "app.services.foto_caso_service.gerar_url_download",
+            return_value="https://storage.exemplo/foto-caso",
+        ) as gerar:
+            self.client.get(f"/api/casos/{self.caso_id}/foto/link", headers=self.headers)
+
+        self.assertTrue(gerar.call_args.kwargs["chave"].startswith(f"casos/{self.caso_id}/foto/"))
+
+    def test_sem_foto_na_pasta_nem_no_cliente_o_link_nao_existe(self) -> None:
+        link = self.client.get(f"/api/casos/{self.caso_id}/foto/link", headers=self.headers)
+        self.assertEqual(link.status_code, 404)
 
     def test_recusa_arquivo_que_nao_e_imagem(self) -> None:
         resposta = self.enviar_foto(b"not an image")
